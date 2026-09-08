@@ -52,12 +52,17 @@ Hay además un botón de pausa (⏸) fijo en la esquina superior derecha de la
 pantalla, visible siempre durante la partida — no depende del teclado.
 
 **MISSILE es una bomba, no un arma secundaria de disparo continuo**: hace daño
-en área (explota al primer impacto y daña a todo lo que esté cerca del punto
-de explosión, no solo a un enemigo) y tiene un cooldown de ~1.4s (baja con la
+en área (explota al impactar y daña a todo lo que esté cerca del punto de
+explosión, no solo a un enemigo) y tiene un cooldown de ~1.4s (baja con la
 mejora MSL del medidor de poder). Se ve una barra "MISIL" bajo LIVES en el HUD
 que se llena mientras recarga y se pone naranja brillante — con el texto
 "MISIL LISTO" — en cuanto se puede volver a usar. El botón táctil MSL también
 brilla cuando está listo.
+
+**Detonación manual**: si ya hay un misil en vuelo y se vuelve a pulsar
+MISSILE, el misil en camino explota ahí mismo en vez de esperar a chocar con
+algo — así se puede elegir el punto exacto de la explosión en vez de depender
+de que un enemigo se cruce en la trayectoria.
 
 ### Táctil (iPhone / móvil)
 

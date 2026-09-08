@@ -145,11 +145,19 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
     state.events.emit({ type: 'fire', weapon: p.weapon });
   }
 
-  if (input.missile && p.missileCooldown <= 0) {
-    const m = state.missiles.acquire();
-    spawnMissile(m, p.x + 6, p.y, MISSILE_SPEED);
-    p.missileCooldown = missileCooldownFor(p);
-    state.events.emit({ type: 'missileFire' });
+  if (input.missile) {
+    const inFlight = state.missiles.active();
+    if (inFlight.length > 0) {
+      for (const m of inFlight) {
+        m.active = false;
+        explodeMissile(state, m.x, m.y, m.dmg);
+      }
+    } else if (p.missileCooldown <= 0) {
+      const m = state.missiles.acquire();
+      spawnMissile(m, p.x + 6, p.y, MISSILE_SPEED);
+      p.missileCooldown = missileCooldownFor(p);
+      state.events.emit({ type: 'missileFire' });
+    }
   }
 }
 

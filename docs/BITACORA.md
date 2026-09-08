@@ -176,3 +176,24 @@ direcciones distintas a la derecha, y enemigos no-nave (ej. un "pulpo
 espacial"). Ambas quedan anotadas en `LOGIC.md` §14 como milestone 2 — el
 usuario decidió retomarlas después de ver el juego con los primeros assets
 reales en vez de ahora, con motor todavía en placeholders.
+
+## 2026-09-08 (noche, cont.) — Detonación manual del misil y barra del jefe arriba
+
+Dos ajustes puntuales sobre lo anterior:
+
+- **Detonación manual del misil** (`game/world.ts::stepFiring`): si ya hay un
+  misil en vuelo y se pulsa MISSILE otra vez, ya no se ignora ni se dispara
+  uno nuevo — el/los misil(es) en camino explotan de inmediato en su posición
+  actual, con el mismo daño en área de `explodeMissile`. Verificado con un
+  test aislado inyectando un enemigo lejos de la trayectoria natural del
+  misil: el misil desapareció exactamente en el segundo press, sin colisión
+  natural posible, confirmando que fue la detonación manual y no un disparo
+  nuevo. También se verificó el splash real con dos enemigos cercanos entre
+  sí (distancia 36px, radio 46+8=54px): ambos recibieron daño de la misma
+  explosión en el mismo tick.
+- **Barra de vida del jefe movida arriba** (`render/hud.ts::drawBossBar`):
+  antes estaba pegada al borde inferior, poco visible en combate. Ahora es
+  una franja fina de ancho completo en el borde superior (`y=0, h=8`), con
+  etiqueta "JEFE" debajo, sin pisar el SCORE/LIVES/medidor de poder que
+  siguen empezando en `y=10`. Confirmado con screenshot: jefe al 55% de vida,
+  franja roja hasta poco más de la mitad del ancho.
