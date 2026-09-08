@@ -373,3 +373,36 @@ pasar por ninguna oleada; "Probar armas" planta el enemigo de práctica y cada
 click cambia el arma tanto en el HUD del juego como en el indicador de la
 barra de desarrollo (capturado en screenshot con ARMA: DOUBLE tras un solo
 click adicional).
+
+## 2026-09-08 (madrugada, cont.) — Las armas sí cambiaban; el problema era que casi nunca se llegaba a usarlas
+
+El usuario reportó que en "Probar armas" el cambio se nota, pero en partida
+normal "todo sigue igual, no importa si tengo power up o no". Antes de tocar
+nada, se reprodujo el camino **real** de recogida (no el atajo del modo de
+prueba): se simularon 3 recogidas de Power Core exactamente como las
+produce `stepCollisions` (`advanceCursor` de `powermeter.ts`), se disparó
+PWR con la tecla real (Shift, el mismo `input.consumePausePressed`-style path
+que usa cualquier jugador), y se confirmó que `player.weapon` pasaba a
+`'double'` y que disparar producía las dos balas paralelas — el mecanismo en
+sí **no tenía ningún bug**.
+
+La causa real: `stage1.ts` solo tenía **4 formaciones en los 90 segundos del
+stage**. Llegar a DOUBLE (3er slot del medidor) exige 3 cores seguidos sin
+pulsar PWR antes; llegar a LASER (4º slot) exige 4 — es decir, limpiar
+**todas** las formaciones del juego a la perfección, sin que escape un solo
+enemigo en ninguna, y sin pulsar PWR de más entre medio. Con solo 4
+disponibles eso es casi imposible en una partida real, así que en la
+práctica el jugador solo llega a SPEED o MISSILE (1-2 cores) y nunca ve
+DOUBLE/LASER — de ahí la sensación de "las armas no cambian nada".
+
+**Arreglo:** `stage1.ts` ahora tiene **6 formaciones** (antes 4), repartidas
+cada ~14s en vez de cada ~20-24s, intercaladas con el resto de oleadas.
+DOUBLE pasa a ser alcanzable jugando bien; LASER deja de exigir perfección
+absoluta en cada formación del juego. La regla de "formación completa sin que
+escape nadie" no se tocó — eso quedó fijado como innegociable desde el
+milestone 1 y sigue siéndolo, solo se le dio al jugador más oportunidades de
+lograrlo.
+
+Verificado: con la barra de desarrollo, `dev-play` + avance de `stageTime` a
+85s confirma `formations.size === 6` (las 6 disparadas) y `spawnIndex` en la
+posición correcta, sin afectar el disparo del jefe a `t=90`.

@@ -207,15 +207,26 @@ Guion en `game/stage1.ts` como datos, no como código:
 
 ```ts
 [
-  { t: 2.0,  type: 'scout',   count: 5, pattern: 'stream' },
-  { t: 8.0,  type: 'sine',    count: 4 },
-  { t: 14.0, formation: true, count: 6, shape: 'v' },      // → Power Core
-  { t: 22.0, type: 'diver',   count: 3 },
-  { t: 30.0, formation: true, count: 6, shape: 'column' },
-  // ...
+  { t: 2.0,  type: 'scout',   count: 5 },
+  { t: 8.0,  formation: true, count: 6, shape: 'v' },      // → Power Core
+  { t: 16.0, type: 'sine',    count: 4 },
+  { t: 22.0, formation: true, count: 6, shape: 'column' },
+  { t: 30.0, type: 'diver',   count: 3 },
+  { t: 36.0, formation: true, count: 6, shape: 'line' },
+  // ... 6 formaciones en total, cada ~14s
   { t: 90.0, boss: 'sentinel' }
 ]
 ```
+
+**6 formaciones, no 4** (ajustado tras probarlo en partida real): con solo 4
+formaciones en todo el stage, llegar a LASER (el 4º slot del medidor)
+exigía limpiar perfectamente **todas** las formaciones del juego sin fallar
+una — prácticamente imposible salvo con play perfecto. El mecanismo del
+medidor en sí funcionaba bien (verificado disparando el pickup real y
+comprobando que el arma cambiaba), el problema era que casi nunca había
+ocasión de llegar tan lejos en el medidor durante una partida normal. Con 6
+formaciones, DOUBLE (3 cores) es alcanzable jugando bien, y LASER (4 cores)
+deja de exigir perfección absoluta en cada una.
 
 **Jefe "Sentinel"**: nave **gigante** (128×112 px en fase 1, hasta 151×132 en
 fase 3 — ver más abajo), silueta blocky/octogonal en vez de una nave estilizada
