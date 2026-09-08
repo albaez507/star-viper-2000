@@ -49,6 +49,10 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
     case 'missileFire':
       tone(engine, 220, 'sawtooth', 0.14, 0.25);
       break;
+    case 'missileImpact':
+      noiseBurst(engine, 0.32, 0.5, 900);
+      tone(engine, 90, 'sawtooth', 0.15, 0.3);
+      break;
     case 'hit':
       tone(engine, 340, 'square', 0.05, 0.16);
       break;

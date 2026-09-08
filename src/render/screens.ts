@@ -46,3 +46,24 @@ export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode
   ctx.textAlign = 'left';
   ctx.restore();
 }
+
+export function drawPauseOverlay(ctx: CanvasRenderingContext2D, worldW: number, worldH: number): void {
+  ctx.save();
+  ctx.fillStyle = 'rgba(6, 8, 16, 0.72)';
+  ctx.fillRect(0, 0, worldW, worldH);
+
+  ctx.textAlign = 'center';
+  const cx = worldW / 2;
+  const cy = worldH / 2;
+
+  ctx.font = 'bold 30px "Courier New", monospace';
+  ctx.fillStyle = '#3ee6c4';
+  ctx.fillText('PAUSA', cx, cy - 16);
+
+  ctx.font = '13px "Courier New", monospace';
+  ctx.fillStyle = '#eaf6ff';
+  ctx.fillText('P / botón de pausa para continuar', cx, cy + 12);
+
+  ctx.textAlign = 'left';
+  ctx.restore();
+}

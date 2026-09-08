@@ -1,6 +1,7 @@
 export type GameEvent =
   | { type: 'fire'; weapon: 'single' | 'double' | 'laser' }
   | { type: 'missileFire' }
+  | { type: 'missileImpact'; x: number; y: number }
   | { type: 'hit'; x: number; y: number }
   | { type: 'enemyDeath'; x: number; y: number }
   | { type: 'coreCollected'; slot: number }

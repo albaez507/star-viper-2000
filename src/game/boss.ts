@@ -16,14 +16,14 @@ export type Boss = {
 
 export function makeBoss(): Boss {
   return {
-    x: 0, y: 0, hp: 60, maxHp: 60, phase: 1, entering: true, t: 0,
-    fireCooldown: 1, hitFlash: 0, halfW: 34, halfH: 30, active: false,
+    x: 0, y: 0, hp: 90, maxHp: 90, phase: 1, entering: true, t: 0,
+    fireCooldown: 1, hitFlash: 0, halfW: 64, halfH: 56, active: false,
     dying: false, dyingTimer: 0,
   };
 }
 
 export function spawnBoss(b: Boss, worldW: number, worldH: number): void {
-  b.x = worldW + 60;
+  b.x = worldW + b.halfW + 20;
   b.y = worldH / 2;
   b.hp = b.maxHp;
   b.phase = 1;

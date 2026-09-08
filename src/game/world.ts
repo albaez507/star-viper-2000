@@ -3,6 +3,7 @@ import { Pool } from '../core/pool';
 import { Rng } from '../core/rng';
 import { EventBus } from '../core/events';
 import { hits } from './collision';
+import { dist } from '../core/math';
 
 import { createPlayer, movePlayer, type Player, FIRE_COOLDOWN, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H } from './player';
 import { PositionHistory } from './history';
@@ -208,6 +209,26 @@ function damagePlayer(state: GameState): void {
   state.events.emit({ type: 'shake', strength: 7, duration: 0.25 });
 }
 
+const MISSILE_SPLASH_RADIUS = 46;
+
+function explodeMissile(state: GameState, x: number, y: number, dmg: number): void {
+  for (const e of state.enemies.active()) {
+    if (dist(x, y, e.x, e.y) <= MISSILE_SPLASH_RADIUS + Math.max(e.halfW, e.halfH)) {
+      e.hp -= dmg;
+      e.hitFlash = 0.12;
+      if (e.hp <= 0) killEnemy(state, e);
+    }
+  }
+
+  if (state.boss.active && !state.boss.dying && dist(x, y, state.boss.x, state.boss.y) <= MISSILE_SPLASH_RADIUS + state.boss.halfW) {
+    state.boss.hp -= dmg;
+    state.boss.hitFlash = 0.15;
+  }
+
+  state.events.emit({ type: 'missileImpact', x, y });
+  state.events.emit({ type: 'shake', strength: 5, duration: 0.2 });
+}
+
 function killEnemy(state: GameState, e: Enemy): void {
   state.score += e.score;
   state.events.emit({ type: 'enemyDeath', x: e.x, y: e.y });
@@ -254,24 +275,30 @@ function stepCollisions(state: GameState): void {
   }
 
   for (const m of state.missiles.active()) {
+    let impactX = m.x;
+    let impactY = m.y;
+    let exploded = false;
+
     for (const e of state.enemies.active()) {
       if (hits(m.x, m.y, 4, 4, e.x, e.y, e.halfW, e.halfH)) {
-        e.hp -= m.dmg;
-        e.hitFlash = 0.12;
-        m.active = false;
-        state.events.emit({ type: 'hit', x: m.x, y: m.y });
-        if (e.hp <= 0) killEnemy(state, e);
+        impactX = e.x;
+        impactY = e.y;
+        exploded = true;
         break;
       }
     }
-    if (m.active && state.boss.active && !state.boss.dying) {
+    if (!exploded && state.boss.active && !state.boss.dying) {
       const boss = state.boss;
       if (hits(m.x, m.y, 4, 4, boss.x, boss.y, boss.halfW, boss.halfH)) {
-        boss.hp -= m.dmg;
-        boss.hitFlash = 0.1;
-        m.active = false;
-        state.events.emit({ type: 'hit', x: m.x, y: m.y });
+        impactX = boss.x;
+        impactY = boss.y;
+        exploded = true;
       }
+    }
+
+    if (exploded) {
+      m.active = false;
+      explodeMissile(state, impactX, impactY, m.dmg);
     }
   }
 
@@ -305,7 +332,7 @@ function stepCollisions(state: GameState): void {
   }
 }
 
-const BOSS_ANCHOR_MARGIN = 140;
+const BOSS_ANCHOR_MARGIN = 170;
 
 function stepBoss(state: GameState, dt: number): void {
   const boss = state.boss;

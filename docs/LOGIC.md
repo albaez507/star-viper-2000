@@ -217,10 +217,29 @@ Guion en `game/stage1.ts` como datos, no como código:
 ]
 ```
 
-**Jefe "Sentinel"**: nave grande que entra por la derecha, se ancla, y alterna
-tres fases según su vida (100% → 60% → 30%): abanico de balas, barrido láser
-telegrafiado, y llamada de esbirros. Punto débil visible. Muerte en cadena de
-explosiones con pausa dramática antes del fin de fase.
+**Jefe "Sentinel"**: nave **gigante** (128×112 px — más de 6 veces el área del
+jugador, ver `game/boss.ts`) que entra por la derecha, se ancla, y alterna
+tres fases según su vida (100% → 60% → 30%). Punto débil visible (el círculo
+oscuro del centro). Muerte en cadena de explosiones con pausa dramática antes
+del fin de fase.
+
+**Evolución visual por fases (confirmado, implementado por código en
+`render/sprites.ts::drawBoss`):** cada fase no es solo más ataque, también se
+ve más dañado — el color pasa de rojo (`#ff5470`) a rojo oscuro (`#d43a5c`) a
+carmesí casi negro con pulso (`#9c1f3c`), y a partir de la fase 2 aparecen
+grietas blancas procedurales en el casco, más densas en fase 3, con un anillo
+de energía pulsante alrededor del núcleo. Esto es el mismo principio de
+"criatura que se transforma según su daño" que se evaluó tras jugar otro
+prototipo — se aprobó extenderlo **solo al jefe** por ahora (ver §14). Cuando
+lleguen los sprites reales del brief de assets, `boss-sentinel-phase2.png` y
+`-phase3.png` (opcionales, §6.4 de `ASSET_BRIEF.md`) sustituyen estas grietas
+generadas por código.
+
+Patrones de disparo por fase (abanico de 1/3/5 balas según fase, cadencia
+1.1s/0.75s/0.5s) ya implementados. Barrido láser telegrafiado y llamada de
+esbirros mencionados en un borrador anterior de este documento **no están
+implementados todavía** — quedan como candidatos para cuando se retome el
+diseño de enemigos (§14).
 
 ---
 
@@ -350,3 +369,23 @@ Recomendación, con motivo:
 Decisión: **Cloudflare Pages** para el juego, y Durable Objects reservado para
 la fase de multijugador. Firebase se descarta salvo que aparezca una necesidad
 de auth/Firestore que hoy no existe.
+
+---
+
+## 14. Ideas de diseño en evaluación (milestone 2, no implementadas todavía)
+
+Surgieron tras comparar con otro prototipo del mismo concepto. Estado de cada
+una:
+
+| Idea | Estado | Nota |
+|---|---|---|
+| Jefe gigante | ✅ Aprobado e implementado | Ver §8 |
+| Evolución visual por fases | ✅ Aprobado — solo para el jefe por ahora | Ver §8. Extenderlo a enemigos regulares se descartó: mueren en 1-2 golpes, no da tiempo a "verse" la evolución y multiplica el trabajo de arte por variante |
+| Entrada de enemigos por otros lados (no solo desde la derecha) | ⏸ Pausado, se retoma después | Técnicamente barato — cada patrón ya es una función independiente en `game/behaviors/`, así que una entrada por arriba/abajo es un patrón nuevo, no un rediseño |
+| Enemigos no-nave (ej. un "pulpo espacial") | ⏸ Pausado, junto con lo anterior | Mismo mecanismo: nuevo behavior + nuevo sprite. No rompe la arquitectura, es una idea de contenido, no de motor |
+
+Cuando se retome esto, el orden lógico es: primero jugar con los primeros
+assets reales (ver `ASSET_BRIEF.md`) para saber si el juego ya se siente bien
+vestido, y sobre esa base decidir si vale la pena la variedad de entrada/tipo
+de enemigo o si el foco debe ir a otro lado (más niveles, más fases del
+medidor, etc.).

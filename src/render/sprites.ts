@@ -75,11 +75,20 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   ctx.restore();
 }
 
+const BOSS_PHASE_COLOR: Record<1 | 2 | 3, string> = {
+  1: '#ff5470',
+  2: '#d43a5c',
+  3: '#9c1f3c',
+};
+
 export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   if (!b.active) return;
   ctx.save();
   ctx.translate(b.x, b.y);
-  ctx.fillStyle = b.hitFlash > 0 ? '#ffffff' : '#ff5470';
+
+  const pulse = b.phase === 3 ? 0.75 + Math.sin(b.t * 10) * 0.25 : 1;
+  ctx.fillStyle = b.hitFlash > 0 ? '#ffffff' : BOSS_PHASE_COLOR[b.phase];
+  ctx.globalAlpha = pulse;
   ctx.beginPath();
   ctx.moveTo(-b.halfW, 0);
   ctx.lineTo(-b.halfW * 0.2, -b.halfH);
@@ -88,12 +97,49 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.lineTo(-b.halfW * 0.2, b.halfH);
   ctx.closePath();
   ctx.fill();
+  ctx.globalAlpha = 1;
+
+  if (b.phase >= 2 && b.hitFlash <= 0) drawBossCracks(ctx, b);
 
   ctx.fillStyle = '#0a0e17';
   ctx.beginPath();
-  ctx.arc(b.halfW * 0.3, 0, 6, 0, Math.PI * 2);
+  ctx.arc(b.halfW * 0.3, 0, b.halfH * 0.18, 0, Math.PI * 2);
   ctx.fill();
+
+  if (b.phase === 3 && b.hitFlash <= 0) {
+    ctx.strokeStyle = `rgba(255, 84, 112, ${0.5 + Math.sin(b.t * 12) * 0.5})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(b.halfW * 0.3, 0, b.halfH * 0.3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   ctx.restore();
+}
+
+function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
+  ctx.strokeStyle = b.phase === 3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 1.2;
+
+  ctx.beginPath();
+  ctx.moveTo(-b.halfW * 0.5, -b.halfH * 0.5);
+  ctx.lineTo(-b.halfW * 0.15, -b.halfH * 0.1);
+  ctx.lineTo(-b.halfW * 0.35, b.halfH * 0.2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(b.halfW * 0.2, -b.halfH * 0.6);
+  ctx.lineTo(b.halfW * 0.4, -b.halfH * 0.2);
+  ctx.lineTo(b.halfW * 0.15, b.halfH * 0.1);
+  ctx.stroke();
+
+  if (b.phase === 3) {
+    ctx.beginPath();
+    ctx.moveTo(-b.halfW * 0.1, b.halfH * 0.3);
+    ctx.lineTo(b.halfW * 0.2, b.halfH * 0.55);
+    ctx.lineTo(b.halfW * 0.5, b.halfH * 0.35);
+    ctx.stroke();
+  }
 }
 
 export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {

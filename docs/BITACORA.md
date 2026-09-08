@@ -116,3 +116,63 @@ corre de forma nativa sin este rodeo.
 - Registrar en Notion (Projects Registry) y en `PROJECTS_SUMMARY.md`.
 - Iterar sobre identidad visual una vez el MVP funcional esté validado
   (todavía en placeholders geométricos, según el spec original).
+
+## 2026-09-08 (noche) — Misil como bomba, pausa, jefe gigante con fases
+
+El usuario probó el juego y reportó que el misil "no funciona". Investigado a
+fondo: el disparo, el daño y el vuelo del misil sí funcionaban (confirmado
+inyectando ticks manuales y leyendo `state.missiles`), pero **no había ninguna
+señal visual de que existiera** — sin barra de cooldown, sin indicación de
+cuándo estaba listo, y el proyectil era pequeño y fácil de perder de vista.
+Diagnóstico: no era un bug de lógica, era ausencia total de feedback. Se
+aprovechó además para redefinir el arma como el usuario la describió — una
+bomba de área, no un arma secundaria de disparo continuo.
+
+**Cambios:**
+
+- **Misil ahora hace daño en área** (`game/world.ts::explodeMissile`, radio 46
+  px): al primer impacto explota y daña a todo enemigo/jefe cercano, no solo
+  al primero que toca. Nuevo evento `missileImpact` con burst de partículas
+  más grande, sonido de explosión distinto (ruido filtrado + tono grave) y
+  shake pequeño — coherente con la regla de "shake solo en impactos con peso".
+- **Indicador de misil en el HUD** (`render/hud.ts::drawMissileStatus`): barra
+  bajo LIVES que se llena con el cooldown real (`missileCooldownFor`) y se
+  pone naranja brillante con el texto "MISIL LISTO (M/X)" en cuanto se puede
+  disparar. El botón táctil MSL también brilla (`.action-missile.ready` en
+  `ui.css`) cuando está listo.
+- **Teclas de misil**: ya estaba en `M` desde el milestone 1 (documentado pero
+  fácil de pasar por alto); se añadieron `X` y `Ctrl` izquierdo como
+  alternativas más descubribles.
+- **Sistema de pausa, antes inexistente**: `consumePausePressed()` ya existía
+  en `input.ts` desde el milestone 1 pero **nunca se llamaba** desde
+  `main.ts` — la tecla P no hacía nada. Ahora: tecla P + botón `⏸` fijo en la
+  esquina superior derecha (visible siempre durante la partida, no depende de
+  layout táctil), pantalla "PAUSA" superpuesta, y todo se congela de verdad
+  (mundo, starfield, partículas, shake) mientras está en pausa.
+- **Jefe "Sentinel" ahora es gigante**: de 68×60 px a **128×112 px** (más de
+  6× el área del jugador). Ajustado el margen de anclaje y el punto de
+  aparición para que no se salga de pantalla.
+- **Evolución visual del jefe por fases** (`render/sprites.ts::drawBoss`):
+  color más oscuro e intenso por fase (`#ff5470` → `#d43a5c` → `#9c1f3c` con
+  pulso), grietas blancas procedurales a partir de la fase 2 (más densas en
+  fase 3), anillo de energía pulsante alrededor del núcleo en fase 3. Esto
+  responde a la idea del usuario de un sistema de "evolución por fases" tipo
+  el juego que mencionó (una araña/ratón con esqueleto que cambia de forma al
+  ser dañado) — **se aprobó extenderlo solo al jefe**, no a enemigos
+  regulares (mueren demasiado rápido para que se note, y multiplica el
+  trabajo de arte). Detalle completo en `LOGIC.md` §8 y §14.
+
+**Verificado en el navegador** (mismo método de tick manual que en el
+milestone 1, porque el entorno de previsualización de esta sesión no dispara
+`requestAnimationFrame` — ver nota técnica arriba): misil explota con daño en
+área, barra de cooldown se llena/vacía correctamente, pausa congela el mundo
+y lo reanuda exacto donde quedó, jefe gigante se ve claramente más grande que
+cualquier enemigo, y las tres fases muestran colores y grietas distintas —
+capturado en screenshot con el jefe en fase 3 (carmesí oscuro, grietas densas,
+anillo pulsante, barra de vida al 20%).
+
+**Discutido pero pospuesto (no implementado):** entrada de enemigos desde
+direcciones distintas a la derecha, y enemigos no-nave (ej. un "pulpo
+espacial"). Ambas quedan anotadas en `LOGIC.md` §14 como milestone 2 — el
+usuario decidió retomarlas después de ver el juego con los primeros assets
+reales en vez de ahora, con motor todavía en placeholders.

@@ -7,7 +7,7 @@ import { Starfield } from './render/starfield';
 import { ParticleSystem } from './fx/particles';
 import { ScreenShake } from './fx/shake';
 import { Renderer } from './render/renderer';
-import type { ScreenMode } from './render/screens';
+import { drawPauseOverlay, type ScreenMode } from './render/screens';
 
 const WORLD_W = 960;
 const WORLD_H = 540;
@@ -21,9 +21,17 @@ if (!ctx) throw new Error('2D canvas context unavailable');
 const dpadEl = document.getElementById('dpad') as HTMLElement;
 const fireEl = document.getElementById('btn-fire') as HTMLElement;
 const missileEl = document.getElementById('btn-missile') as HTMLElement;
+const pauseEl = document.getElementById('btn-pause') as HTMLElement;
 
 const input = new InputManager();
 input.attachTouch(dpadEl, fireEl, missileEl);
+
+let pauseRequested = false;
+pauseEl.addEventListener('pointerdown', (e) => {
+  pauseRequested = true;
+  e.preventDefault();
+  e.stopPropagation();
+});
 
 const audio = new AudioEngine();
 const unlockAudio = (): void => audio.unlock();
@@ -43,6 +51,7 @@ const renderer = new Renderer(ctx, starfield, particles, shake);
 let state: GameState = createWorld(WORLD_W, WORLD_H);
 let mode: ScreenMode = 'title';
 let elapsed = 0;
+let paused = false;
 
 function resetGame(): void {
   state = createWorld(WORLD_W, WORLD_H);
@@ -69,18 +78,31 @@ function handleEvents(s: GameState): void {
       case 'shake':
         shake.trigger(ev.strength, ev.duration);
         break;
+      case 'missileImpact':
+        particles.burst(ev.x, ev.y, 26, '#ff8c3e', 150);
+        break;
     }
   }
 }
 
 const loop = new GameLoop({
   step: (dt) => {
+    const frame = input.sample();
+    const pausePressed = input.consumePausePressed() || pauseRequested;
+    pauseRequested = false;
+
+    if (mode !== 'playing') {
+      paused = false;
+    } else if (pausePressed) {
+      paused = !paused;
+    }
+
+    if (paused) return;
+
     elapsed += dt;
     starfield.update(dt);
     particles.update(dt);
     shake.update(dt);
-
-    const frame = input.sample();
 
     if (mode === 'title') {
       if (input.consumeStartPressed() || frame.fire || tapToStart) resetGame();
@@ -102,6 +124,11 @@ const loop = new GameLoop({
   },
   render: () => {
     renderer.draw(state, mode, elapsed);
+    if (paused && mode === 'playing') drawPauseOverlay(ctx, WORLD_W, WORLD_H);
+
+    pauseEl.textContent = paused ? '▶' : '⏸';
+    pauseEl.hidden = mode !== 'playing';
+    missileEl.classList.toggle('ready', mode === 'playing' && !paused && state.player.missileCooldown <= 0);
   },
 });
 
