@@ -197,3 +197,31 @@ Dos ajustes puntuales sobre lo anterior:
   etiqueta "JEFE" debajo, sin pisar el SCORE/LIVES/medidor de poder que
   siguen empezando en `y=10`. Confirmado con screenshot: jefe al 55% de vida,
   franja roja hasta poco más de la mitad del ancho.
+
+## 2026-09-08 (noche, cont. 2) — Barra del jefe flotando sobre él, hitbox de bala más generosa
+
+El usuario aclaró que quería la barra de vida **flotando directamente sobre el
+sprite del jefe**, no arriba de la pantalla — corregido:
+
+- **`render/sprites.ts::drawBossHealthBar`** (nueva): se mueve a
+  `render/renderer.ts`, dibujada en el mismo paso de mundo que el jefe (dentro
+  del `ctx.save()`/`applyShake`), justo encima de su silueta
+  (`boss.y - boss.halfH - 17`), con fondo semitransparente propio y etiqueta
+  "JEFE" arriba de la barra. Sigue al jefe en su vaivén vertical porque se
+  recalcula cada frame contra `boss.x`/`boss.y`. La versión anterior en
+  `hud.ts` (franja fija en la parte superior de la pantalla) se eliminó.
+  Verificado con screenshot: la barra queda pegada justo sobre el jefe al 40%
+  de vida, moviéndose con él.
+- **Hitbox de la bala del jugador más generosa**
+  (`game/world.ts::PLAYER_BULLET_HIT_HALF = 5`, antes 2): se agrandó solo la
+  caja de colisión de la bala del jugador contra enemigos/jefe (de 4×4 a
+  10×10 px), sin tocar la hitbox de los enemigos ni la de las balas
+  enemigas/cuerpo-a-cuerpo contra el jugador — la regla de "el jugador siempre
+  siente que esquivó, siente que acertó" de `LOGIC.md` §11 se mantiene: solo
+  se perdona al que dispara, no al que recibe.
+
+**Investigado (pedido explícito del usuario — "revisen internet, busca
+ejemplos"):** research sobre por qué cuesta apuntar/golpear y qué hacen otros
+shmups al respecto. Resumen y recomendación en el mensaje de esa sesión, no
+implementado todavía porque toca la resolución de diseño del juego entero
+(ver conversación — pendiente de que el usuario decida si quiere ir por ahí).

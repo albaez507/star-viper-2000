@@ -79,6 +79,7 @@ export function createWorld(worldW: number, worldH: number, seed = 1337): GameSt
 const PLAYER_BULLET_SPEED = 560;
 const ENEMY_BULLET_SPEED = 220;
 const MISSILE_SPEED = 340;
+const PLAYER_BULLET_HIT_HALF = 5;
 
 export function step(state: GameState, input: InputFrame, dt: number): void {
   if (state.gameOver || state.victory) return;
@@ -262,7 +263,7 @@ function stepCollisions(state: GameState): void {
   for (const b of state.playerBullets.active()) {
     if (!b.active) continue;
     for (const e of state.enemies.active()) {
-      if (hits(b.x, b.y, 2, 2, e.x, e.y, e.halfW, e.halfH)) {
+      if (hits(b.x, b.y, PLAYER_BULLET_HIT_HALF, PLAYER_BULLET_HIT_HALF, e.x, e.y, e.halfW, e.halfH)) {
         e.hp -= b.dmg;
         e.hitFlash = 0.12;
         state.events.emit({ type: 'hit', x: b.x, y: b.y });
@@ -273,7 +274,7 @@ function stepCollisions(state: GameState): void {
     }
     if (b.active && state.boss.active && !state.boss.dying) {
       const boss = state.boss;
-      if (hits(b.x, b.y, 2, 2, boss.x, boss.y, boss.halfW, boss.halfH)) {
+      if (hits(b.x, b.y, PLAYER_BULLET_HIT_HALF, PLAYER_BULLET_HIT_HALF, boss.x, boss.y, boss.halfW, boss.halfH)) {
         boss.hp -= b.dmg;
         boss.hitFlash = 0.1;
         state.events.emit({ type: 'hit', x: b.x, y: b.y });

@@ -19,8 +19,6 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, t: numb
   drawMissileStatus(ctx, state, t);
   drawPowerMeter(ctx, state, t);
 
-  if (state.boss.active) drawBossBar(ctx, state);
-
   ctx.restore();
 }
 
@@ -81,25 +79,3 @@ function drawMissileStatus(ctx: CanvasRenderingContext2D, state: GameState, t: n
   ctx.fillText(ready ? 'MISIL LISTO (M/X)' : 'MISIL', x + 4, y + 2);
 }
 
-function drawBossBar(ctx: CanvasRenderingContext2D, state: GameState): void {
-  const boss = state.boss;
-  const x = 0;
-  const y = 0;
-  const w = state.worldW;
-  const h = 8;
-  const ratio = Math.max(0, boss.hp / boss.maxHp);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = '#ff5470';
-  ctx.fillRect(x, y, w * ratio, h);
-  ctx.strokeStyle = 'rgba(234,246,255,0.4)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x, y, w, h);
-
-  ctx.fillStyle = '#eaf6ff';
-  ctx.font = '9px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('JEFE', w / 2, h + 2);
-  ctx.textAlign = 'left';
-}

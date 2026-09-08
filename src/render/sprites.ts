@@ -117,6 +117,34 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.restore();
 }
 
+export function drawBossHealthBar(ctx: CanvasRenderingContext2D, b: Boss): void {
+  if (!b.active) return;
+
+  const w = b.halfW * 1.8;
+  const h = 7;
+  const x = b.x - w / 2;
+  const y = b.y - b.halfH - h - 10;
+  const ratio = Math.max(0, b.hp / b.maxHp);
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(6, 8, 16, 0.7)';
+  ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = BOSS_PHASE_COLOR[b.phase];
+  ctx.fillRect(x, y, w * ratio, h);
+  ctx.strokeStyle = 'rgba(234,246,255,0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.fillStyle = '#eaf6ff';
+  ctx.font = '9px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('JEFE', x + w / 2, y - 10);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
 function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.strokeStyle = b.phase === 3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 1.2;

@@ -3,7 +3,7 @@ import type { Starfield } from './starfield';
 import type { ParticleSystem } from '../fx/particles';
 import type { ScreenShake } from '../fx/shake';
 import { applyShake } from './camera';
-import { drawPlayer, drawOption, drawEnemy, drawBoss, drawBullet, drawMissile, drawPowerCore } from './sprites';
+import { drawPlayer, drawOption, drawEnemy, drawBoss, drawBossHealthBar, drawBullet, drawMissile, drawPowerCore } from './sprites';
 import { drawParticles } from './particles';
 import { drawHud } from './hud';
 import { drawScreen, type ScreenMode } from './screens';
@@ -31,7 +31,10 @@ export class Renderer {
 
     for (const c of state.powerCores.active()) drawPowerCore(ctx, c, elapsed);
     for (const e of state.enemies.active()) drawEnemy(ctx, e);
-    if (state.boss.active) drawBoss(ctx, state.boss);
+    if (state.boss.active) {
+      drawBoss(ctx, state.boss);
+      drawBossHealthBar(ctx, state.boss);
+    }
 
     for (const o of state.options) drawOption(ctx, o);
     if (state.player.alive) drawPlayer(ctx, state.player);
