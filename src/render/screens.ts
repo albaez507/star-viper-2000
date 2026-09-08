@@ -1,4 +1,5 @@
 import type { GameState } from '../game/world';
+import type { Boss } from '../game/boss';
 
 export type ScreenMode = 'title' | 'playing' | 'gameover' | 'victory';
 
@@ -44,6 +45,31 @@ export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode
   }
 
   ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+export function drawBossWarning(ctx: CanvasRenderingContext2D, worldW: number, worldH: number, boss: Boss, elapsed: number): void {
+  if (!boss.active || boss.revealed) return;
+
+  const blink = boss.introPhase === 'warp'
+    ? 0.55 + Math.sin(elapsed * 16) * 0.45
+    : 0.7;
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = blink;
+
+  ctx.font = 'bold 42px "Courier New", monospace';
+  ctx.fillStyle = '#ff5470';
+  ctx.fillText('警告', worldW / 2, worldH - 78);
+
+  ctx.font = '13px "Courier New", monospace';
+  ctx.fillStyle = '#eaf6ff';
+  ctx.globalAlpha = Math.min(1, blink + 0.2);
+  ctx.fillText('ALERTA — OBJETIVO DE GRAN ESCALA DETECTADO', worldW / 2, worldH - 34);
+
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 

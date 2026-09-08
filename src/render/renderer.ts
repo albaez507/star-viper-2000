@@ -6,7 +6,7 @@ import { applyShake } from './camera';
 import { drawPlayer, drawOption, drawEnemy, drawBoss, drawBossHealthBar, drawBullet, drawMissile, drawPowerCore } from './sprites';
 import { drawParticles } from './particles';
 import { drawHud } from './hud';
-import { drawScreen, type ScreenMode } from './screens';
+import { drawScreen, drawBossWarning, type ScreenMode } from './screens';
 
 export class Renderer {
   constructor(
@@ -53,6 +53,7 @@ export class Renderer {
     }
 
     drawHud(ctx, state, elapsed);
+    if (mode === 'playing') drawBossWarning(ctx, worldW, worldH, state.boss, elapsed);
     drawScreen(ctx, state, mode);
   }
 }

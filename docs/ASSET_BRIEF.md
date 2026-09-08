@@ -101,7 +101,7 @@ aunque el sprite roce).
 |---|---|---|
 | Jugador | 15 × 10 px | **44 × 32 px** |
 | Enemigo `scout` / `sine` / `diver` / `formation` | 13 × 12 px | **36 × 32 px** cada uno |
-| Jefe "Sentinel" | 64 × 56 px | **160 × 140 px** — es deliberadamente gigante, varias veces el tamaño de un enemigo normal |
+| Jefe "Sentinel" (fase 1) | 128 × 112 px | **260 × 230 px** — deliberadamente gigante y de silueta **blocky/octogonal**, no una nave estilizada (se lee como fortaleza). Crece de verdad en fases 2 y 3 (ver §6.4) |
 | Option (orbe de apoyo) | — | **12 × 12 px** |
 | Power Core | — | **20 × 20 px** |
 | Bala del jugador (single/double) | — | **12 × 6 px** |
@@ -154,16 +154,20 @@ la forma sin leer el color:
 
 ### 6.4 Jefe
 
-- `boss-sentinel.png` — 96×84 px, mirando a la izquierda. Nave grande y
-  amenazante, con un "núcleo" o punto débil visible (actualmente se pinta un
-  círculo oscuro en el centro-derecha del jefe — mantener un punto focal ahí
-  para que quede coherente con los disparos que salen de esa zona).
-- Opcional, si el modelo puede: `boss-sentinel-phase2.png` y
-  `-phase3.png`, variantes con más daño visible (grietas, partes rotas,
-  color más intenso) para las fases de 60% y 30% de vida — ver §7, esto es
-  la idea de "evolución por fases" que se está evaluando, **no está
-  confirmada todavía**. Generar solo si sobra tiempo; la fase 1 no depende de
-  esto.
+- `boss-sentinel.png` — 260×230 px, mirando a la izquierda. Silueta **blocky/
+  octogonal** — piensa "fortaleza acorazada", no "nave elegante". Con un
+  "núcleo" o punto débil visible (actualmente se pinta un círculo oscuro en
+  el centro-derecha del jefe — mantener un punto focal ahí para que quede
+  coherente con los disparos que salen de esa zona).
+- **Confirmado, no opcional (a diferencia de la versión anterior de este
+  brief):** `boss-sentinel-phase2.png` y `-phase3.png`, ligeramente más
+  grandes que el sprite base (×1.08 y ×1.18 — el motor ya redimensiona la
+  hitbox real en esas fases, así que el arte debe acompañar) y con más daño
+  visible: grietas, partes rotas, color más intenso/oscuro. El motor ya
+  genera esto por código (grietas procedurales + cambio de color) como
+  placeholder, así que no bloquea nada — pero si el otro modelo los genera,
+  se integran directamente. Ver `LOGIC.md` §8 para el detalle exacto de color
+  por fase (`#ff5470` → `#d43a5c` → `#9c1f3c`).
 
 ### 6.5 Proyectiles y pickups
 
@@ -191,20 +195,18 @@ mejora, mismo lenguaje visual que el resto:
 
 ---
 
-## 7. Sobre el sistema de "evolución por fases" (en discusión, NO confirmado)
+## 7. Sobre el sistema de "evolución por fases" (confirmado, solo para el jefe)
 
-Se está evaluando un sistema inspirado en juegos donde un enemigo cambia de
-forma visual/mecánica según su vida (ej. de "sano" a "dañado" a "crítico"),
-parecido a lo que ya hace el jefe por código (3 fases de ataque según % de
-vida). La pregunta abierta es si esto se extiende también a **enemigos
-regulares**, no solo al jefe.
+El jefe cambia de forma visual y de tamaño real según su vida (100% → 60% →
+30%), no solo de patrón de ataque: crece (×1.08, ×1.18), se oscurece y se
+agrieta más con cada fase (ver `LOGIC.md` §8 para el detalle exacto). Ya
+implementado por código como placeholder; los sprites `boss-sentinel-phase2.png`
+y `-phase3.png` de §6.4 lo sustituyen con arte real cuando estén listos.
 
-**Si esto se aprueba**, el impacto en assets sería: cada tipo de enemigo que
-tenga fases necesitaría 2-3 variantes del mismo sprite (sano / dañado /
-crítico), manteniendo la misma silueta base pero con más daño visible. Por
-ahora, **no generar variantes de fase para los enemigos regulares** — solo
-para el jefe, y solo si sobra tiempo (ver §6.4). Esto se confirma en una
-revisión posterior de este documento.
+**Se decidió explícitamente NO extender esto a los enemigos regulares** —
+mueren en 1-2 golpes, no da tiempo a que se note la transformación, y
+multiplicaría el trabajo de arte por cada tipo. No generar variantes de fase
+para `enemy-scout`/`enemy-sine`/`enemy-diver`/`enemy-formation`.
 
 ---
 

@@ -217,23 +217,59 @@ Guion en `game/stage1.ts` como datos, no como código:
 ]
 ```
 
-**Jefe "Sentinel"**: nave **gigante** (128×112 px — más de 6 veces el área del
-jugador, ver `game/boss.ts`) que entra por la derecha, se ancla, y alterna
-tres fases según su vida (100% → 60% → 30%). Punto débil visible (el círculo
-oscuro del centro). Muerte en cadena de explosiones con pausa dramática antes
-del fin de fase.
+**Jefe "Sentinel"**: nave **gigante** (128×112 px en fase 1, hasta 151×132 en
+fase 3 — ver más abajo), silueta blocky/octogonal en vez de una nave estilizada
+(a propósito: se lee como una fortaleza, no como una nave más grande). Punto
+débil visible (el círculo oscuro del centro).
 
-**Evolución visual por fases (confirmado, implementado por código en
-`render/sprites.ts::drawBoss`):** cada fase no es solo más ataque, también se
-ve más dañado — el color pasa de rojo (`#ff5470`) a rojo oscuro (`#d43a5c`) a
-carmesí casi negro con pulso (`#9c1f3c`), y a partir de la fase 2 aparecen
-grietas blancas procedurales en el casco, más densas en fase 3, con un anillo
-de energía pulsante alrededor del núcleo. Esto es el mismo principio de
-"criatura que se transforma según su daño" que se evaluó tras jugar otro
-prototipo — se aprobó extenderlo **solo al jefe** por ahora (ver §14). Cuando
-lleguen los sprites reales del brief de assets, `boss-sentinel-phase2.png` y
-`-phase3.png` (opcionales, §6.4 de `ASSET_BRIEF.md`) sustituyen estas grietas
-generadas por código.
+**Llegada — el jugador llega al jefe, no al revés (`game/boss.ts` §
+`updateBossIntro`).** El diseño original hacía que el jefe volara desde el
+borde derecho hasta anclarse; se cambió a propósito porque se sentía como
+"vino el jefe" en vez de "yo llegué al jefe". Ahora, al disparar el evento
+`{ t: 90, boss: 'sentinel' }`:
+
+1. `spawnBoss()` coloca al jefe **ya anclado** en su posición final, pero
+   invisible (`revealed: false`) e inactivo.
+2. **Fase `hold` (0.5s):** el juego entero se congela — nada se mueve, ni
+   siquiera el fondo (`world.ts::step` corta en seco y solo cuenta el timer
+   de la intro). Es el silencio antes del golpe.
+3. **Fase `warp` (1.4s):** el starfield acelera ×6 (`bossWarpMultiplier`,
+   consumido por `Starfield.update` en `main.ts`) — la sensación es de
+   avanzar rápido hacia el objetivo, no de que algo venga hacia el jugador.
+   Abajo en pantalla aparece **警告** parpadeante (kanji de "advertencia" —
+   convención clásica de los shmups japoneses antes de un jefe) con un
+   subtítulo en español. El jefe sigue sin dibujarse.
+4. **Fase `reveal`:** `revealed = true`. El jefe aparece, el starfield vuelve
+   a velocidad normal, y recién ahí empieza a moverse y disparar.
+
+Mientras `!revealed`, el jugador tampoco puede moverse ni disparar — es una
+pausa real de juego, no solo visual, igual que forzar la pausa manual pero
+disparada por el guion de la fase.
+
+**Movimiento — patrón deliberadamente más complejo y más rápido que un
+enemigo normal (`world.ts::stepBoss`):** en vez de una sola onda senoidal,
+combina tres frecuencias distintas en X y en Y (`sin(t·1.3f) + sin(t·0.47f) +
+cos(t·2.1f)`, con un `f` que sube con la fase), dando una trayectoria errática
+tipo Lissajous en vez de un vaivén predecible. `f` (factor de frecuencia) sube
++30% por fase, así que en fase 3 se mueve visiblemente más rápido y agresivo
+que en fase 1.
+
+**Evolución visual por fases (`render/sprites.ts::drawBoss`,
+`game/boss.ts::updateBossPhase`):** cada fase no es solo más ataque y más
+velocidad, también se ve y **es** más grande y más dañado:
+
+- **Tamaño real** (no solo visual — afecta la hitbox): fase 1 = tamaño base,
+  fase 2 = ×1.08, fase 3 = ×1.18. El jefe crece de verdad al enfurecerse.
+- **Color**: rojo (`#ff5470`) → rojo oscuro (`#d43a5c`) → carmesí casi negro
+  con pulso (`#9c1f3c`).
+- **Grietas** blancas procedurales en el casco a partir de la fase 2, más
+  densas en fase 3, con un anillo de energía pulsante alrededor del núcleo.
+
+Esto es el principio de "criatura que se transforma según su daño" que se
+evaluó tras jugar otro prototipo — se aprobó extenderlo **solo al jefe** por
+ahora (ver §14). Cuando lleguen los sprites reales del brief de assets,
+`boss-sentinel-phase2.png` y `-phase3.png` (opcionales, §6.4 de
+`ASSET_BRIEF.md`) sustituyen las grietas generadas por código.
 
 Patrones de disparo por fase (abanico de 1/3/5 balas según fase, cadencia
 1.1s/0.75s/0.5s) ya implementados. Barrido láser telegrafiado y llamada de

@@ -83,7 +83,7 @@ const BOSS_PHASE_COLOR: Record<1 | 2 | 3, string> = {
 };
 
 export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
-  if (!b.active) return;
+  if (!b.active || !b.revealed) return;
   ctx.save();
   ctx.translate(b.x, b.y);
 
@@ -91,11 +91,14 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.fillStyle = b.hitFlash > 0 ? '#ffffff' : BOSS_PHASE_COLOR[b.phase];
   ctx.globalAlpha = pulse;
   ctx.beginPath();
-  ctx.moveTo(-b.halfW, 0);
-  ctx.lineTo(-b.halfW * 0.2, -b.halfH);
-  ctx.lineTo(b.halfW, -b.halfH * 0.4);
-  ctx.lineTo(b.halfW, b.halfH * 0.4);
-  ctx.lineTo(-b.halfW * 0.2, b.halfH);
+  ctx.moveTo(-b.halfW, -b.halfH * 0.45);
+  ctx.lineTo(-b.halfW * 0.55, -b.halfH);
+  ctx.lineTo(b.halfW * 0.6, -b.halfH);
+  ctx.lineTo(b.halfW, -b.halfH * 0.35);
+  ctx.lineTo(b.halfW, b.halfH * 0.35);
+  ctx.lineTo(b.halfW * 0.6, b.halfH);
+  ctx.lineTo(-b.halfW * 0.55, b.halfH);
+  ctx.lineTo(-b.halfW, b.halfH * 0.45);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
@@ -119,7 +122,7 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
 }
 
 export function drawBossHealthBar(ctx: CanvasRenderingContext2D, b: Boss): void {
-  if (!b.active) return;
+  if (!b.active || !b.revealed) return;
 
   const w = b.halfW * 1.8;
   const h = 7;

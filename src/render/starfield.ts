@@ -4,6 +4,7 @@ type Layer = { stars: Star[]; speed: number; size: number; alpha: number };
 
 export class Starfield {
   private layers: Layer[];
+  private warp = 1;
 
   constructor(private w: number, private h: number) {
     this.layers = [
@@ -25,10 +26,11 @@ export class Starfield {
     return { stars, speed, size, alpha };
   }
 
-  update(dt: number): void {
+  update(dt: number, warpMultiplier = 1): void {
+    this.warp = warpMultiplier;
     for (const layer of this.layers) {
       for (const s of layer.stars) {
-        s.x -= layer.speed * dt;
+        s.x -= layer.speed * warpMultiplier * dt;
         if (s.x < 0) {
           s.x = this.w;
           s.y = Math.random() * this.h;
@@ -39,10 +41,15 @@ export class Starfield {
 
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#eaf6ff';
+    const streak = this.warp > 1.5;
     for (const layer of this.layers) {
       ctx.globalAlpha = layer.alpha;
       for (const s of layer.stars) {
-        ctx.fillRect(s.x, s.y, layer.size, layer.size);
+        if (streak) {
+          ctx.fillRect(s.x, s.y, layer.size + layer.speed * 0.35, layer.size);
+        } else {
+          ctx.fillRect(s.x, s.y, layer.size, layer.size);
+        }
       }
     }
     ctx.globalAlpha = 1;

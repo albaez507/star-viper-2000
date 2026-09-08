@@ -1,5 +1,6 @@
 import { GameLoop } from './core/loop';
 import { createWorld, step, type GameState } from './game/world';
+import { bossWarpMultiplier } from './game/boss';
 import { InputManager } from './input/input';
 import { AudioEngine } from './audio/audio';
 import { playSfx } from './audio/sfx';
@@ -100,7 +101,8 @@ const loop = new GameLoop({
     if (paused) return;
 
     elapsed += dt;
-    starfield.update(dt);
+    const warp = mode === 'playing' ? bossWarpMultiplier(state.boss) : 1;
+    starfield.update(dt, warp);
     particles.update(dt);
     shake.update(dt);
 

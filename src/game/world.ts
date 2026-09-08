@@ -15,7 +15,7 @@ import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { createPowerMeter, advanceCursor, activateSlot, type PowerMeter } from './powermeter';
-import { makeBoss, updateBossPhase, type Boss } from './boss';
+import { makeBoss, updateBossPhase, updateBossIntro, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
 
 export type GameState = {
@@ -83,6 +83,11 @@ const PLAYER_BULLET_HIT_HALF = 5;
 
 export function step(state: GameState, input: InputFrame, dt: number): void {
   if (state.gameOver || state.victory) return;
+
+  if (state.boss.active && !state.boss.revealed) {
+    updateBossIntro(state.boss, dt);
+    return;
+  }
 
   state.stageTime += dt;
   updateSpawner(state);
@@ -350,11 +355,9 @@ function stepCollisions(state: GameState): void {
   }
 }
 
-const BOSS_ANCHOR_MARGIN = 170;
-
 function stepBoss(state: GameState, dt: number): void {
   const boss = state.boss;
-  if (!boss.active) return;
+  if (!boss.active || !boss.revealed) return;
 
   boss.t += dt;
   if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt);
@@ -368,15 +371,15 @@ function stepBoss(state: GameState, dt: number): void {
     return;
   }
 
-  if (boss.entering) {
-    const targetX = state.worldW - BOSS_ANCHOR_MARGIN;
-    boss.x += (targetX - boss.x) * Math.min(1, dt * 1.4);
-    if (Math.abs(boss.x - targetX) < 1.5) boss.entering = false;
-  } else {
-    boss.y = state.worldH / 2 + Math.sin(boss.t * 0.8) * 90;
-  }
-
   updateBossPhase(boss);
+
+  const freq = 1 + (boss.phase - 1) * 0.3;
+  const anchorX = state.worldW - BOSS_ANCHOR_MARGIN;
+  boss.x = anchorX + Math.sin(boss.t * 0.6 * freq) * 30;
+  boss.y = state.worldH / 2
+    + Math.sin(boss.t * 1.3 * freq) * 70
+    + Math.sin(boss.t * 0.47 * freq) * 40
+    + Math.cos(boss.t * 2.1 * freq) * 15;
 
   if (boss.hp <= 0) {
     boss.dying = true;
@@ -387,7 +390,7 @@ function stepBoss(state: GameState, dt: number): void {
   }
 
   boss.fireCooldown -= dt;
-  if (!boss.entering && boss.fireCooldown <= 0) {
+  if (boss.fireCooldown <= 0) {
     fireBossPattern(state, boss);
     boss.fireCooldown = boss.phase === 3 ? 0.5 : boss.phase === 2 ? 0.75 : 1.1;
   }

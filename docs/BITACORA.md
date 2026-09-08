@@ -263,3 +263,59 @@ casi el mismo dibujo).
     balas a 12px de separación vertical; LASER confirmado con `dmg:2,
     pierce:true` y capturado en screenshot como una fila de rayos alargados
     claramente distintos de los puntos dorados de SINGLE/DOUBLE.
+
+## 2026-09-08 (noche, cont. 4) — Rediseño completo del jefe: llegada, forma, tamaño, patrón y fases
+
+Pedido más grande de la sesión. El usuario dijo "quiero que el enemigo sea dos
+veces transparente" — interpretado como "dos veces más grande" (dictado por
+voz, pegado a "está muy pequeño"); si en realidad quería un efecto de
+transparencia real, hay que decírmelo para ajustarlo.
+
+**Forma y tamaño** (`game/boss.ts`, `render/sprites.ts::drawBoss`):
+- Duplicado de 64×56 a **128×112** en fase 1 (antes de escalar por fase).
+- Silueta rediseñada de flecha/pentágono a **octógono blocky** — más
+  "cuadrado" como pidió el usuario, se lee como fortaleza en vez de nave
+  estilizada.
+- El tamaño real (hitbox, no solo el dibujo) ahora **crece con la fase**:
+  ×1.08 en fase 2, ×1.18 en fase 3 (`updateBossPhase` recalcula `halfW`/
+  `halfH` cada vez que cambia de fase) — antes solo cambiaba de color.
+
+**Llegada rediseñada — "yo llegué al jefe", no "el jefe vino"**
+(`game/boss.ts::updateBossIntro`, nuevo estado `introPhase`:
+`hold → warp → reveal`):
+1. `hold` (0.5s): el jefe se coloca ya anclado en su posición pero invisible
+   e inactivo; **todo el juego se congela** — `world.ts::step()` corta antes
+   de tocar jugador/enemigos/spawns, solo corre el timer de la intro. Es la
+   pausa que pidió el usuario.
+2. `warp` (1.4s): el starfield acelera ×6 (`bossWarpMultiplier` en
+   `game/boss.ts`, consumido por `Starfield.update(dt, multiplier)` en
+   `main.ts` — el starfield ahora acepta un multiplicador y dibuja las
+   estrellas como estelas cuando `warp > 1.5`) — sensación de avanzar rápido
+   hacia el objetivo. Abajo aparece **警告** parpadeante (kanji de
+   "advertencia", convención de los shmups japoneses clásicos antes de un
+   jefe — así se resolvió el "texto en otro idioma que se sienta como
+   peligro") con subtítulo en español debajo (`render/screens.ts::
+   drawBossWarning`). El jefe sigue sin dibujarse.
+3. `reveal`: el jefe se hace visible y activo, el starfield vuelve a
+   velocidad normal, el jugador recupera el control.
+   El jefe ya no "vuela" hacia su posición — ya estaba ahí desde el `hold`,
+   solo estaba oculto. Se eliminó el campo `entering` y su lerp de posición.
+
+**Patrón de movimiento — más complejo y más rápido que un enemigo normal**
+(`world.ts::stepBoss`): antes una sola onda senoidal simple. Ahora combina
+tres frecuencias distintas en X y en Y (tipo Lissajous), con un factor de
+frecuencia que sube +30% por fase — en fase 3 se mueve visiblemente más
+rápido y errático que en fase 1, y siempre más rápido que un enemigo
+pequeño.
+
+**Verificado en el navegador**, con un ajuste de método: los screenshots de
+esta sesión disparan internamente un frame real de render que puede saltarse
+varios ticks de golpe (el `MAX_FRAME` del loop absorbe el tiempo real
+transcurrido entre llamadas de la herramienta), así que probar la secuencia
+`hold`→`warp`→`reveal` con screenshots sueltos la completaba de un salto. Se
+resolvió forzando la pausa manual (tecla P) antes de capturar, lo que congela
+`world.ts::step()` de verdad y permite fotografiar un instante exacto de la
+fase `warp`: capturado con el texto 警告 + "ALERTA — OBJETIVO DE GRAN ESCALA
+DETECTADO" visible abajo y el jefe todavía sin aparecer. La secuencia completa
+de estados (`hold`→`warp`→`reveal`, tamaño 128×112 al revelarse) también se
+verificó leyendo `state.boss` directamente en cada transición.
