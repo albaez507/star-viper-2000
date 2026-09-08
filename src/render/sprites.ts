@@ -1,4 +1,5 @@
 import type { Player } from '../game/player';
+import { PLAYER_HALF_W, PLAYER_HALF_H } from '../game/player';
 import type { Option } from '../game/options';
 import type { Enemy } from '../game/enemy';
 import type { Bullet } from '../game/bullets';
@@ -20,10 +21,10 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   ctx.translate(p.x, p.y);
   ctx.fillStyle = p.hitFlash > 0 ? '#ffffff' : '#3ee6c4';
   ctx.beginPath();
-  ctx.moveTo(12, 0);
-  ctx.lineTo(-9, -7);
-  ctx.lineTo(-4, 0);
-  ctx.lineTo(-9, 7);
+  ctx.moveTo(PLAYER_HALF_W * 1.2, 0);
+  ctx.lineTo(-PLAYER_HALF_W * 0.9, -PLAYER_HALF_H);
+  ctx.lineTo(-PLAYER_HALF_W * 0.4, 0);
+  ctx.lineTo(-PLAYER_HALF_W * 0.9, PLAYER_HALF_H);
   ctx.closePath();
   ctx.fill();
 
@@ -31,7 +32,7 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
     ctx.strokeStyle = 'rgba(122, 92, 255, 0.7)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.arc(0, 0, PLAYER_HALF_W + 6, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -171,7 +172,15 @@ function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
 }
 
 export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
-  ctx.fillStyle = b.fromPlayer ? (b.pierce ? '#3ee6c4' : '#ffd23f') : '#ff5470';
+  if (b.fromPlayer && b.pierce) {
+    ctx.fillStyle = 'rgba(62, 230, 196, 0.35)';
+    ctx.fillRect(b.x - 18, b.y - 2, 14, 4);
+    ctx.fillStyle = '#3ee6c4';
+    ctx.fillRect(b.x - 4, b.y - 2, 18, 4);
+    return;
+  }
+
+  ctx.fillStyle = b.fromPlayer ? '#ffd23f' : '#ff5470';
   const w = b.fromPlayer ? 8 : 6;
   const h = 3;
   ctx.fillRect(b.x - w / 2, b.y - h / 2, w, h);

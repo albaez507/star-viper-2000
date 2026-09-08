@@ -104,6 +104,17 @@ SPEED · MISSILE · DOUBLE · LASER · OPTION · SHIELD
 Es decir: el jugador decide entre gastar pronto (SPEED barato) o aguantar
 formaciones seguidas para llegar a OPTION o SHIELD.
 
+**DOUBLE y LASER se ven y se sienten distintos, no solo cambian el número de
+daño:**
+
+| Arma | Disparo | Daño | Cadencia | Especial |
+|---|---|---|---|---|
+| SINGLE (inicial) | Un disparo dorado | 1 | Rápida | — |
+| DOUBLE | Dos disparos dorados en paralelo | 1 cada uno (2 en total por ráfaga) | Igual que SINGLE | El doble de balas en pantalla |
+| LASER | Un rayo alargado color teal | **2** por impacto | Algo más lenta | **Atraviesa enemigos** — un solo disparo puede dañar a varios en línea |
+
+DOUBLE y LASER se excluyen entre sí (activar uno reemplaza al otro).
+
 Detalle de cada mejora y del sistema de Options en `docs/LOGIC.md`.
 
 ---

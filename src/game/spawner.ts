@@ -38,8 +38,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
     e.baseY = 60 + spreadY;
     e.y = e.baseY;
     e.x = state.worldW + 40 + i * 46;
-    e.halfW = 9;
-    e.halfH = 8;
+    e.halfW = 13;
+    e.halfH = 12;
     e.hp = isFormation ? 2 : wave.kind === 'diver' ? 2 : 1;
     e.maxHp = e.hp;
     e.triggerX = state.worldW * 0.55;

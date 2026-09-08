@@ -2,12 +2,22 @@ import type { Weapon } from '../core/types';
 import { clamp } from '../core/math';
 
 export const PLAYER_BASE_SPEED = 220;
-export const PLAYER_HALF_W = 10;
-export const PLAYER_HALF_H = 7;
+export const PLAYER_HALF_W = 15;
+export const PLAYER_HALF_H = 10;
 export const FIRE_COOLDOWN = 0.14;
 export const MISSILE_COOLDOWN_BASE = 1.4;
 export const INVULN_TIME = 1.5;
 export const SHIELD_MAX = 3;
+
+const WEAPON_FIRE_COOLDOWN: Record<Weapon, number> = {
+  single: 0.14,
+  double: 0.16,
+  laser: 0.22,
+};
+
+export function fireCooldownFor(weapon: Weapon): number {
+  return WEAPON_FIRE_COOLDOWN[weapon];
+}
 
 export type Player = {
   x: number;

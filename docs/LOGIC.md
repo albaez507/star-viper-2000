@@ -164,8 +164,8 @@ izquierda; si escapa, se pierde.
 |---|---|---|
 | SPEED | +18% velocidad de la nave | Sí, hasta 4 niveles |
 | MISSILE | Desbloquea/mejora el misil (más cadencia) | Sí, hasta 2 |
-| DOUBLE | Añade un disparo diagonal hacia arriba | No (excluye LASER) |
-| LASER | Sustituye el disparo por un rayo penetrante | No (excluye DOUBLE) |
+| DOUBLE | Dos disparos paralelos en vez de uno (mismo daño y cadencia c/u) | No (excluye LASER) |
+| LASER | Rayo alargado que atraviesa enemigos, 2× daño, cadencia algo menor | No (excluye DOUBLE) |
 | OPTION | +1 Option (máx. 2 en la fase 1) | Sí, hasta 2 |
 | SHIELD | Escudo que absorbe 3 impactos, con anillo visible | Recarga a 3 |
 

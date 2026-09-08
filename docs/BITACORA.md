@@ -225,3 +225,41 @@ ejemplos"):** research sobre por qué cuesta apuntar/golpear y qué hacen otros
 shmups al respecto. Resumen y recomendación en el mensaje de esa sesión, no
 implementado todavía porque toca la resolución de diseño del juego entero
 (ver conversación — pendiente de que el usuario decida si quiere ir por ahí).
+
+## 2026-09-08 (noche, cont. 3) — Nave y enemigos más grandes, armas diferenciadas
+
+El usuario decidió, sin necesidad de tocar la resolución del mundo: agrandar
+directamente la nave y los enemigos, y además arregló un problema real —
+DOUBLE y LASER no se sentían distintos de SINGLE (mismo daño, misma cadencia,
+casi el mismo dibujo).
+
+- **Tamaños** (`game/player.ts`, `game/enemy.ts`, `game/spawner.ts`):
+  - Jugador: `PLAYER_HALF_W/H` de 10×7 a **15×10** (50% más grande).
+  - Enemigos regulares (los 4 tipos): de 8-9×8 a **13×12**.
+  - El sprite del jugador en `render/sprites.ts::drawPlayer` estaba con
+    coordenadas sueltas (12, -9, -4, 7) que **no** seguían las constantes de
+    hitbox — se corrigió para que dependa de `PLAYER_HALF_W`/`PLAYER_HALF_H`,
+    así que a partir de ahora si se vuelve a tocar el tamaño del jugador, el
+    sprite escala solo. Los enemigos ya escalaban bien porque su dibujo usa
+    `e.halfW`/`e.halfH` directamente.
+  - El jefe se dejó igual (128×112) — sigue siendo "gigante" pero la
+    diferencia de escala frente a un enemigo normal bajó de ~7-8× a ~5×,
+    razonable.
+  - `docs/ASSET_BRIEF.md` actualizado con la tabla de tamaños nueva antes de
+    que se genere ningún sprite real.
+
+- **Armas diferenciadas de verdad** (`game/player.ts`, `game/world.ts`,
+  `render/sprites.ts`):
+  - Antes: `fireFrom()` disparaba lo mismo con daño 1 y misma cadencia sin
+    importar el arma; DOUBLE añadía una segunda bala diagonal poco visible y
+    LASER solo cambiaba de color y atravesaba, sin más diferencia.
+  - Ahora, cadencia por arma (`fireCooldownFor`, antes una sola constante
+    `FIRE_COOLDOWN` fija): SINGLE 0.14s, DOUBLE 0.16s, LASER 0.22s.
+  - DOUBLE: dos disparos **paralelos** (antes uno recto + uno en diagonal
+    rara) — mismo daño cada uno, se ve claramente como el doble de balas.
+  - LASER: **2× de daño** por impacto (antes 1×, igual que SINGLE) y sprite
+    propio — un rayo alargado teal con estela, no una bala más de otro color.
+  - Verificado inyectando estado directamente: DOUBLE confirmado como dos
+    balas a 12px de separación vertical; LASER confirmado con `dmg:2,
+    pierce:true` y capturado en screenshot como una fila de rayos alargados
+    claramente distintos de los puntos dorados de SINGLE/DOUBLE.

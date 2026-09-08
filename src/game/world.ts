@@ -5,7 +5,7 @@ import { EventBus } from '../core/events';
 import { hits } from './collision';
 import { dist } from '../core/math';
 
-import { createPlayer, movePlayer, type Player, FIRE_COOLDOWN, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H } from './player';
+import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H } from './player';
 import { PositionHistory } from './history';
 import { createOptions, updateOptions, type Option } from './options';
 import { makeEnemy, type Enemy } from './enemy';
@@ -123,13 +123,22 @@ function stepPlayer(state: GameState, input: InputFrame, dt: number): void {
 }
 
 function fireFrom(state: GameState, x: number, y: number, weapon: 'single' | 'double' | 'laser'): void {
-  const b1 = state.playerBullets.acquire();
-  spawnBullet(b1, x + 10, y, PLAYER_BULLET_SPEED, 0, 1, true, weapon === 'laser');
-
   if (weapon === 'double') {
+    const b1 = state.playerBullets.acquire();
+    spawnBullet(b1, x + 10, y - 6, PLAYER_BULLET_SPEED, 0, 1, true);
     const b2 = state.playerBullets.acquire();
-    spawnBullet(b2, x + 6, y - 4, PLAYER_BULLET_SPEED * 0.98, -90, 1, true);
+    spawnBullet(b2, x + 10, y + 6, PLAYER_BULLET_SPEED, 0, 1, true);
+    return;
   }
+
+  if (weapon === 'laser') {
+    const b = state.playerBullets.acquire();
+    spawnBullet(b, x + 10, y, PLAYER_BULLET_SPEED * 1.15, 0, 2, true, true);
+    return;
+  }
+
+  const b = state.playerBullets.acquire();
+  spawnBullet(b, x + 10, y, PLAYER_BULLET_SPEED, 0, 1, true);
 }
 
 function stepFiring(state: GameState, input: InputFrame, dt: number): void {
@@ -142,7 +151,7 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
     for (const opt of state.options) {
       if (opt.active) fireFrom(state, opt.x, opt.y, 'single');
     }
-    p.fireCooldown = FIRE_COOLDOWN;
+    p.fireCooldown = fireCooldownFor(p.weapon);
     state.events.emit({ type: 'fire', weapon: p.weapon });
   }
 

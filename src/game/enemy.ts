@@ -26,7 +26,7 @@ export function makeEnemy(): Enemy {
   return {
     id: 0, x: 0, y: 0, baseY: 0, vx: -60, vy: 0,
     hp: 1, maxHp: 1, behavior: 'scout', t: 0, hitFlash: 0,
-    fireCooldown: 0, score: 100, halfW: 8, halfH: 8,
+    fireCooldown: 0, score: 100, halfW: 13, halfH: 12,
     formationId: -1, triggerX: 0, diving: false, divingVx: 0, divingVy: 0,
     active: false,
   };

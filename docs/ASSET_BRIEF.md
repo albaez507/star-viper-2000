@@ -99,14 +99,22 @@ aunque el sprite roce).
 
 | Entidad | Hitbox (half-width × half-height) | Tamaño de sprite recomendado |
 |---|---|---|
-| Jugador | 10 × 7 px | **32 × 24 px** |
-| Enemigo `scout` / `sine` / `diver` / `formation` | 8-9 × 8 px | **24 × 24 px** cada uno |
-| Jefe "Sentinel" | 34 × 30 px | **96 × 84 px** |
+| Jugador | 15 × 10 px | **44 × 32 px** |
+| Enemigo `scout` / `sine` / `diver` / `formation` | 13 × 12 px | **36 × 32 px** cada uno |
+| Jefe "Sentinel" | 64 × 56 px | **160 × 140 px** — es deliberadamente gigante, varias veces el tamaño de un enemigo normal |
 | Option (orbe de apoyo) | — | **12 × 12 px** |
 | Power Core | — | **20 × 20 px** |
-| Bala del jugador | — | **12 × 6 px** |
+| Bala del jugador (single/double) | — | **12 × 6 px** |
+| Bala del jugador (láser) | — | **32 × 6 px** — mucho más alargada, con estela detrás; es el arma más fuerte y debe leerse como un rayo, no como una bala más |
 | Bala enemiga / del jefe | — | **10 × 6 px** |
 | Misil | — | **20 × 10 px** |
+
+Actualizado tras subir el tamaño del jugador y los enemigos regulares a
+petición del usuario — se sentían demasiado pequeños en pantalla. El jefe
+queda igual de grande en términos absolutos, pero la diferencia de escala
+frente a los enemigos se redujo un poco (de ~7-8× a ~5×), lo cual sigue
+leyéndose como "gigante" sin dejar de distinguir bien a los enemigos
+normales.
 
 Todos los tamaños son múltiplos de 4 a propósito, para que escalen limpio en
 pixel art (2x, 4x) sin sub-píxeles raros.
