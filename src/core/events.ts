@@ -10,6 +10,7 @@ export type GameEvent =
   | { type: 'playerDamage' }
   | { type: 'playerDeath' }
   | { type: 'bossDeath'; x: number; y: number }
+  | { type: 'bossEnrage'; x: number; y: number }
   | { type: 'shake'; strength: number; duration: number };
 
 export class EventBus {

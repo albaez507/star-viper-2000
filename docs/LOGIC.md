@@ -254,12 +254,36 @@ tipo Lissajous en vez de un vaivén predecible. `f` (factor de frecuencia) sube
 +30% por fase, así que en fase 3 se mueve visiblemente más rápido y agresivo
 que en fase 1.
 
-**Evolución visual por fases (`render/sprites.ts::drawBoss`,
-`game/boss.ts::updateBossPhase`):** cada fase no es solo más ataque y más
-velocidad, también se ve y **es** más grande y más dañado:
+**Vida por fases, no una sola barra continua (`game/boss.ts` — `phaseHp`/
+`phaseMaxHp`, `damageBoss()`):** el jefe no tiene una barra de vida que baja
+de 100 a 0. Cada fase tiene su **propia barra** (30 / 35 / 40 puntos):
+
+```
+fase 1: |||||||||||||||||||||||||||||| (30)  →  se agota
+fase 2: ||||||||||||||||||||||||||||||||||| (35)  ← se rellena entera, no sigue drenando
+fase 3: |||||||||||||||||||||||||||||||||||||||| (40)  ← se rellena otra vez
+        se agota del todo → recién ahí muere
+```
+
+Cuando la barra de la fase actual llega a 0 y no es la última fase,
+`damageBoss()` devuelve `'enraged'`: la fase avanza, la barra **se rellena al
+máximo de la nueva fase**, el jefe crece (ver tamaño abajo) y dispara un
+evento `bossEnrage` (flash blanco + anillo de onda expansiva en
+`render/sprites.ts::drawBoss`, shake fuerte, sonido grave distinto de un
+impacto normal). La sensación buscada es "no lo vencí, se puso más bravo" —
+justo lo que pidió el usuario, en vez de "la barra bajó a cero y listo".
+Solo en la fase 3, llegar a 0 devuelve `'dead'` y ahí sí empieza la secuencia
+de muerte real. Toda esta lógica vive en una única función pura
+(`damageBoss(boss, dmg): 'hit' | 'enraged' | 'dead'`), y `world.ts::
+applyBossDamage()` es el único punto que la llama (bala del jugador o splash
+de misil), así que no hay dos copias de la regla de transición.
+
+**Evolución por fases — no es solo más ataque, también es más grande y más
+dañado:**
 
 - **Tamaño real** (no solo visual — afecta la hitbox): fase 1 = tamaño base,
-  fase 2 = ×1.08, fase 3 = ×1.18. El jefe crece de verdad al enfurecerse.
+  fase 2 = ×1.08, fase 3 = ×1.18. El jefe crece de verdad al enfurecerse,
+  justo en el momento del `bossEnrage`.
 - **Color**: rojo (`#ff5470`) → rojo oscuro (`#d43a5c`) → carmesí casi negro
   con pulso (`#9c1f3c`).
 - **Grietas** blancas procedurales en el casco a partir de la fase 2, más
@@ -271,11 +295,18 @@ ahora (ver §14). Cuando lleguen los sprites reales del brief de assets,
 `boss-sentinel-phase2.png` y `-phase3.png` (opcionales, §6.4 de
 `ASSET_BRIEF.md`) sustituyen las grietas generadas por código.
 
-Patrones de disparo por fase (abanico de 1/3/5 balas según fase, cadencia
-1.1s/0.75s/0.5s) ya implementados. Barrido láser telegrafiado y llamada de
-esbirros mencionados en un borrador anterior de este documento **no están
-implementados todavía** — quedan como candidatos para cuando se retome el
-diseño de enemigos (§14).
+**Patrones de disparo por fase** (abanico de 1/3/5 balas según fase, cadencia
+1.1s/0.75s/0.5s) ya implementados — la cantidad de proyectiles sube con cada
+`bossEnrage`, no solo la velocidad. **Balas del jefe agrandadas**
+(`game/bullets.ts::Bullet.big`, `render/sprites.ts::drawBullet`): antes usaba
+el mismo proyectil pequeño que un enemigo normal, lo cual no se sentía a la
+altura de una nave gigante. Ahora son un orbe de 16px con halo (vs. 6px de un
+enemigo normal) y la hitbox de colisión también crece (radio 8 en vez de 2) —
+el tamaño visual y el real coinciden, no es solo cosmético.
+
+Barrido láser telegrafiado y llamada de esbirros mencionados en un borrador
+anterior de este documento **no están implementados todavía** — quedan como
+candidatos para cuando se retome el diseño de enemigos (§14).
 
 ---
 
@@ -405,6 +436,28 @@ Recomendación, con motivo:
 Decisión: **Cloudflare Pages** para el juego, y Durable Objects reservado para
 la fase de multijugador. Firebase se descarta salvo que aparezca una necesidad
 de auth/Firestore que hoy no existe.
+
+---
+
+## 13.5. Barra de desarrollo
+
+Fila fija sobre el canvas (`index.html` — `#dev-toolbar`, cableada en
+`main.ts`), **solo para iterar en local** — no es parte del juego que juega
+el usuario final, hay que quitarla o esconderla detrás de un flag antes de
+publicar la build final. Existe porque probar el jefe o un arma nueva jugando
+el stage 1 completo desde cero cada vez es demasiado lento para iterar:
+
+- **▶ Jugar** — reinicia la partida normal.
+- **👹 Ir al jefe** — llama `spawnBoss()` directamente y salta
+  `state.spawnIndex` al final del guion de `stage1.ts` para que no se
+  disparen más oleadas encima. Entra directo a la secuencia `hold → warp →
+  reveal` de §8.
+- **🔫 Probar armas** — reinicia, planta un enemigo de práctica con 9999 hp
+  quieto en pantalla (mismo tamaño que un enemigo real, para que el patrón de
+  disparo se lea igual que en partida) y da 2 Options. Cada click adicional
+  cicla `SINGLE → DOUBLE → LASER` sin tener que sobrevivir a formaciones para
+  desbloquearlas. El HUD ya muestra el arma equipada (`ARMA: ...`) siempre,
+  no solo en esta pantalla — es útil en partida real también.
 
 ---
 

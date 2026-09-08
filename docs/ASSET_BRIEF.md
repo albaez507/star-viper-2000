@@ -106,7 +106,8 @@ aunque el sprite roce).
 | Power Core | — | **20 × 20 px** |
 | Bala del jugador (single/double) | — | **12 × 6 px** |
 | Bala del jugador (láser) | — | **32 × 6 px** — mucho más alargada, con estela detrás; es el arma más fuerte y debe leerse como un rayo, no como una bala más |
-| Bala enemiga / del jefe | — | **10 × 6 px** |
+| Bala enemiga (normal) | — | **10 × 6 px** |
+| Bala del jefe | — | **32 × 32 px** — un orbe con halo, notablemente más grande que una bala normal; el jefe es gigante, su disparo debe sentirse igual de amenazante |
 | Misil | — | **20 × 10 px** |
 
 Actualizado tras subir el tamaño del jugador y los enemigos regulares a

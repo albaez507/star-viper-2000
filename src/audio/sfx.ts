@@ -79,5 +79,9 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
     case 'bossDeath':
       noiseBurst(engine, 0.6, 0.55, 700);
       break;
+    case 'bossEnrage':
+      tone(engine, 110, 'sawtooth', 0.3, 0.4);
+      noiseBurst(engine, 0.35, 0.4, 1100);
+      break;
   }
 }

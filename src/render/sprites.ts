@@ -88,7 +88,7 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.translate(b.x, b.y);
 
   const pulse = b.phase === 3 ? 0.75 + Math.sin(b.t * 10) * 0.25 : 1;
-  ctx.fillStyle = b.hitFlash > 0 ? '#ffffff' : BOSS_PHASE_COLOR[b.phase];
+  ctx.fillStyle = (b.hitFlash > 0 || b.enrageFlash > 0) ? '#ffffff' : BOSS_PHASE_COLOR[b.phase];
   ctx.globalAlpha = pulse;
   ctx.beginPath();
   ctx.moveTo(-b.halfW, -b.halfH * 0.45);
@@ -103,7 +103,16 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  if (b.phase >= 2 && b.hitFlash <= 0) drawBossCracks(ctx, b);
+  if (b.phase >= 2 && b.hitFlash <= 0 && b.enrageFlash <= 0) drawBossCracks(ctx, b);
+
+  if (b.enrageFlash > 0) {
+    const ringRatio = 1 - b.enrageFlash / 0.5;
+    ctx.strokeStyle = `rgba(255, 84, 112, ${1 - ringRatio})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.halfW * (0.7 + ringRatio * 0.8), 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
   ctx.fillStyle = '#0a0e17';
   ctx.beginPath();
@@ -128,7 +137,7 @@ export function drawBossHealthBar(ctx: CanvasRenderingContext2D, b: Boss): void 
   const h = 7;
   const x = b.x - w / 2;
   const y = b.y - b.halfH - h - 10;
-  const ratio = Math.max(0, b.hp / b.maxHp);
+  const ratio = Math.max(0, b.phaseHp / b.phaseMaxHp);
 
   ctx.save();
   ctx.fillStyle = 'rgba(6, 8, 16, 0.7)';
@@ -144,7 +153,7 @@ export function drawBossHealthBar(ctx: CanvasRenderingContext2D, b: Boss): void 
   ctx.fillStyle = '#eaf6ff';
   ctx.font = '9px "Courier New", monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('JEFE', x + w / 2, y - 10);
+  ctx.fillText(`JEFE — FASE ${b.phase}/3`, x + w / 2, y - 10);
   ctx.textAlign = 'left';
   ctx.restore();
 }
@@ -180,6 +189,22 @@ export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
     ctx.fillRect(b.x - 18, b.y - 2, 14, 4);
     ctx.fillStyle = '#3ee6c4';
     ctx.fillRect(b.x - 4, b.y - 2, 18, 4);
+    return;
+  }
+
+  if (b.big) {
+    ctx.fillStyle = 'rgba(255, 84, 112, 0.3)';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff5470';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd8de';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+    ctx.fill();
     return;
   }
 

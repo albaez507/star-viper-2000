@@ -15,6 +15,10 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, t: numb
   ctx.fillStyle = '#eaf6ff';
   ctx.fillText(`SCORE ${String(state.score).padStart(6, '0')}`, 12, 10);
   ctx.fillText(`LIVES ${'▲'.repeat(Math.max(0, state.player.lives))}`, 12, 28);
+  ctx.font = '10px "Courier New", monospace';
+  ctx.fillStyle = 'rgba(234,246,255,0.7)';
+  ctx.fillText(`ARMA: ${state.player.weapon.toUpperCase()}`, 118, 30);
+  ctx.font = '14px "Courier New", monospace';
 
   drawMissileStatus(ctx, state, t);
   drawPowerMeter(ctx, state, t);

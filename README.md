@@ -33,6 +33,18 @@ npm run build    # genera dist/
 npm run preview  # sirve dist/ para probar la build
 ```
 
+Arriba del canvas hay una **barra de desarrollo** (solo en local, no se saca
+antes de publicar) para no tener que jugar el stage completo cada vez que se
+quiere probar algo:
+
+| Botón | Qué hace |
+|---|---|
+| ▶ Jugar | Empieza la partida normal desde el principio |
+| 👹 Ir al jefe | Salta directo a la secuencia de llegada del jefe (警告 y todo) |
+| 🔫 Probar armas | Pone un enemigo de práctica con mucha vida quieto en pantalla; cada click cicla SINGLE → DOUBLE → LASER para comparar daño/cadencia/patrón sin tener que ganar mejoras primero |
+
+El arma equipada también se ve siempre en el HUD ("ARMA: ...") junto a LIVES.
+
 ---
 
 ## Controles

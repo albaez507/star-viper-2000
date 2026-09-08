@@ -15,7 +15,7 @@ import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { createPowerMeter, advanceCursor, activateSlot, type PowerMeter } from './powermeter';
-import { makeBoss, updateBossPhase, updateBossIntro, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
+import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
 
 export type GameState = {
@@ -232,6 +232,23 @@ function damagePlayer(state: GameState): void {
   state.events.emit({ type: 'shake', strength: 7, duration: 0.25 });
 }
 
+function applyBossDamage(state: GameState, dmg: number, x: number, y: number): void {
+  const boss = state.boss;
+  const result = damageBoss(boss, dmg);
+
+  if (result === 'hit') {
+    boss.hitFlash = 0.1;
+  } else if (result === 'enraged') {
+    state.events.emit({ type: 'bossEnrage', x, y });
+    state.events.emit({ type: 'shake', strength: 10, duration: 0.4 });
+  } else if (result === 'dead') {
+    boss.dying = true;
+    boss.dyingTimer = 1.2;
+    state.events.emit({ type: 'bossDeath', x, y });
+    state.events.emit({ type: 'shake', strength: 14, duration: 0.6 });
+  }
+}
+
 const MISSILE_SPLASH_RADIUS = 46;
 
 function explodeMissile(state: GameState, x: number, y: number, dmg: number): void {
@@ -243,9 +260,8 @@ function explodeMissile(state: GameState, x: number, y: number, dmg: number): vo
     }
   }
 
-  if (state.boss.active && !state.boss.dying && dist(x, y, state.boss.x, state.boss.y) <= MISSILE_SPLASH_RADIUS + state.boss.halfW) {
-    state.boss.hp -= dmg;
-    state.boss.hitFlash = 0.15;
+  if (state.boss.active && state.boss.revealed && !state.boss.dying && dist(x, y, state.boss.x, state.boss.y) <= MISSILE_SPLASH_RADIUS + state.boss.halfW) {
+    applyBossDamage(state, dmg, state.boss.x, state.boss.y);
   }
 
   state.events.emit({ type: 'missileImpact', x, y });
@@ -286,11 +302,10 @@ function stepCollisions(state: GameState): void {
         if (!b.pierce) break;
       }
     }
-    if (b.active && state.boss.active && !state.boss.dying) {
+    if (b.active && state.boss.active && state.boss.revealed && !state.boss.dying) {
       const boss = state.boss;
       if (hits(b.x, b.y, PLAYER_BULLET_HIT_HALF, PLAYER_BULLET_HIT_HALF, boss.x, boss.y, boss.halfW, boss.halfH)) {
-        boss.hp -= b.dmg;
-        boss.hitFlash = 0.1;
+        applyBossDamage(state, b.dmg, boss.x, boss.y);
         state.events.emit({ type: 'hit', x: b.x, y: b.y });
         if (!b.pierce) b.active = false;
       }
@@ -326,7 +341,8 @@ function stepCollisions(state: GameState): void {
   }
 
   for (const b of state.enemyBullets.active()) {
-    if (hits(b.x, b.y, 2, 2, p.x, p.y, PLAYER_HALF_W, PLAYER_HALF_H)) {
+    const bulletHalf = b.big ? 8 : 2;
+    if (hits(b.x, b.y, bulletHalf, bulletHalf, p.x, p.y, PLAYER_HALF_W, PLAYER_HALF_H)) {
       b.active = false;
       damagePlayer(state);
     }
@@ -371,23 +387,15 @@ function stepBoss(state: GameState, dt: number): void {
     return;
   }
 
-  updateBossPhase(boss);
+  if (boss.enrageFlash > 0) boss.enrageFlash = Math.max(0, boss.enrageFlash - dt);
 
-  const freq = 1 + (boss.phase - 1) * 0.3;
+  const freq = bossMovementFrequency(boss);
   const anchorX = state.worldW - BOSS_ANCHOR_MARGIN;
   boss.x = anchorX + Math.sin(boss.t * 0.6 * freq) * 30;
   boss.y = state.worldH / 2
     + Math.sin(boss.t * 1.3 * freq) * 70
     + Math.sin(boss.t * 0.47 * freq) * 40
     + Math.cos(boss.t * 2.1 * freq) * 15;
-
-  if (boss.hp <= 0) {
-    boss.dying = true;
-    boss.dyingTimer = 1.2;
-    state.events.emit({ type: 'bossDeath', x: boss.x, y: boss.y });
-    state.events.emit({ type: 'shake', strength: 14, duration: 0.6 });
-    return;
-  }
 
   boss.fireCooldown -= dt;
   if (boss.fireCooldown <= 0) {
@@ -409,7 +417,9 @@ function fireBossPattern(state: GameState, boss: Boss): void {
       Math.cos(angle) * ENEMY_BULLET_SPEED,
       Math.sin(angle) * ENEMY_BULLET_SPEED * 0.6,
       1,
-      false
+      false,
+      false,
+      true
     );
   }
 }

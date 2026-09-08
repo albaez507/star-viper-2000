@@ -1,6 +1,8 @@
 import { GameLoop } from './core/loop';
 import { createWorld, step, type GameState } from './game/world';
-import { bossWarpMultiplier } from './game/boss';
+import { bossWarpMultiplier, spawnBoss } from './game/boss';
+import { STAGE_1 } from './game/stage1';
+import type { Weapon } from './core/types';
 import { InputManager } from './input/input';
 import { AudioEngine } from './audio/audio';
 import { playSfx } from './audio/sfx';
@@ -59,6 +61,46 @@ function resetGame(): void {
   mode = 'playing';
 }
 
+const devPlayEl = document.getElementById('dev-play') as HTMLElement;
+const devBossEl = document.getElementById('dev-boss') as HTMLElement;
+const devWeaponsEl = document.getElementById('dev-weapons') as HTMLElement;
+const devReadoutEl = document.getElementById('dev-weapon-readout') as HTMLElement;
+
+const WEAPON_CYCLE: Weapon[] = ['single', 'double', 'laser'];
+let weaponTestIndex = 0;
+
+devPlayEl.addEventListener('click', () => {
+  resetGame();
+});
+
+devBossEl.addEventListener('click', () => {
+  resetGame();
+  state.spawnIndex = STAGE_1.length;
+  spawnBoss(state.boss, state.worldW, state.worldH);
+});
+
+devWeaponsEl.addEventListener('click', () => {
+  const alreadyInTest = mode === 'playing' && state.enemies.active().some((e) => e.id === 99999);
+  if (!alreadyInTest) {
+    resetGame();
+    state.spawnIndex = STAGE_1.length;
+    state.player.optionCount = 2;
+
+    const dummy = state.enemies.acquire();
+    Object.assign(dummy, {
+      id: 99999, x: state.worldW * 0.72, y: state.worldH / 2,
+      hp: 9999, maxHp: 9999, halfW: 13, halfH: 12,
+      behavior: 'scout', vx: 0, vy: 0, hitFlash: 0,
+      formationId: -1, active: true, diving: false, score: 0,
+      fireCooldown: 0, t: 0, triggerX: 0, divingVx: 0, divingVy: 0,
+    });
+    weaponTestIndex = 0;
+  } else {
+    weaponTestIndex = (weaponTestIndex + 1) % WEAPON_CYCLE.length;
+  }
+  state.player.weapon = WEAPON_CYCLE[weaponTestIndex];
+});
+
 function handleEvents(s: GameState): void {
   for (const ev of s.events.drain()) {
     playSfx(audio, ev);
@@ -72,6 +114,9 @@ function handleEvents(s: GameState): void {
         break;
       case 'bossDeath':
         particles.burst(ev.x, ev.y, 40, '#ff5470', 180);
+        break;
+      case 'bossEnrage':
+        particles.burst(ev.x, ev.y, 30, '#9c1f3c', 160);
         break;
       case 'coreCollected':
         particles.burst(s.player.x, s.player.y, 10, '#ffd23f', 60);
@@ -131,6 +176,7 @@ const loop = new GameLoop({
     pauseEl.textContent = paused ? '▶' : '⏸';
     pauseEl.hidden = mode !== 'playing';
     missileEl.classList.toggle('ready', mode === 'playing' && !paused && state.player.missileCooldown <= 0);
+    devReadoutEl.textContent = mode === 'playing' ? `ARMA: ${state.player.weapon.toUpperCase()}` : '';
   },
 });
 

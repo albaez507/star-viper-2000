@@ -319,3 +319,57 @@ fase `warp`: capturado con el texto 警告 + "ALERTA — OBJETIVO DE GRAN ESCALA
 DETECTADO" visible abajo y el jefe todavía sin aparecer. La secuencia completa
 de estados (`hold`→`warp`→`reveal`, tamaño 128×112 al revelarse) también se
 verificó leyendo `state.boss` directamente en cada transición.
+
+## 2026-09-08 (madrugada) — Balas del jefe más grandes, vida por fases que se rellena, barra de desarrollo
+
+**Balas del jefe agrandadas** (`game/bullets.ts` — nuevo campo `Bullet.big`,
+`render/sprites.ts::drawBullet`, `world.ts::fireBossPattern`/colisión
+enemigo-bala-vs-jugador): antes el jefe disparaba el mismo proyectil pequeño
+que cualquier enemigo normal — no se sentía a la altura de una nave gigante.
+Ahora son un orbe con halo de 16px (vs. 6px normal) y la hitbox real también
+creció (radio 8 en vez de 2), no solo el dibujo.
+
+**Vida del jefe rediseñada — fases que se rellenan, no una barra que baja a
+cero** (`game/boss.ts` — `phaseHp`/`phaseMaxHp` en vez de `hp`/`maxHp`,
+`damageBoss()` como única función que decide la transición): esto es
+exactamente lo que pidió el usuario — "que se sienta como que él se puso
+bravo y la barra se llenó", no que la barra simplemente termine. Cada fase
+tiene su propia barra (30/35/40 puntos). Al llegar a 0:
+
+- Si no es la fase 3: `damageBoss()` devuelve `'enraged'` — la fase avanza,
+  la barra se **rellena al máximo de la nueva fase**, el jefe crece
+  (×1.08/×1.18, ya existía el tamaño por fase pero ahora el disparo del
+  evento va sincronizado con el momento exacto de la transición en vez de
+  ser continuo por ratio de vida) y dispara un evento nuevo `bossEnrage`:
+  flash blanco del sprite + anillo de onda expansiva (`drawBoss`), shake
+  fuerte, sonido grave distinto (`sfx.ts`), burst de partículas del color de
+  la fase nueva.
+- Si es la fase 3: devuelve `'dead'` — recién ahí arranca la secuencia de
+  muerte real.
+
+Se centralizó todo el daño al jefe (bala del jugador, splash de misil) por
+una sola función `applyBossDamage()` en `world.ts` que interpreta el
+resultado de `damageBoss()` — antes había dos copias del mismo `boss.hp -=
+dmg` sueltas en distintos sitios del archivo.
+
+Verificado inyectando `damageBoss(boss, 999)` tres veces seguidas: fase
+1→2 (barra 30→rellena a 35, halfW 128→138, resultado `'enraged'`), fase 2→3
+(rellena a 40, halfW→151), fase 3→muerte (resultado `'dead'`) — cada
+transición confirmada leyendo el estado real, no simulada.
+
+**Barra de desarrollo** (`index.html` — `#dev-toolbar`, `main.ts`): pedido
+explícito del usuario para no tener que jugar el stage completo cada vez que
+quiere probar el jefe o un cambio de arma. Tres botones fijos arriba del
+canvas: "▶ Jugar" (normal), "👹 Ir al jefe" (salta directo a la secuencia de
+llegada), "🔫 Probar armas" (planta un enemigo de práctica con 9999 hp y
+cicla SINGLE→DOUBLE→LASER en cada click). El HUD también gana un indicador
+permanente "ARMA: ..." junto a LIVES — útil en partida real, no solo en la
+pantalla de pruebas. **Pendiente:** esconder o quitar esta barra antes de
+cualquier build que vea un jugador real — hoy no hay flag de entorno para
+eso, es visible siempre.
+
+Verificado en el navegador: "Ir al jefe" entra directo a la pantalla 警告 sin
+pasar por ninguna oleada; "Probar armas" planta el enemigo de práctica y cada
+click cambia el arma tanto en el HUD del juego como en el indicador de la
+barra de desarrollo (capturado en screenshot con ARMA: DOUBLE tras un solo
+click adicional).

@@ -7,11 +7,14 @@ export const BASE_HALF_H = 112;
 const INTRO_HOLD = 0.5;
 const INTRO_WARP = 1.4;
 
+const PHASE_HP = [30, 35, 40];
+const PHASE_SCALE = [1, 1.08, 1.18];
+
 export type Boss = {
   x: number; y: number;
-  hp: number;
-  maxHp: number;
   phase: 1 | 2 | 3;
+  phaseHp: number;
+  phaseMaxHp: number;
   t: number;
   fireCooldown: number;
   hitFlash: number;
@@ -23,24 +26,32 @@ export type Boss = {
   revealed: boolean;
   introPhase: BossIntroPhase;
   introTimer: number;
+  enrageFlash: number;
 };
 
 export function makeBoss(): Boss {
   return {
-    x: 0, y: 0, hp: 90, maxHp: 90, phase: 1, t: 0,
+    x: 0, y: 0, phase: 1, phaseHp: PHASE_HP[0], phaseMaxHp: PHASE_HP[0], t: 0,
     fireCooldown: 1, hitFlash: 0, halfW: BASE_HALF_W, halfH: BASE_HALF_H, active: false,
     dying: false, dyingTimer: 0,
     revealed: false, introPhase: 'none', introTimer: 0,
+    enrageFlash: 0,
   };
+}
+
+function resizeForPhase(b: Boss): void {
+  const scale = PHASE_SCALE[b.phase - 1];
+  b.halfW = BASE_HALF_W * scale;
+  b.halfH = BASE_HALF_H * scale;
 }
 
 export function spawnBoss(b: Boss, worldW: number, worldH: number): void {
   b.x = worldW - BOSS_ANCHOR_MARGIN;
   b.y = worldH / 2;
-  b.hp = b.maxHp;
   b.phase = 1;
-  b.halfW = BASE_HALF_W;
-  b.halfH = BASE_HALF_H;
+  b.phaseMaxHp = PHASE_HP[0];
+  b.phaseHp = PHASE_HP[0];
+  resizeForPhase(b);
   b.t = 0;
   b.active = true;
   b.dying = false;
@@ -48,6 +59,7 @@ export function spawnBoss(b: Boss, worldW: number, worldH: number): void {
   b.revealed = false;
   b.introPhase = 'hold';
   b.introTimer = INTRO_HOLD;
+  b.enrageFlash = 0;
 }
 
 export function updateBossIntro(b: Boss, dt: number): void {
@@ -73,19 +85,26 @@ export function bossWarpMultiplier(b: Boss): number {
   return 1;
 }
 
-export function updateBossPhase(b: Boss): void {
-  const ratio = b.hp / b.maxHp;
-  if (ratio <= 0.3) {
-    b.phase = 3;
-    b.halfW = BASE_HALF_W * 1.18;
-    b.halfH = BASE_HALF_H * 1.18;
-  } else if (ratio <= 0.6) {
-    b.phase = 2;
-    b.halfW = BASE_HALF_W * 1.08;
-    b.halfH = BASE_HALF_H * 1.08;
-  } else {
-    b.phase = 1;
-    b.halfW = BASE_HALF_W;
-    b.halfH = BASE_HALF_H;
+export type DamageResult = 'hit' | 'enraged' | 'dead';
+
+/** Applies damage to the boss's current phase bar. Returns what happened so
+ * the caller can trigger the right events (hit flash / enrage burst / death). */
+export function damageBoss(b: Boss, dmg: number): DamageResult {
+  b.phaseHp -= dmg;
+  if (b.phaseHp > 0) return 'hit';
+
+  if (b.phase < 3) {
+    b.phase = (b.phase + 1) as 1 | 2 | 3;
+    b.phaseMaxHp = PHASE_HP[b.phase - 1];
+    b.phaseHp = b.phaseMaxHp;
+    resizeForPhase(b);
+    b.enrageFlash = 0.5;
+    return 'enraged';
   }
+
+  return 'dead';
+}
+
+export function bossMovementFrequency(b: Boss): number {
+  return 1 + (b.phase - 1) * 0.3;
 }
