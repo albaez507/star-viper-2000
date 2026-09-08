@@ -1,0 +1,14 @@
+:root {
+  --sv-bg: #0a0e17;
+  --sv-bg-2: #060810;
+  --sv-ink: #eaf6ff;
+  --sv-accent: #3ee6c4;
+  --sv-accent-2: #7a5cff;
+  --sv-danger: #ff5470;
+  --sv-warn: #ffd23f;
+  --sv-panel: rgba(10, 14, 23, 0.72);
+  --sv-panel-border: rgba(62, 230, 196, 0.35);
+  --sv-radius: 10px;
+  --sv-radius-sm: 6px;
+  --sv-font: 'Courier New', ui-monospace, monospace;
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e17" />
+  <title>Star Viper 2000</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/src/styles/tokens.css" />
+  <link rel="stylesheet" href="/src/styles/ui.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" width="960" height="540"></canvas>
+    <div id="hud"></div>
+    <div id="touch-layer">
+      <div id="dpad">
+        <button id="btn-up" class="dpad-btn" data-dir="up" aria-label="Arriba">▲</button>
+        <button id="btn-left" class="dpad-btn" data-dir="left" aria-label="Izquierda">◀</button>
+        <button id="btn-pwr" class="dpad-btn dpad-pwr" data-dir="pwr" aria-label="Power">PWR</button>
+        <button id="btn-right" class="dpad-btn" data-dir="right" aria-label="Derecha">▶</button>
+        <button id="btn-down" class="dpad-btn" data-dir="down" aria-label="Abajo">▼</button>
+      </div>
+      <div id="action-pad">
+        <button id="btn-fire" class="action-btn action-fire" aria-label="Disparo">FIRE</button>
+        <button id="btn-missile" class="action-btn action-missile" aria-label="Misil">MSL</button>
+      </div>
+    </div>
+    <div id="screens"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

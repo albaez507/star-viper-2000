@@ -1,0 +1,158 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--sv-bg-2);
+  color: var(--sv-ink);
+  font-family: var(--sv-font);
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sv-bg-2);
+}
+
+#game {
+  display: block;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+  max-width: 100vw;
+  max-height: 100dvh;
+  image-rendering: pixelated;
+  background: var(--sv-bg);
+  touch-action: none;
+  margin: auto;
+}
+
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+#screens {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* --- touch controls --- */
+
+#touch-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 18px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#dpad {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.dpad-btn {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--sv-radius);
+  border: 1px solid var(--sv-panel-border);
+  background: var(--sv-panel);
+  color: var(--sv-accent);
+  font-family: var(--sv-font);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn.active {
+  background: rgba(62, 230, 196, 0.28);
+  border-color: var(--sv-accent);
+}
+
+#btn-up    { left: 58px; top: 0; }
+#btn-down  { left: 58px; top: 116px; }
+#btn-left  { left: 0;    top: 58px; }
+#btn-right { left: 116px; top: 58px; }
+
+.dpad-pwr {
+  left: 58px;
+  top: 58px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 11px;
+  background: rgba(122, 92, 255, 0.22);
+  border-color: rgba(122, 92, 255, 0.55);
+  color: #cbb9ff;
+}
+
+.dpad-pwr.active {
+  background: rgba(122, 92, 255, 0.5);
+}
+
+#action-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  pointer-events: auto;
+}
+
+.action-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1px solid var(--sv-panel-border);
+  background: var(--sv-panel);
+  color: var(--sv-ink);
+  font-family: var(--sv-font);
+  font-size: 13px;
+  font-weight: bold;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-fire {
+  color: var(--sv-warn);
+  border-color: rgba(255, 210, 63, 0.5);
+}
+
+.action-missile {
+  color: var(--sv-danger);
+  border-color: rgba(255, 84, 112, 0.5);
+}
+
+.action-btn.active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (min-width: 900px) {
+  #touch-layer { display: none; }
+}
