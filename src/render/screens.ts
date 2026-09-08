@@ -22,7 +22,7 @@ export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode
     ctx.font = '14px "Courier New", monospace';
     ctx.fillStyle = '#eaf6ff';
     ctx.fillText('ENTER / toca la pantalla para empezar', cx, cy);
-    ctx.fillText('Flechas o D-pad: mover  ·  FIRE: espacio  ·  MSL: M  ·  PWR: shift', cx, cy + 24);
+    ctx.fillText('Flechas o D-pad: mover  ·  FIRE: espacio  ·  MSL: M/X  ·  PWR: shift', cx, cy + 24);
   } else if (mode === 'gameover') {
     ctx.font = 'bold 30px "Courier New", monospace';
     ctx.fillStyle = '#ff5470';

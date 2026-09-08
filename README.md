@@ -4,7 +4,7 @@ Shoot-'em-up horizontal de arcade para navegador. Inspirado en los shooters
 espaciales clásicos y en los juegos móviles de principios de los 2000, pero con
 identidad visual, assets y diseño de juego propios.
 
-Estado: **Fase 0 — arquitectura definida, sin código todavía.**
+Estado: **Milestone 1 — prototipo jugable con placeholders geométricos.**
 
 ---
 
@@ -17,7 +17,7 @@ Estado: **Fase 0 — arquitectura definida, sin código todavía.**
 | Render | HTML5 Canvas 2D |
 | Audio | Web Audio API (sonidos sintetizados, sin ficheros) |
 | Input móvil | Pointer Events |
-| Motor de juego | Ninguno — todo a mano |
+| Motor de juego | Ninguno — motor 2D propio sobre Canvas |
 | Deploy | Cloudflare Pages (ver `docs/LOGIC.md` § Deploy) |
 
 Sin motor de juego en la v1. Sin dependencias de runtime.
@@ -43,7 +43,7 @@ npm run preview  # sirve dist/ para probar la build
 |---|---|
 | Flechas / WASD | Mover |
 | Espacio | FIRE (disparo primario) |
-| M | MISSILE |
+| M, X o Ctrl (izq.) | MISSILE |
 | Shift | PWR (activar la mejora seleccionada) |
 | Enter | Start / Restart |
 | P | Pausa |
@@ -120,6 +120,7 @@ parte del motor.
 | `docs/STRUCTURE.md` | Estructura de carpetas y qué hace cada módulo |
 | `docs/LOGIC.md` | Arquitectura, bucle de juego, sistemas, plan de multijugador |
 | `docs/BITACORA.md` | Registro cronológico de decisiones y avances |
+| `docs/ASSET_BRIEF.md` | Brief de sprites para pasar a otro modelo: tamaños, paleta, orientación |
 
 ---
 
