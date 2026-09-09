@@ -10,10 +10,38 @@ dibuja hoy por código (triángulos, rectángulos). Más adelante se reemplazar�
 por trabajo de artistas humanos, así que el objetivo aquí es **desbloquear el
 desarrollo**, no producir el arte definitivo.
 
-**Prioridad de esta tanda: la nave del jugador y los enemigos.** Todo lo demás
-(proyectiles, UI, entornos) está más abajo y puede esperar.
+## ⚑ ENCARGO ACTUAL — empieza por aquí
+
+> Actualizado el 2026-09-09. El resto del documento es referencia. **Esto es
+> lo que hace falta ahora**, en este orden. No hagas nada de §9D.
+
+**1. Las cuatro capas de la nave, alineadas entre sí** (§5.1)
+
+`ship-hull.png`, `ship-wings.png`, `ship-engine.png`, `ship-cannon.png`, las
+cuatro de 48 × 32 px. Ya entregaste una versión, pero **no encajan**: cada
+capa está dibujada en su propio centro, así que al superponerlas las alas no
+caen sobre el casco ni el cañón sale del morro.
+
+Prueba de aceptación: **apila las cuatro y debe salir una nave coherente.**
+Si no sale, no sirve. Esto bloquea el panel de personalización de la nave.
+
+**2. Los cuatro obstáculos** (§9C)
+
+`hazard-rock-a.png`, `hazard-rock-b.png`, `hazard-rock-small.png`,
+`hazard-debris.png`. Ya funcionan en el juego con un polígono gris
+provisional, así que aquí solo falta el arte.
+
+Prueba de aceptación: **ponlo al lado de un enemigo. Si dudas de cuál de los
+dos hay que disparar, está mal.** Lee la tabla de §9C antes de dibujar.
+
+**3. Las dos capas de foreground** (§9C, al final)
+
+`fg-clouds.png` y `fg-rocks.png`, 960 × 540 con alfa. Ojo con las reglas de
+densidad: si tapan la banda central o cruzan la pantalla sin huecos, el juego
+se vuelve injusto y hay que tirarlas.
 
 ---
+
 
 ## 0. Estilo visual — LEER ESTO PRIMERO
 
