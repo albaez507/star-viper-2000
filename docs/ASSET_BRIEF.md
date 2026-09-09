@@ -80,7 +80,8 @@ entidad es un sprite fijo (más un par de variantes de estado, ver §5).
 |---|---|
 | Formato | PNG con canal alfa (fondo transparente) |
 | Estilo | Pixel art retro, silueta legible a tamaño pequeño |
-| Render | El juego usa `image-rendering: pixelated`: píxeles nítidos, **sin** anti-aliasing suave ni degradados difusos |
+| Render | Píxeles nítidos, **sin** anti-aliasing suave ni degradados difusos |
+| **Resolución del arte** | **Dibuja los sprites cerca del tamaño al que se ven** (las tablas de abajo). Un sprite de 300 px reducido a 34 px pierde el 99% de sus píxeles y se ve sucio por mucho que el original sea precioso — el detalle que no cabe no se ve, solo ensucia |
 | Paleta | La de §3. Todo debe salir de ahí, salvo blanco/negro puro para contorno |
 | Orientación | Ver §4. Es crítico: si se dibuja al revés hay que rehacerlo |
 | Recorte | Sin margen transparente sobrante: el bounding box del PNG ajustado a la silueta |
@@ -294,6 +295,15 @@ la profundidad.
 - **Capas media y cercana: con transparencia** (PNG con alfa), porque se
   dibujan encima de la lejana.
 - La capa lejana puede ser opaca (es el fondo del todo).
+
+### ⚠️ La capa cercana necesita ARTE PROPIO
+
+Se intentó hacerla recortando la parte de abajo del mismo fondo y pintándola
+otra vez con opacidad baja. **No funciona y se quitó del juego**: se ve
+exactamente como lo que es — la misma imagen encima de sí misma. Un parallax
+necesita que cada capa tenga contenido distinto, no la misma imagen a medio
+gas. Si no hay arte propio para la capa cercana, es mejor no tener capa
+cercana.
 
 ### ⚠️ Aviso sobre la capa cercana
 

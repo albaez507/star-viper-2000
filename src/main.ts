@@ -23,23 +23,34 @@ const rawCtx = canvas.getContext('2d');
 if (!rawCtx) throw new Error('2D canvas context unavailable');
 const ctx = rawCtx;
 
-/** Fill the play area, but keep an integer pixel scale so sprites stay sharp. */
+/**
+ * El lienzo se dibuja a la resolución REAL a la que se ve.
+ *
+ * Antes el bitmap era siempre 960×540 y el navegador lo estiraba a lo que
+ * midiera la ventana (p. ej. 1178×663, un 1.23×). Ese estirón fraccionario es
+ * lo que emborronaba todo: unos píxeles salían de 1 y otros de 2. Ahora el
+ * bitmap coincide con los píxeles de pantalla, así que no hay estirón y los
+ * sprites se reducen desde su arte original directamente al tamaño final.
+ *
+ * Las coordenadas del juego siguen siendo 960×540: lo único que cambia es
+ * cuántos píxeles reales hay por unidad de mundo.
+ */
 function fitCanvas(): void {
   const parent = canvas.parentElement;
   if (!parent) return;
   const fit = Math.min(parent.clientWidth / WORLD_W, parent.clientHeight / WORLD_H);
   const cssScale = Number.isFinite(fit) && fit > 0 ? fit : 1;
-  // Integer window scale: match the backing store 1:1. Fractional window
-  // scale: keep a 1× bitmap and let `image-rendering: pixelated` enlarge it.
-  // A 2× bitmap shown at 1.5× has to shrink, and that is what looked soft.
-  const pixelScale = cssScale >= 1 && Math.abs(cssScale - Math.round(cssScale)) < 0.03
-    ? Math.round(cssScale)
-    : 1;
-  canvas.style.width = `${Math.round(WORLD_W * cssScale)}px`;
-  canvas.style.height = `${Math.round(WORLD_H * cssScale)}px`;
-  canvas.width = WORLD_W * pixelScale;
-  canvas.height = WORLD_H * pixelScale;
-  ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const cssW = Math.round(WORLD_W * cssScale);
+  const cssH = Math.round(WORLD_H * cssScale);
+  canvas.style.width = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
+  canvas.width = Math.max(1, Math.round(cssW * dpr));
+  canvas.height = Math.max(1, Math.round(cssH * dpr));
+
+  const escala = canvas.width / WORLD_W;
+  ctx.setTransform(escala, 0, 0, escala, 0, 0);
   ctx.imageSmoothingEnabled = false;
 }
 fitCanvas();
