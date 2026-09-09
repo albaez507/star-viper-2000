@@ -44,7 +44,11 @@ export class Sky {
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#83dce3'; ctx.fillRect(0, 0, w, h);
     if (this.tile) {
-      const scroll = Math.round(this.scroll * 13);
+      // Sin redondear. A 13 px/s, redondear a píxel entero hacía que el
+      // fondo avanzara una sola vez cada ~77 ms: se veía a saltos en vez de
+      // deslizarse. El fondo ya se reescala igualmente al tamaño de pantalla,
+      // así que cuantizarlo no ganaba nitidez, solo costaba suavidad.
+      const scroll = this.scroll * 13;
       const first = Math.floor(scroll / w);
       for (let i = first; i <= first + 1; i++) {
         const x = i * w - scroll;

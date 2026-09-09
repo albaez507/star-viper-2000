@@ -347,6 +347,15 @@ const loop = new GameLoop({
       return;
     }
 
+    // Propulsor: sale de la tobera cada frame mientras la nave esté viva.
+    // Más fuerte si aceleras hacia delante y más flojo si frenas, para que se
+    // vea que la nave responde en vez de arrastrar una llama fija.
+    if (!paused && state.player.alive && !state.gameOver) {
+      const fuerza = frame.right ? 1.45 : frame.left ? 0.6 : 1;
+      const color = Math.random() < 0.35 ? '#ff8c3e' : '#ffd23f';
+      particles.thruster(state.player.x - 17, state.player.y, color, fuerza);
+    }
+
     step(state, frame, dt);
     handleEvents(state);
 

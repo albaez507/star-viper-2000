@@ -36,6 +36,28 @@ export class ParticleSystem {
     }
   }
 
+  /**
+   * Chorro continuo hacia atrás. `burst` dispersa en todas direcciones, que
+   * sirve para explosiones pero no para una tobera: aquí las partículas salen
+   * en un cono estrecho hacia la izquierda, con vida corta, para que se lea
+   * como llama y no como escombros.
+   */
+  thruster(x: number, y: number, color: string, fuerza = 1): void {
+    const count = fuerza > 1 ? 2 : 1;
+    for (let i = 0; i < count; i++) {
+      const p = this.particles[this.cursor];
+      this.cursor = (this.cursor + 1) % this.capacity;
+      p.x = x;
+      p.y = y + (Math.random() - 0.5) * 5;
+      p.vx = -(80 + Math.random() * 80) * fuerza;
+      p.vy = (Math.random() - 0.5) * 28;
+      p.life = p.maxLife = 0.14 + Math.random() * 0.14;
+      p.size = 1.5 + Math.random() * 2;
+      p.color = color;
+      p.active = true;
+    }
+  }
+
   update(dt: number): void {
     for (const p of this.particles) {
       if (!p.active) continue;
