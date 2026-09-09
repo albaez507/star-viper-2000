@@ -17,50 +17,55 @@ desarrollo**, no producir el arte definitivo.
 
 ## 0. Estilo visual — LEER ESTO PRIMERO
 
-**La referencia es Contra Force (Konami, NES, 1992).** No el juego, que es de
-otro género: su **acabado de sprite**.
+> **Esta sección cambió el 2026-09-09 y contradice a propósito lo que decía
+> antes.** El brief pedía acabado NES estilo Contra Force: plano, tres tonos,
+> duro. Se generó arte en otra dirección — pixel art detallado, luz cálida,
+> nubes con volumen — el usuario lo jugó y esa es la que eligió. Manda lo que
+> funcionó en pantalla, no lo que estaba escrito.
 
-Eso quiere decir, en concreto:
+**La referencia ya no es un juego ajeno: es el sector "Jardines del Céfiro"
+que ya está en este repositorio.** Míralo (`public/assets/sky/`) y trabaja en
+esa línea.
 
-### Lo que SÍ
+### Lo que define el estilo
 
-- **Pocos colores por sprite.** Tres tonos del mismo color (oscuro / base /
-  claro) más un contorno casi negro. Esto es lo que más define el estilo y lo
-  que más se nota si no se respeta. El color base sale de la paleta de §3; los
-  otros dos los derivas de ese.
-- **Contorno oscuro** alrededor de toda la silueta. El fondo del juego es
-  negro azulado (`#0a0e17`): sin contorno, las naves se funden con el espacio.
-- **Píxel duro.** Sin anti-aliasing, sin degradados suaves, sin glow, sin
-  desenfoque. Cada píxel es un píxel.
-- **Iluminación plana y consistente**, con la luz entrando desde arriba a la
-  izquierda en todos los sprites.
-- **Estética militar / industrial.** Maquinaria funcional: paneles, remaches,
-  cañones, blindaje. Cosas que parecen construidas y que hacen un trabajo.
-- **Silueta primero, detalle después.** Si el sprite en negro plano no se
-  distingue de los demás, el detalle no lo va a salvar.
+- **Pixel art detallado, no minimalista.** Varios tonos por pieza, sombra
+  propia, materiales que se distinguen (metal, cristal, quitina, roca).
+- **Luz cálida entrando desde arriba.** Consistente en todo: si un sprite
+  tiene la luz desde otro lado, canta.
+- **Los fondos van desaturados; lo que mata va saturado.** Esa es la regla que
+  mantiene el juego legible. Las nubes y las islas son pastel; los enemigos
+  son colores plenos. Si un fondo compite en saturación, los enemigos
+  desaparecen dentro de él.
+- **Contorno oscuro en naves y enemigos.** Sobre un cielo claro, sin contorno
+  la silueta se deshace.
+- **Criaturas mecánicas.** Los enemigos actuales son mitad insecto mitad
+  máquina, y funciona: se leen como vivos y hostiles a la vez. Mantener esa
+  familia.
+- **Silueta primero.** Sigue mandando: si en negro plano dos enemigos se
+  confunden, el detalle no lo arregla.
 
 ### Lo que NO
 
-- Nada de neón, cromados brillantes ni degradados de vaporwave.
-- Nada "kawaii", chibi ni de proporciones caricaturescas.
-- Nada de pixel art moderno de indie con 30 tonos y luz suave — eso es otro
-  siglo estéticamente.
-- Nada orgánico/biológico por ahora (eso llegará con los entornos).
+- **No volver al plano de tres tonos.** Esa dirección se probó y se descartó.
+- Nada foto-realista ni con degradados suaves de render 3D.
+- Fondos saturados o con mucho contraste en la franja central, que es donde se
+  juega.
+- Nada de neón ni cromados.
 
-### Por qué esta regla en particular
+### ⚠️ Lo que más está costando: el tamaño al que dibujas
 
-La NES daba a cada sprite **3 colores más transparente**, y los juegos tardíos
-como Contra Force apilaban varios sprites con paletas distintas para conseguir
-personajes más ricos sin romper esa lógica. No hace falta que respetes el
-hardware al pie de la letra — pero ese límite es exactamente lo que produce la
-lectura que te gusta: colores planos, contraste alto, formas que se leen de un
-vistazo. Si te sales a 15 tonos con luz suave, se pierde.
+Los sprites entregados vienen a **~313 px** y el juego los muestra a **~34
+px**. Se pierde el 99% de los píxeles. El motor ya reduce lo mejor que puede,
+pero **el detalle que no cabe no se ve: solo ensucia el resultado.**
 
-**Regla práctica:** 3 tonos + contorno por sprite. Si necesitas un cuarto para
-un detalle concreto (una luz de cabina, un núcleo brillante), adelante — pero
-que sea la excepción y siempre el mismo acento.
+**Dibuja cerca del tamaño final de las tablas de abajo.** Un sprite de 40×36
+pensado píxel a píxel se ve muchísimo mejor que uno de 313 px reducido. Si
+necesitas trabajar en grande, hazlo a un **múltiplo entero** (2× o 4×: 80×72
+o 160×144) y reduce tú antes de entregar — nunca a un tamaño arbitrario.
 
----
+Esto es lo primero que hay que corregir en el próximo lote.
+
 
 ## 1. El juego en una frase
 

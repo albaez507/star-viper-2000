@@ -570,3 +570,46 @@ con CERRAR.
 Revisados los otros dos elementos que se ocultan por JS (`#btn-hangar`,
 `#btn-pause`): ninguno declara `display` en un selector de ID, así que no
 tienen el mismo problema.
+
+## 2026-09-09 (tarde) — Decidido el estilo: se queda el detallado
+
+El usuario jugó los dos sectores y eligió. Sus palabras: de Órbita Sentinel
+dijo "está cool"; de Jardines del Céfiro, "está muy bonito", "se siente como
+un paseo", "se siente como que estoy cerca de la tierra". Eso último es
+literalmente la visión del viaje que él mismo había descrito dos mensajes
+antes — jugó su propia idea sin darse cuenta y la reconoció.
+
+Su única objeción a Jardines era que el fondo "no se sentía smooth". **Era un
+bug, no el estilo:** el scroll iba a 13 px/s con la posición redondeada a
+píxel entero, así que avanzaba una sola vez cada ~77 ms. Quitado el redondeo
+(el fondo se reescala igualmente al tamaño de pantalla, así que cuantizarlo no
+ganaba nitidez). Con eso no quedaba nada en contra.
+
+**Cambios de documentación:**
+
+- `ASSET_BRIEF.md` §0 reescrito. Antes pedía acabado NES tipo Contra Force —
+  plano, tres tonos, duro — y explícitamente prohibía "pixel art moderno con
+  luz suave", que es justo lo elegido. La sección ahora dice que se contradice
+  a propósito y por qué: manda lo que funcionó en pantalla, no lo escrito.
+  La referencia ya no es un juego ajeno sino `public/assets/sky/`, que está en
+  el repo.
+- Añadida una sección **ENCARGO ACTUAL** al principio del brief con **una sola
+  petición**: las cuatro capas de la nave alineadas entre sí. Se entregaron
+  una vez y no servían (cada capa era un objeto suelto centrado en su propio
+  lienzo), por eso el juego dibuja solo el casco. Incluye una prueba de
+  aceptación concreta: apilar las cuatro debe dar una nave coherente.
+- Advertencia destacada sobre el tamaño de dibujo: el arte viene a ~313 px y
+  se ve a ~34 px. El motor ya reduce bien, pero el detalle que no cabe solo
+  ensucia. Se pide dibujar cerca del tamaño final, o a múltiplo entero.
+- README: quitada la referencia a Contra Force, marcada la decisión como
+  cerrada, y el encargo de capas marcado como el único activo.
+
+**Órbita Sentinel no se tira.** El espacio es un tramo posterior del mismo
+viaje, y ya usa las mismas naves; lo único que le tocaría algún día es un
+fondo propio en vez del starfield genérico.
+
+**También en esta tanda:** propulsor de la nave con partículas
+(`ParticleSystem.thruster`), un cono estrecho hacia atrás en vez de `burst`,
+que dispersa y se lee como escombros. Reacciona al input — más fuerte al
+acelerar, más flojo al frenar — para que la nave no arrastre una llama fija.
+Sin assets nuevos.

@@ -1,12 +1,13 @@
 # Star Viper 2000
 
-Shoot-'em-up horizontal de arcade para navegador. Inspirado en los shooters
-espaciales clásicos y en Contra Force (acabado de sprite NES), con identidad
-propia: no es un clon.
+Shoot-'em-up horizontal de arcade para navegador. Pixel art detallado, luz
+cálida, fondos con profundidad. La idea a largo plazo es que los niveles sean
+un **viaje**: tierra → nubes → altura → espacio → otro planeta.
 
 Hay dos sectores jugables: **Órbita Sentinel** (espacio) y **Jardines del
-Céfiro** (cielo). El cielo es un borrador de arte. El jugador aún no ha
-decidido si se queda, se redibuja al brief, o se tira.
+Céfiro** (cielo). **El estilo del cielo es el elegido** (2026-09-09) y manda
+sobre lo que decía antes el brief. Órbita no se tira: el espacio es un tramo
+posterior del mismo viaje.
 
 ---
 
@@ -97,16 +98,16 @@ Lista viva. Un agente que cierre un punto lo marca `[x]` y lo anota en
 
 ### Decidir (el jugador, no el agente)
 
-- [ ] **Arte del cielo.** ¿Se queda Jardines del Céfiro, se redibuja al
-      brief NES de `docs/ASSET_BRIEF.md`, o se tira y solo queda Órbita
-      Sentinel? No generar más packs de arte hasta que esto esté decidido.
+- [x] **Arte del cielo.** Decidido: se queda. El brief se reescribió al
+      estilo detallado (`docs/ASSET_BRIEF.md` §0).
 - [ ] ¿El jefe del cielo (el pez/guardián) se acepta o se vuelve a
       Sentinel, fortaleza blocky?
 
 ### Arte (cuando haya decisión)
 
-- [ ] Nave por **capas alineadas** (casco / alas / motor / cañón). Hoy
-      solo se dibuja el casco: las otras tres piezas no coinciden.
+- [ ] **ENCARGO ACTIVO:** nave por **capas alineadas** (casco / alas /
+      motor / cañón). Hoy solo se dibuja el casco. Ver `ASSET_BRIEF.md`
+      § ENCARGO ACTUAL. Es lo único pedido ahora mismo.
 - [ ] Enemigos dañados que faltan, a tamaño real del brief.
 - [ ] Fondos que repitan sin costura (960×540, 3 capas). El cielo actual
       es una sola imagen.
@@ -155,7 +156,7 @@ de juego, sin dependencias de runtime. Deploy previsto: Cloudflare Pages.
 | `docs/ARMAS.md` | Diseño de armas (FORGE/MINE aún no) |
 | `docs/HANGAR.md` | Items persistentes |
 | `docs/NAVE_Y_PIEZAS.md` | Panel de nave por ranuras y piezas con trade-off (análisis) |
-| `docs/ASSET_BRIEF.md` | Brief de arte: Contra Force NES, paleta, tamaños |
+| `docs/ASSET_BRIEF.md` | Brief de arte: estilo detallado, paleta, tamaños, encargo actual |
 
 El código de simulación vive en `src/game/` y **no** toca DOM, Canvas ni
 `Math.random()`. El arte y el menú viven en `src/render/` y `src/main.ts`.
