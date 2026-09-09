@@ -67,13 +67,6 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
       tone(engine, 880, 'triangle', 0.08, 0.28);
       tone(engine, 1320, 'triangle', 0.14, 0.2);
       break;
-    case 'coreDenied':
-      tone(engine, 140, 'square', 0.08, 0.15);
-      break;
-    case 'powerActivate':
-      tone(engine, 520, 'sine', 0.05, 0.25);
-      tone(engine, 780, 'sine', 0.16, 0.2);
-      break;
     case 'playerDamage':
       noiseBurst(engine, 0.18, 0.45, 900);
       break;

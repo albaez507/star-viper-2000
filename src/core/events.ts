@@ -6,8 +6,6 @@ export type GameEvent =
   | { type: 'enemyDeath'; x: number; y: number }
   | { type: 'coreCollected'; slot: number }
   | { type: 'itemCollected'; x: number; y: number }
-  | { type: 'coreDenied' }
-  | { type: 'powerActivate'; slot: number }
   | { type: 'playerDamage' }
   | { type: 'playerDeath' }
   | { type: 'bossDeath'; x: number; y: number }

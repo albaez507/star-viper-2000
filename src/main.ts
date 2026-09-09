@@ -2,7 +2,7 @@ import { GameLoop } from './core/loop';
 import { createWorld, step, type GameState } from './game/world';
 import { bossWarpMultiplier, spawnBoss } from './game/boss';
 import { STAGE_1 } from './game/stage1';
-import type { Weapon } from './core/types';
+import { SHIP_ORDER, SHIPS, nombreArma, MAX_WEAPON_LEVEL, type WeaponLevel } from './game/weapons';
 import { loadProgress, banquearItems, comprar, nivelDe, puedeComprar, UPGRADES, type Progress } from './meta/progress';
 import { InputManager } from './input/input';
 import { AudioEngine } from './audio/audio';
@@ -62,7 +62,7 @@ let progress: Progress = loadProgress();
 /** Traduce el progreso persistente a campos del jugador. Vive aquí y no en
  * `game/` para que la simulación siga sin saber nada de almacenamiento. */
 function aplicarMejoras(): void {
-  state.player.lives += nivelDe(progress, 'hull');
+  state.player.lives = SHIPS[state.player.ship].vidasIniciales + nivelDe(progress, 'hull');
   state.player.speedLevel += nivelDe(progress, 'engines');
   if (nivelDe(progress, 'shield') > 0) state.player.shield = state.player.shieldMax;
 }
@@ -91,9 +91,29 @@ const devBossEl = document.getElementById('dev-boss') as HTMLElement;
 const devSwarmEl = document.getElementById('dev-swarm') as HTMLElement;
 const devWeaponsEl = document.getElementById('dev-weapons') as HTMLElement;
 const devReadoutEl = document.getElementById('dev-weapon-readout') as HTMLElement;
+const visualStyleEl = document.getElementById('visual-style') as HTMLSelectElement;
+const visualWeaponEl = document.getElementById('visual-weapon') as HTMLSelectElement;
+const visualLightingEl = document.getElementById('visual-lighting') as HTMLInputElement;
+const styleReadoutEl = document.getElementById('style-readout') as HTMLElement;
 
-const WEAPON_CYCLE: Weapon[] = ['single', 'double', 'laser'];
-let weaponTestIndex = 0;
+const savedVisualStyle = localStorage.getItem('sv-visual-style');
+const savedLighting = localStorage.getItem('sv-visual-lighting') === 'true';
+if (savedVisualStyle && [...visualStyleEl.options].some((o) => o.value === savedVisualStyle)) visualStyleEl.value = savedVisualStyle;
+visualLightingEl.checked = savedLighting;
+function applyVisualLab(): void {
+  document.body.dataset.visualStyle = visualStyleEl.value;
+  document.body.dataset.lighting = String(visualLightingEl.checked);
+  localStorage.setItem('sv-visual-style', visualStyleEl.value);
+  localStorage.setItem('sv-visual-lighting', String(visualLightingEl.checked));
+  styleReadoutEl.textContent = `${visualStyleEl.selectedOptions[0].text} · ${visualWeaponEl.selectedOptions[0].text}`;
+}
+visualStyleEl.addEventListener('change', applyVisualLab);
+visualWeaponEl.addEventListener('change', applyVisualLab);
+visualLightingEl.addEventListener('change', applyVisualLab);
+applyVisualLab();
+
+let shipTestIndex = 0;
+let nivelTest: WeaponLevel = 1;
 
 devPlayEl.addEventListener('click', () => {
   resetGame();
@@ -129,11 +149,21 @@ devWeaponsEl.addEventListener('click', () => {
       formationId: -1, active: true, diving: false, score: 0,
       fireCooldown: 0, t: 0, triggerX: 0, divingVx: 0, divingVy: 0,
     });
-    weaponTestIndex = 0;
+    shipTestIndex = 0;
+    nivelTest = 1;
   } else {
-    weaponTestIndex = (weaponTestIndex + 1) % WEAPON_CYCLE.length;
+    // Cada click recorre nivel 1→2→3 y al pasarse cambia de nave, para poder
+    // comparar las dos naves en sus tres niveles sin jugar el stage.
+    if (nivelTest < MAX_WEAPON_LEVEL) {
+      nivelTest = (nivelTest + 1) as WeaponLevel;
+    } else {
+      nivelTest = 1;
+      shipTestIndex = (shipTestIndex + 1) % SHIP_ORDER.length;
+    }
   }
-  state.player.weapon = WEAPON_CYCLE[weaponTestIndex];
+  state.player.ship = SHIP_ORDER[shipTestIndex];
+  state.player.weaponLevel = nivelTest;
+  state.player.optionCount = nivelTest >= 3 ? 2 : nivelTest >= 2 ? 1 : 0;
 });
 
 function handleEvents(s: GameState): void {
@@ -214,7 +244,9 @@ const loop = new GameLoop({
     pauseEl.textContent = paused ? '▶' : '⏸';
     pauseEl.hidden = mode !== 'playing';
     missileEl.classList.toggle('ready', mode === 'playing' && !paused && state.player.missileCooldown <= 0);
-    devReadoutEl.textContent = mode === 'playing' ? `ARMA: ${state.player.weapon.toUpperCase()}` : '';
+    devReadoutEl.textContent = mode === 'playing'
+      ? `${SHIPS[state.player.ship].nombre} — ${nombreArma(state.player.ship, state.player.weaponLevel)}`
+      : '';
     hangarBtn.hidden = mode === 'playing';
   },
 });
@@ -270,4 +302,5 @@ renderHangar();
 hangarEl.hidden = true;
 
 loop.start();
+
 

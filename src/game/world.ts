@@ -15,7 +15,7 @@ import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { makeItem, spawnItem, stepItem, type Item } from './items';
-import { createPowerMeter, advanceCursor, activateSlot, type PowerMeter } from './powermeter';
+import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, type WeaponLevel } from './weapons';
 import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
 
@@ -26,7 +26,6 @@ export type GameState = {
   player: Player;
   history: PositionHistory;
   options: Option[];
-  powerMeter: PowerMeter;
 
   enemies: Pool<Enemy>;
   formations: Map<number, Formation>;
@@ -61,7 +60,6 @@ export function createWorld(worldW: number, worldH: number, seed = 1337): GameSt
     player: createPlayer(90, worldH / 2),
     history: new PositionHistory(),
     options: createOptions(),
-    powerMeter: createPowerMeter(),
     enemies: new Pool(makeEnemy, 48),
     formations: new Map(),
     playerBullets: new Pool(makeBullet, 64),
@@ -83,7 +81,6 @@ export function createWorld(worldW: number, worldH: number, seed = 1337): GameSt
   };
 }
 
-const PLAYER_BULLET_SPEED = 560;
 const ENEMY_BULLET_SPEED = 220;
 const MISSILE_SPEED = 340;
 const PLAYER_BULLET_HIT_HALF = 5;
@@ -129,29 +126,18 @@ function stepPlayer(state: GameState, input: InputFrame, dt: number): void {
   if (p.fireCooldown > 0) p.fireCooldown -= dt;
   if (p.missileCooldown > 0) p.missileCooldown -= dt;
 
-  if (input.power) {
-    const ok = activateSlot(state.powerMeter, p);
-    state.events.emit(ok ? { type: 'powerActivate', slot: 0 } : { type: 'coreDenied' });
-  }
 }
 
-function fireFrom(state: GameState, x: number, y: number, weapon: 'single' | 'double' | 'laser'): void {
-  if (weapon === 'double') {
-    const b1 = state.playerBullets.acquire();
-    spawnBullet(b1, x + 10, y - 6, PLAYER_BULLET_SPEED, 0, 1, true);
-    const b2 = state.playerBullets.acquire();
-    spawnBullet(b2, x + 10, y + 6, PLAYER_BULLET_SPEED, 0, 1, true);
-    return;
-  }
+function fireFrom(state: GameState, x: number, y: number, esOption: boolean): void {
+  const p = state.player;
+  // Los Options siempre disparan la versión básica: si replicaran el arma
+  // entera, tres buscadores por ráfaga barrerían la pantalla sola.
+  const specs = disparosDe(p.ship, esOption ? 0 : p.weaponLevel);
 
-  if (weapon === 'laser') {
+  for (const spec of specs) {
     const b = state.playerBullets.acquire();
-    spawnBullet(b, x + 10, y, PLAYER_BULLET_SPEED * 1.15, 0, 2, true, true);
-    return;
+    spawnBullet(b, x + 10, y + spec.offsetY, spec.vx, spec.vy, spec.dmg, true, false, false, spec.homing);
   }
-
-  const b = state.playerBullets.acquire();
-  spawnBullet(b, x + 10, y, PLAYER_BULLET_SPEED, 0, 1, true);
 }
 
 function stepFiring(state: GameState, input: InputFrame, dt: number): void {
@@ -160,12 +146,12 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
   if (!p.alive) return;
 
   if (input.fire && p.fireCooldown <= 0) {
-    fireFrom(state, p.x, p.y, p.weapon);
+    fireFrom(state, p.x, p.y, false);
     for (const opt of state.options) {
-      if (opt.active) fireFrom(state, opt.x, opt.y, 'single');
+      if (opt.active) fireFrom(state, opt.x, opt.y, true);
     }
-    p.fireCooldown = fireCooldownFor(p.weapon);
-    state.events.emit({ type: 'fire', weapon: p.weapon });
+    p.fireCooldown = fireCooldownFor(p.ship, p.weaponLevel);
+    state.events.emit({ type: 'fire', weapon: 'single' });
   }
 
   if (input.missile) {
@@ -258,8 +244,41 @@ function stepEnemies(state: GameState, dt: number): void {
   }
 }
 
+const HOMING_TURN = 3.6;
+
+/** Corrige el rumbo hacia el enemigo más cercano por delante, con giro
+ * limitado: persigue, pero no es infalible — si te colocas mal, falla. */
+function guiarBala(state: GameState, b: Bullet, dt: number): void {
+  let mejor: { x: number; y: number } | null = null;
+  let mejorDist = Infinity;
+
+  for (const e of state.enemies.active()) {
+    if (e.x < b.x) continue;
+    const d = dist(b.x, b.y, e.x, e.y);
+    if (d < mejorDist) { mejorDist = d; mejor = e; }
+  }
+  if (!mejor && state.boss.active && state.boss.revealed && !state.boss.dying) {
+    mejor = state.boss;
+  }
+  if (!mejor) return;
+
+  const velocidad = Math.hypot(b.vx, b.vy) || 1;
+  const anguloActual = Math.atan2(b.vy, b.vx);
+  const anguloObjetivo = Math.atan2(mejor.y - b.y, mejor.x - b.x);
+
+  let delta = anguloObjetivo - anguloActual;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+
+  const giro = Math.max(-HOMING_TURN * dt, Math.min(HOMING_TURN * dt, delta));
+  const nuevo = anguloActual + giro;
+  b.vx = Math.cos(nuevo) * velocidad;
+  b.vy = Math.sin(nuevo) * velocidad;
+}
+
 function stepProjectiles(state: GameState, dt: number): void {
   for (const b of state.playerBullets.active()) {
+    if (b.homing) guiarBala(state, b, dt);
     stepBullet(b, dt);
     if (b.x > state.worldW + 30 || b.y < -30 || b.y > state.worldH + 30) b.active = false;
   }
@@ -338,6 +357,18 @@ function explodeMissile(state: GameState, x: number, y: number, dmg: number): vo
 
   state.events.emit({ type: 'missileImpact', x, y });
   state.events.emit({ type: 'shake', strength: 5, duration: 0.2 });
+}
+
+/** Primer core: activa el arma característica. Siguientes: la suben de nivel.
+ * Sin cursor y sin decidir cuándo gastarlo — ese era justo el punto donde el
+ * sistema anterior se rompía. */
+function subirArma(state: GameState): void {
+  const p = state.player;
+  if (p.weaponLevel < MAX_WEAPON_LEVEL) {
+    p.weaponLevel = (p.weaponLevel + 1) as WeaponLevel;
+    p.optionCount = optionsPara(p.weaponLevel);
+  }
+  state.events.emit({ type: 'coreCollected', slot: p.weaponLevel });
 }
 
 function killEnemy(state: GameState, e: Enemy): void {
@@ -442,8 +473,7 @@ function stepCollisions(state: GameState): void {
   for (const c of state.powerCores.active()) {
     if (hits(c.x, c.y, 10, 10, p.x, p.y, PLAYER_HALF_W + 8, PLAYER_HALF_H + 8)) {
       c.active = false;
-      advanceCursor(state.powerMeter);
-      state.events.emit({ type: 'coreCollected', slot: state.powerMeter.cursor });
+      subirArma(state);
     }
   }
 
