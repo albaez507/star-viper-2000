@@ -16,6 +16,30 @@ export type WeaponLevel = 0 | 1 | 2 | 3;
 
 export const MAX_WEAPON_LEVEL: WeaponLevel = 3;
 
+/**
+ * Cuántos Power Cores cuesta cada nivel, acumulado.
+ *
+ * El primero sigue costando **uno solo**: activar el arma de tu nave es el
+ * momento que engancha y no se debe hacer esperar. A partir de ahí cada nivel
+ * cuesta dos, así que subir al máximo exige las cinco formaciones perfectas
+ * de un sector. Antes bastaban tres cores y llegabas al tope a mitad de nivel,
+ * con la otra mitad sin nada que ganar — de ahí que ganar se sintiera fácil.
+ */
+export const CORES_POR_NIVEL = [1, 3, 5];
+
+export function nivelPorCores(cores: number): WeaponLevel {
+  let nivel: WeaponLevel = 0;
+  for (let i = 0; i < CORES_POR_NIVEL.length; i++) {
+    if (cores >= CORES_POR_NIVEL[i]) nivel = (i + 1) as WeaponLevel;
+  }
+  return nivel;
+}
+
+/** Cores necesarios para volver a tener exactamente ese nivel. */
+export function coresParaNivel(nivel: WeaponLevel): number {
+  return nivel <= 0 ? 0 : CORES_POR_NIVEL[nivel - 1];
+}
+
 export type ShipDef = {
   id: ShipId;
   nombre: string;

@@ -15,7 +15,7 @@ import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { makeItem, spawnItem, stepItem, type Item } from './items';
-import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, SHIPS, type WeaponLevel } from './weapons';
+import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, SHIPS, nivelPorCores, coresParaNivel } from './weapons';
 import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, easeBossSize, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
 import type { StageId } from './stages';
@@ -321,6 +321,9 @@ function damagePlayer(state: GameState): void {
     p.lives--;
     if (p.weaponLevel > 0) {
       p.weaponLevel = (p.weaponLevel - 1) as typeof p.weaponLevel;
+      // Los cores retroceden al umbral del nivel que queda: si no, un golpe
+      // se recuperaría con un solo core y el castigo no se notaría.
+      p.cores = coresParaNivel(p.weaponLevel);
       p.optionCount = optionsPara(p.weaponLevel);
     }
   }
@@ -373,8 +376,10 @@ function subirArma(state: GameState): void {
   const p = state.player;
   const eraBasica = p.weaponLevel === 0;
 
-  if (p.weaponLevel < MAX_WEAPON_LEVEL) {
-    p.weaponLevel = (p.weaponLevel + 1) as WeaponLevel;
+  p.cores++;
+  const nuevoNivel = nivelPorCores(p.cores);
+  if (nuevoNivel > p.weaponLevel && p.weaponLevel < MAX_WEAPON_LEVEL) {
+    p.weaponLevel = nuevoNivel;
     p.optionCount = optionsPara(p.weaponLevel);
   }
 

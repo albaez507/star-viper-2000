@@ -19,6 +19,8 @@ export type Player = {
   speedLevel: number;
   ship: ShipId;
   weaponLevel: WeaponLevel;
+  /** Cores recogidos en esta partida. El nivel se deriva de aquí. */
+  cores: number;
   fireCooldown: number;
   missileCooldown: number;
   missileLevel: number;
@@ -37,6 +39,7 @@ export function createPlayer(x: number, y: number): Player {
     speedLevel: 0,
     ship: 'vulcan',
     weaponLevel: 0,
+    cores: 0,
     fireCooldown: 0,
     missileCooldown: 0,
     missileLevel: 0,

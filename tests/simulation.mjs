@@ -52,16 +52,20 @@ test('each full sector reaches its boss with an empty projectile arena', () => {
   }
 });
 
-test('both ships fire, upgrade through three cores, and gain options', () => {
+// Ritmo nuevo: el primer core activa el arma, y a partir de ahí cada nivel
+// cuesta dos cores (umbrales 1, 3, 5). Antes bastaban 3 cores para el máximo
+// y se llegaba al tope a mitad de sector.
+test('both ships fire, upgrade on cores 1/3/5, and gain options at max', () => {
   for (const ship of ['vulcan', 'lance']) {
     const state = createWorld(960, 540, 1337, 'sky'); state.player.ship = ship;
     step(state, { ...idle, fire: true }, dt);
     assert.equal(state.playerBullets.active().length, 1);
-    for (let level = 1; level <= 3; level++) {
+    const esperadoPorCore = [1, 1, 2, 2, 3];
+    for (let i = 0; i < esperadoPorCore.length; i++) {
       const core = state.powerCores.acquire();
       Object.assign(core, { x: state.player.x, y: state.player.y, vx: 0 });
       step(state, idle, dt);
-      assert.equal(state.player.weaponLevel, level);
+      assert.equal(state.player.weaponLevel, esperadoPorCore[i], `core ${i + 1}`);
     }
     assert.equal(state.player.optionCount, 2);
     state.playerBullets.releaseAll(); state.player.fireCooldown = 0;
@@ -125,6 +129,7 @@ test('sky bounds keep the ship visible; death and fresh runs reset correctly', (
 test('a hit drops one weapon level; cores spawn in reach and pull in', () => {
   const state = createWorld(960, 540, 1337, 'sky');
   state.player.weaponLevel = 2;
+  state.player.cores = 3;          // el umbral del nivel 2
   state.player.optionCount = 0;
   state.player.invulnTimer = 0;
   spawnBullet(state.enemyBullets.acquire(), state.player.x, state.player.y, 0, 0, 1, false);
@@ -132,9 +137,12 @@ test('a hit drops one weapon level; cores spawn in reach and pull in', () => {
   assert.equal(state.player.weaponLevel, 1);
   assert.equal(state.player.lives, 2);
 
-  const core = state.powerCores.acquire();
-  Object.assign(core, { x: 360, y: state.player.y, vx: -42, active: true });
-  for (let i = 0; i < 90; i++) step(state, idle, dt);
+  // Un solo core ya no devuelve el nivel perdido: hacen falta dos.
+  for (const _ of [0, 1]) {
+    const core = state.powerCores.acquire();
+    Object.assign(core, { x: 360, y: state.player.y, vx: -42, active: true });
+    for (let i = 0; i < 90; i++) step(state, idle, dt);
+  }
   assert.equal(state.powerCores.active().length, 0);
   assert.equal(state.player.weaponLevel, 2);
 });

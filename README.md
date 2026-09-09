@@ -73,8 +73,9 @@ Ya **no** hay medidor Gradius ni botón PWR. Cada nave tiene su arma:
 1. Empiezas con el disparo básico.
 2. Si destruyes una **formación de 6** entera (nadie escapa), cae un
    **Power Core**.
-3. El primer core **activa el arma de tu nave**. Los siguientes la suben
-   de nivel (máximo 3).
+3. El primer core **activa el arma de tu nave**. A partir de ahí cada nivel
+   cuesta **dos cores** (umbrales 1, 3, 5), así que llegar al máximo exige
+   las cinco formaciones perfectas de un sector.
 4. Un golpe te baja **un nivel de arma** (y una vida, si no hay escudo).
 
 | Nave | Arma | Trade-off |
@@ -130,7 +131,8 @@ Lista viva. Un agente que cierre un punto lo marca `[x]` y lo anota en
 
 - [ ] Viaje continuo tierra → nubes → espacio → otro planeta.
 - [ ] Entornos cueva / océano / volcán / hielo.
-- [ ] Piezas de hangar que se vean puestas en la nave.
+- [ ] Panel de nave con ranuras y piezas (`docs/NAVE_Y_PIEZAS.md`).
+      Bloqueado por las capas alineadas, no por código.
 - [ ] Multijugador cooperativo. El hangar en `localStorage` **no sirve**
       para eso (`docs/HANGAR.md`).
 
@@ -152,6 +154,7 @@ de juego, sin dependencias de runtime. Deploy previsto: Cloudflare Pages.
 | `docs/BITACORA.md` | Qué se hizo y por qué, en orden |
 | `docs/ARMAS.md` | Diseño de armas (FORGE/MINE aún no) |
 | `docs/HANGAR.md` | Items persistentes |
+| `docs/NAVE_Y_PIEZAS.md` | Panel de nave por ranuras y piezas con trade-off (análisis) |
 | `docs/ASSET_BRIEF.md` | Brief de arte: Contra Force NES, paleta, tamaños |
 
 El código de simulación vive en `src/game/` y **no** toca DOM, Canvas ni
