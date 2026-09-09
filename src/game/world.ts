@@ -16,7 +16,7 @@ import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { makeItem, spawnItem, stepItem, type Item } from './items';
 import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, SHIPS, type WeaponLevel } from './weapons';
-import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
+import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, easeBossSize, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
 import type { StageId } from './stages';
 
@@ -519,6 +519,7 @@ function stepBoss(state: GameState, dt: number): void {
   }
 
   if (boss.enrageFlash > 0) boss.enrageFlash = Math.max(0, boss.enrageFlash - dt);
+  easeBossSize(boss, dt);
 
   const freq = bossMovementFrequency(boss);
   const anchorX = state.worldW - BOSS_ANCHOR_MARGIN;

@@ -6,6 +6,11 @@ export class Sky {
   private tile: HTMLCanvasElement | null = null;
   private clouds: HTMLCanvasElement | null = null;
   private bursts: { x: number; y: number; t: number; size: number }[] = [];
+  /** Desplazamiento acumulado propio. Antes el scroll salía de `elapsed`, así
+   * que el fondo del cielo era inmune al "warp" de llegada del jefe: la
+   * secuencia congelaba el juego y mostraba 警告 sobre un cielo quieto, y el
+   * jefe parecía aparecer de la nada. */
+  private scroll = 0;
   readonly ready: Promise<void>;
 
   constructor() {
@@ -30,6 +35,12 @@ export class Sky {
     });
   }
 
+  /** `warp` > 1 durante la aproximación al jefe: el cielo pasa a toda
+   * velocidad y se siente que eres tú quien llega hasta él. */
+  update(dt: number, warp = 1): void {
+    this.scroll += dt * warp;
+  }
+
   burst(x: number, y: number, t: number, size = 44): void {
     this.bursts.push({ x, y, t, size });
     if (this.bursts.length > 60) this.bursts.shift();
@@ -40,7 +51,7 @@ export class Sky {
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#83dce3'; ctx.fillRect(0, 0, w, h);
     if (this.tile) {
-      const scroll = Math.round(t * 13);
+      const scroll = Math.round(this.scroll * 13);
       const first = Math.floor(scroll / w);
       for (let i = first; i <= first + 1; i++) {
         const x = i * w - scroll;
@@ -53,7 +64,7 @@ export class Sky {
       }
     }
     if (this.clouds) {
-      const scroll = Math.round(t * 31);
+      const scroll = Math.round(this.scroll * 31);
       const first = Math.floor(scroll / w);
       ctx.globalAlpha = 0.7;
       for (let i = first; i <= first + 1; i++) {

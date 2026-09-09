@@ -39,10 +39,29 @@ export function makeBoss(): Boss {
   };
 }
 
-function resizeForPhase(b: Boss): void {
+/**
+ * Antes el cambio de fase saltaba en un solo frame: color, tamaño y cadencia
+ * cambiaban de golpe y se sentía brusco. Ahora el tamaño se interpola hacia
+ * el de la fase nueva mientras dura `enrageFlash`, así el jefe **crece** en
+ * lugar de teletransportarse a su tamaño nuevo.
+ */
+function targetSizeForPhase(b: Boss): { w: number; h: number } {
   const scale = PHASE_SCALE[b.phase - 1];
-  b.halfW = BASE_HALF_W * scale;
-  b.halfH = BASE_HALF_H * scale;
+  return { w: BASE_HALF_W * scale, h: BASE_HALF_H * scale };
+}
+
+function resizeForPhase(b: Boss): void {
+  const { w, h } = targetSizeForPhase(b);
+  b.halfW = w;
+  b.halfH = h;
+}
+
+/** Acerca el tamaño actual al de la fase, un poco por frame. */
+export function easeBossSize(b: Boss, dt: number): void {
+  const { w, h } = targetSizeForPhase(b);
+  const k = Math.min(1, dt * 4);
+  b.halfW += (w - b.halfW) * k;
+  b.halfH += (h - b.halfH) * k;
 }
 
 export function spawnBoss(b: Boss, worldW: number, worldH: number): void {
@@ -97,8 +116,9 @@ export function damageBoss(b: Boss, dmg: number): DamageResult {
     b.phase = (b.phase + 1) as 1 | 2 | 3;
     b.phaseMaxHp = PHASE_HP[b.phase - 1];
     b.phaseHp = b.phaseMaxHp;
-    resizeForPhase(b);
-    b.enrageFlash = 0.5;
+    // Sin `resizeForPhase` aquí: el tamaño lo alcanza `easeBossSize` a lo
+    // largo del destello, para que se vea crecer.
+    b.enrageFlash = 0.9;
     return 'enraged';
   }
 

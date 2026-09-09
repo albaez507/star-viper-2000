@@ -318,6 +318,7 @@ const loop = new GameLoop({
     elapsed += dt;
     const warp = mode === 'playing' ? bossWarpMultiplier(state.boss) : 1;
     starfield.update(dt, warp);
+    renderer.sky.update(dt, warp);
     particles.update(dt);
     shake.update(dt);
     if (bannerTimer > 0) bannerTimer = Math.max(0, bannerTimer - dt);

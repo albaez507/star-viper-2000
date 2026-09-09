@@ -3,8 +3,13 @@ export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine
 const names: SkySprite[] = ['vulcan', 'lance', 'option', 'core', 'scout', 'sine', 'diver', 'formation', 'swarm', 'harasser', 'rival', 'item', 'bolt', 'orb', 'missile', 'explosion'];
 const frames = new Map<SkySprite, HTMLCanvasElement>();
 
-/** These three were drawn facing right. Everything hostile must face left. */
-const FLIP_X = new Set<SkySprite>(['swarm', 'harasser', 'rival']);
+/**
+ * Vacío a propósito. Antes volteaba `swarm`, `harasser` y `rival` "porque
+ * estaban dibujados mirando a la derecha", pero el arte del atlas ya mira a
+ * la izquierda: el volteo los ponía de espaldas y atacaban al jugador desde
+ * atrás. Comprobado dibujando los frames con y sin el volteo.
+ */
+const FLIP_X = new Set<SkySprite>();
 
 export let skyActive = false;
 export function setSkyActive(active: boolean): void { skyActive = active; }
@@ -48,6 +53,34 @@ export const skyAssetsReady = Promise.all([
   loadSheet('guardian', 3, 1, ['boss1', 'boss2', 'boss3']),
 ]);
 
+/**
+ * Los frames del atlas vienen a ~313 px y se dibujan a ~34 px: una reducción
+ * de casi 9x. Hacerla en cada frame con `imageSmoothingEnabled = false` tira
+ * el 99% de los píxeles y produce el aliasing que hacía que el juego se viera
+ * en baja calidad pese a que el arte original es nítido.
+ *
+ * Aquí se reduce **una sola vez por tamaño**, con filtrado bueno, y a partir
+ * de ahí se pinta 1:1. Los tamaños pedidos son constantes por tipo de enemigo,
+ * así que la caché se queda en un puñado de entradas.
+ */
+const scaledFrames = new Map<string, HTMLCanvasElement>();
+
+function scaledFrame(name: SkySprite, frame: HTMLCanvasElement, dw: number, dh: number): HTMLCanvasElement {
+  const key = `${name}:${dw}x${dh}`;
+  const cached = scaledFrames.get(key);
+  if (cached) return cached;
+
+  const out = document.createElement('canvas');
+  out.width = dw;
+  out.height = dh;
+  const g = out.getContext('2d')!;
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(frame, 0, 0, dw, dh);
+  scaledFrames.set(key, out);
+  return out;
+}
+
 export function drawSkySprite(ctx: CanvasRenderingContext2D, name: SkySprite, x: number, y: number, w: number, h: number, flash = false, angle = 0): boolean {
   const frame = frames.get(name);
   if (!frame) return false;
@@ -62,7 +95,7 @@ export function drawSkySprite(ctx: CanvasRenderingContext2D, name: SkySprite, x:
   if (FLIP_X.has(name)) ctx.scale(-1, 1);
   if (angle) ctx.rotate(angle);
   if (flash) ctx.filter = 'brightness(2.5)';
-  ctx.drawImage(frame, -Math.round(dw / 2), -Math.round(dh / 2), dw, dh);
+  ctx.drawImage(scaledFrame(name, frame, dw, dh), -Math.round(dw / 2), -Math.round(dh / 2));
   ctx.restore();
   return true;
 }
