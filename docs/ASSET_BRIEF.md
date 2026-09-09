@@ -15,6 +15,53 @@ desarrollo**, no producir el arte definitivo.
 
 ---
 
+## 0. Estilo visual — LEER ESTO PRIMERO
+
+**La referencia es Contra Force (Konami, NES, 1992).** No el juego, que es de
+otro género: su **acabado de sprite**.
+
+Eso quiere decir, en concreto:
+
+### Lo que SÍ
+
+- **Pocos colores por sprite.** Tres tonos del mismo color (oscuro / base /
+  claro) más un contorno casi negro. Esto es lo que más define el estilo y lo
+  que más se nota si no se respeta. El color base sale de la paleta de §3; los
+  otros dos los derivas de ese.
+- **Contorno oscuro** alrededor de toda la silueta. El fondo del juego es
+  negro azulado (`#0a0e17`): sin contorno, las naves se funden con el espacio.
+- **Píxel duro.** Sin anti-aliasing, sin degradados suaves, sin glow, sin
+  desenfoque. Cada píxel es un píxel.
+- **Iluminación plana y consistente**, con la luz entrando desde arriba a la
+  izquierda en todos los sprites.
+- **Estética militar / industrial.** Maquinaria funcional: paneles, remaches,
+  cañones, blindaje. Cosas que parecen construidas y que hacen un trabajo.
+- **Silueta primero, detalle después.** Si el sprite en negro plano no se
+  distingue de los demás, el detalle no lo va a salvar.
+
+### Lo que NO
+
+- Nada de neón, cromados brillantes ni degradados de vaporwave.
+- Nada "kawaii", chibi ni de proporciones caricaturescas.
+- Nada de pixel art moderno de indie con 30 tonos y luz suave — eso es otro
+  siglo estéticamente.
+- Nada orgánico/biológico por ahora (eso llegará con los entornos).
+
+### Por qué esta regla en particular
+
+La NES daba a cada sprite **3 colores más transparente**, y los juegos tardíos
+como Contra Force apilaban varios sprites con paletas distintas para conseguir
+personajes más ricos sin romper esa lógica. No hace falta que respetes el
+hardware al pie de la letra — pero ese límite es exactamente lo que produce la
+lectura que te gusta: colores planos, contraste alto, formas que se leen de un
+vistazo. Si te sales a 15 tonos con luz suave, se pierde.
+
+**Regla práctica:** 3 tonos + contorno por sprite. Si necesitas un cuarto para
+un detalle concreto (una luz de cabina, un núcleo brillante), adelante — pero
+que sea la excepción y siempre el mismo acento.
+
+---
+
 ## 1. El juego en una frase
 
 Shoot-'em-up horizontal de arcade: tu nave va por la izquierda, los enemigos

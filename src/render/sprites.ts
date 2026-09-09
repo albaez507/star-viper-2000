@@ -18,11 +18,44 @@ const ENEMY_COLORS: Record<string, string> = {
   rival: '#ff4fd8',
 };
 
+const ASSET_ROOT = '/assets/';
+const images = new Map<string, HTMLImageElement>();
+function asset(name: string): HTMLImageElement {
+  let img = images.get(name);
+  if (!img) {
+    img = new Image();
+    img.src = `${ASSET_ROOT}${name}`;
+    images.set(name, img);
+  }
+  return img;
+}
+function drawAsset(ctx: CanvasRenderingContext2D, name: string, w: number, h: number): boolean {
+  const img = asset(name);
+  if (!img.complete || img.naturalWidth === 0) return false;
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  return true;
+}
+
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 20) % 2 === 0) return;
 
   ctx.save();
   ctx.translate(p.x, p.y);
+  if (p.hitFlash <= 0) {
+    drawAsset(ctx, 'ship-hull.png', 48, 32);
+    drawAsset(ctx, 'ship-wings.png', 48, 32);
+    drawAsset(ctx, 'ship-engine.png', 48, 32);
+    drawAsset(ctx, 'ship-cannon.png', 48, 32);
+  }
+  if (p.hitFlash <= 0) {
+    if (p.shield > 0) {
+      ctx.strokeStyle = 'rgba(122, 92, 255, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, PLAYER_HALF_W + 6, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
   ctx.fillStyle = p.hitFlash > 0 ? '#ffffff' : '#3ee6c4';
   ctx.beginPath();
   ctx.moveTo(PLAYER_HALF_W * 1.2, 0);
@@ -60,6 +93,12 @@ export function drawOption(ctx: CanvasRenderingContext2D, o: Option): void {
 export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   ctx.save();
   ctx.translate(e.x, e.y);
+  const damaged = e.hp < e.maxHp;
+  if (drawAsset(ctx, `enemy-${e.behavior}${damaged ? '-dmg' : ''}.png`, e.halfW * 2.2, e.halfH * 2.2)) {
+    ctx.restore();
+    drawEnemyHealthBar(ctx, e);
+    return;
+  }
   ctx.fillStyle = e.hitFlash > 0 ? '#ffffff' : ENEMY_COLORS[e.behavior] ?? '#ff5470';
 
   if (e.formationId >= 0) {
@@ -91,6 +130,10 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   ctx.restore();
 
   // Barra de vida solo para enemigos que aguantan varios impactos (la rival).
+  drawEnemyHealthBar(ctx, e);
+}
+
+function drawEnemyHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
   if (e.maxHp > 6 && e.hp < e.maxHp) {
     const w = e.halfW * 2;
     const x = e.x - w / 2;
@@ -132,6 +175,10 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   if (!b.active || !b.revealed) return;
   ctx.save();
   ctx.translate(b.x, b.y);
+  if (b.hitFlash <= 0 && b.enrageFlash <= 0 && drawAsset(ctx, `boss-sentinel-${b.phase}.png`, b.halfW * 2, b.halfH * 2)) {
+    ctx.restore();
+    return;
+  }
 
   const pulse = b.phase === 3 ? 0.75 + Math.sin(b.t * 10) * 0.25 : 1;
   ctx.fillStyle = (b.hitFlash > 0 || b.enrageFlash > 0) ? '#ffffff' : BOSS_PHASE_COLOR[b.phase];
