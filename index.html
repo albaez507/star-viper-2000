@@ -26,7 +26,6 @@
       <div id="dpad">
         <button id="btn-up" class="dpad-btn" data-dir="up" aria-label="Arriba">▲</button>
         <button id="btn-left" class="dpad-btn" data-dir="left" aria-label="Izquierda">◀</button>
-        <button id="btn-pwr" class="dpad-btn dpad-pwr" data-dir="pwr" aria-label="Power">PWR</button>
         <button id="btn-right" class="dpad-btn" data-dir="right" aria-label="Derecha">▶</button>
         <button id="btn-down" class="dpad-btn" data-dir="down" aria-label="Abajo">▼</button>
       </div>
@@ -46,6 +45,29 @@
       </div>
     </div>
   </div>
+  <section id="style-lab" aria-label="Laboratorio visual de desarrollo">
+    <div class="style-lab-heading">
+      <span class="dev-label">VISUAL LAB</span>
+      <small>Prueba de estilos · solo desarrollo</small>
+    </div>
+    <label>Estilo
+      <select id="visual-style">
+        <option value="classic">Classic Signal</option>
+        <option value="detailed">Detailed Pixel</option>
+        <option value="neon">Neon Night</option>
+      </select>
+    </label>
+    <label>Arma
+      <select id="visual-weapon">
+        <option value="single">Vulcan · single</option>
+        <option value="double">Vulcan · double</option>
+        <option value="laser">Lance · laser</option>
+        <option value="missile">Forge · missile</option>
+      </select>
+    </label>
+    <label class="style-toggle"><input id="visual-lighting" type="checkbox"> Previsualizar luces</label>
+    <span id="style-readout" role="status"></span>
+  </section>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
