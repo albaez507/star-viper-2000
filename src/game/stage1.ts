@@ -1,6 +1,6 @@
 export type WaveSpawn = {
   t: number;
-  kind: 'scout' | 'sine' | 'diver' | 'formation';
+  kind: 'scout' | 'sine' | 'diver' | 'formation' | 'swarm';
   count: number;
   shape?: 'v' | 'column' | 'line';
 };
@@ -32,6 +32,9 @@ export const STAGE_1: StageEvent[] = [
   { t: 64.0, kind: 'formation', count: 6, shape: 'column' },
   { t: 72.0, kind: 'diver', count: 4 },
   { t: 78.0, kind: 'formation', count: 6, shape: 'line' },
-  { t: 86.0, kind: 'scout', count: 8 },
-  { t: 90.0, boss: 'sentinel' },
+  // Enjambre: el crescendo justo antes del jefe. NO suelta Power Core a
+  // propósito — es un gauntlet de supervivencia, y darle core diluiría el
+  // lenguaje establecido de "formación de 6 = core".
+  { t: 88.0, kind: 'swarm', count: 12 },
+  { t: 104.0, boss: 'sentinel' },
 ];

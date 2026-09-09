@@ -193,6 +193,29 @@ const behaviors: Record<string, Behavior> = {
 | `sine` | `x -= speed*dt`, `y = baseY + amp * sin(t * freq + phase)` |
 | `diver` | Fase 1: entra recto hasta `x < triggerX`. Fase 2: fija el vector hacia la posición del jugador **en ese instante** y se lanza. No persigue eternamente — el jugador puede esquivar. |
 | `formation` | Sigue un punto de anclaje del grupo (formación en V, columna u onda); el grupo se mueve como una unidad |
+| `swarm` | Enjambre estilo Galaxian, horizontal. Tres etapas por miembro: entra → aguanta su ranura en la rejilla "respirando" → al cumplirse su `diveDelay` fija un vector hacia el jugador y se lanza. **Sin controlador de grupo**: el escalonado vive en el `diveDelay` de cada enemigo (asignado en el spawner), así que cada miembro sigue siendo autónomo igual que el resto de patrones, y aun así se ve como que "se descuelgan de a uno" |
+
+### Disparo enemigo (`world.ts::tryEnemyFire`)
+
+Hasta ahora el único que disparaba era el jefe: todo el peligro de los
+enemigos normales era por choque, lo cual dejaba el juego en una sola
+dimensión ("no toques nada"). Ahora `sine` y `diver` disparan:
+
+- **`sine`** dispara recto a la izquierda. Como ya se mueve ondulando,
+  apuntar además sería demasiado castigo.
+- **`diver`** dispara **apuntando** al jugador, y solo antes de lanzarse: el
+  disparo funciona como telegrafía de que el picado viene.
+- **`scout` nunca dispara**, a propósito. Es la carne de cañón legible que
+  enseña a leer siluetas sin castigar. Si todo dispara, nada destaca.
+- **`swarm` tampoco dispara**: su amenaza es el cuerpo, y sumarle balas
+  volvería ilegible el momento del enjambre.
+
+Un enemigo solo dispara mientras está **dentro de pantalla** (`x` entre 60 y
+`worldW - 10`), para que nunca aparezcan balas desde fuera de cuadro. La
+cadencia se re-sortea con `state.rng` (RNG con semilla, nunca `Math.random()`
+— ver §12), tanto la inicial como la de cada disparo, para que una oleada
+entera no dispare al unísono y para que la simulación siga siendo
+determinista de cara al multijugador.
 
 Añadir un patrón nuevo (`weaver`, `turret`, `bomber`, `mine`) es un fichero en
 `game/behaviors/` y una línea en el registro. Cero cambios en el resto.
@@ -214,9 +237,14 @@ Guion en `game/stage1.ts` como datos, no como código:
   { t: 30.0, type: 'diver',   count: 3 },
   { t: 36.0, formation: true, count: 6, shape: 'line' },
   // ... 6 formaciones en total, cada ~14s
-  { t: 90.0, boss: 'sentinel' }
+  { t: 88.0, kind: 'swarm',   count: 12 },   // enjambre: crescendo pre-jefe
+  { t: 104.0, boss: 'sentinel' }
 ]
 ```
+
+El enjambre entra a los 88s y el jefe se corrió de 90 a 104 para darle sus
+~9 segundos completos: si se solapan, el enjambre se come la secuencia de
+llegada del jefe y los dos momentos pierden fuerza.
 
 **6 formaciones, no 4** (ajustado tras probarlo en partida real): con solo 4
 formaciones en todo el stage, llegar a LASER (el 4º slot del medidor)
@@ -463,6 +491,8 @@ el stage 1 completo desde cero cada vez es demasiado lento para iterar:
   `state.spawnIndex` al final del guion de `stage1.ts` para que no se
   disparen más oleadas encima. Entra directo a la secuencia `hold → warp →
   reveal` de §8.
+- **🐝 Enjambre** — adelanta `stageTime` y `spawnIndex` justo a la entrada del
+  enjambre (t=88s), sin tener que sobrevivir 88 segundos para verlo.
 - **🔫 Probar armas** — reinicia, planta un enemigo de práctica con 9999 hp
   quieto en pantalla (mismo tamaño que un enemigo real, para que el patrón de
   disparo se lea igual que en partida) y da 2 Options. Cada click adicional
@@ -483,6 +513,11 @@ una:
 | Evolución visual por fases | ✅ Aprobado — solo para el jefe por ahora | Ver §8. Extenderlo a enemigos regulares se descartó: mueren en 1-2 golpes, no da tiempo a "verse" la evolución y multiplica el trabajo de arte por variante |
 | Entrada de enemigos por otros lados (no solo desde la derecha) | ⏸ Pausado, se retoma después | Técnicamente barato — cada patrón ya es una función independiente en `game/behaviors/`, así que una entrada por arriba/abajo es un patrón nuevo, no un rediseño |
 | Enemigos no-nave (ej. un "pulpo espacial") | ⏸ Pausado, junto con lo anterior | Mismo mecanismo: nuevo behavior + nuevo sprite. No rompe la arquitectura, es una idea de contenido, no de motor |
+| Enemigos que disparan | ✅ Implementado | `sine` y `diver` disparan; `scout` y `swarm` no, a propósito. Ver §7 |
+| Enjambre estilo Galaxian | ✅ Implementado | Ver §7 y §8. Sin Power Core a propósito |
+| **Nave acosadora que suelta un ITEM** | 🔜 Siguiente | Nave que dispara y molesta pero **no intenta matarte**, y se va sola pasado un tiempo. Si la matas, suelta un item. La decisión "¿la persigo y me expongo, o la dejo ir?" es lo que la hace buena — es el OVNI rojo de Space Invaders. Barato: un behavior + un temporizador de fuga + un drop |
+| **Nave rival con misiles** | 🔜 Después de la acosadora | Un mini-jefe. Arquitectónicamente barato (el sistema del jefe ya existe, sería uno con menos fases). **Pero no va justo antes del jefe**: dos set-pieces pegados le quitan impacto al jefe. Va a mitad del stage → oleadas → rival → oleadas → enjambre → jefe |
+| **Items persistentes entre partidas (hangar)** | ⚠️ Milestone propio, no una feature | Son tres cosas en una: persistencia, una pantalla de hangar fuera del juego, y una economía balanceada. **Y choca con el multijugador**: dos jugadores con mejoras persistentes distintas obligan al servidor autoritativo a validarlas (si no, cualquiera edita su `localStorage` y entra con la nave máxima). Plan: hacer primero el drop (§ acosadora) para saber si el loop engancha, y diseñar el hangar aparte |
 
 Cuando se retome esto, el orden lógico es: primero jugar con los primeros
 assets reales (ver `ASSET_BRIEF.md`) para saber si el juego ya se siente bien

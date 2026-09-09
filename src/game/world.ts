@@ -176,6 +176,35 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
   }
 }
 
+const ENEMY_FIRE_MIN = 1.6;
+const ENEMY_FIRE_MAX = 3.4;
+
+/** Un enemigo solo dispara mientras está dentro de pantalla y no pegado al
+ * borde izquierdo — si no, aparecen balas "de la nada" fuera de cuadro. */
+function tryEnemyFire(state: GameState, e: Enemy, dt: number): void {
+  if (!e.canShoot) return;
+
+  e.fireCooldown -= dt;
+  if (e.fireCooldown > 0) return;
+
+  const onScreen = e.x < state.worldW - 10 && e.x > 60;
+  if (!onScreen) return;
+
+  const b = state.enemyBullets.acquire();
+
+  if (e.behavior === 'diver' && !e.diving) {
+    // El diver apunta: su disparo telegrafía que va a lanzarse.
+    const dx = state.player.x - e.x;
+    const dy = state.player.y - e.y;
+    const len = Math.hypot(dx, dy) || 1;
+    spawnBullet(b, e.x - e.halfW, e.y, (dx / len) * ENEMY_BULLET_SPEED, (dy / len) * ENEMY_BULLET_SPEED, 1, false);
+  } else {
+    spawnBullet(b, e.x - e.halfW, e.y, -ENEMY_BULLET_SPEED, 0, 1, false);
+  }
+
+  e.fireCooldown = state.rng.range(ENEMY_FIRE_MIN, ENEMY_FIRE_MAX);
+}
+
 function stepEnemies(state: GameState, dt: number): void {
   const ctx = { playerX: state.player.x, playerY: state.player.y };
 
@@ -184,12 +213,17 @@ function stepEnemies(state: GameState, dt: number): void {
 
     const behavior = behaviors[e.behavior];
     behavior(e, dt, ctx);
+    tryEnemyFire(state, e, dt);
 
     if (e.x < -40) {
       if (e.formationId >= 0) {
         const f = state.formations.get(e.formationId);
         if (f) registerEscape(f);
       }
+      e.active = false;
+    } else if (e.y < -60 || e.y > state.worldH + 60) {
+      // Un miembro del enjambre que se lanzó en diagonal puede salir por
+      // arriba o por abajo en vez de por la izquierda.
       e.active = false;
     }
   }
@@ -202,7 +236,9 @@ function stepProjectiles(state: GameState, dt: number): void {
   }
   for (const b of state.enemyBullets.active()) {
     stepBullet(b, dt);
-    if (b.x < -30) b.active = false;
+    if (b.x < -30 || b.x > state.worldW + 30 || b.y < -30 || b.y > state.worldH + 30) {
+      b.active = false;
+    }
   }
   for (const m of state.missiles.active()) {
     stepMissile(m, dt);

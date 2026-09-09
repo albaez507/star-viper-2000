@@ -3,6 +3,7 @@ import { scout } from './scout';
 import { sine } from './sine';
 import { diver } from './diver';
 import { formation } from './formation';
+import { swarm } from './swarm';
 
 export type BehaviorContext = { playerX: number; playerY: number };
 
@@ -11,4 +12,5 @@ export const behaviors: Record<string, (e: Enemy, dt: number, ctx: BehaviorConte
   sine: (e, dt) => sine(e, dt),
   diver: (e, dt, ctx) => diver(e, dt, ctx.playerX, ctx.playerY),
   formation: (e, dt) => formation(e, dt),
+  swarm: (e, dt, ctx) => swarm(e, dt, ctx.playerX, ctx.playerY),
 };

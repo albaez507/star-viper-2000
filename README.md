@@ -141,10 +141,11 @@ Patrones de la fase 1:
 
 | Patrón | Movimiento |
 |---|---|
-| `scout` | Recto en horizontal, velocidad constante |
-| `sine` | Horizontal + oscilación senoidal vertical |
-| `diver` | Entra recto, luego se lanza hacia la posición del jugador |
-| `formation` | Miembro de un grupo de 6 ligado a un Power Core |
+| `scout` | Recto en horizontal, velocidad constante. **No dispara** |
+| `sine` | Horizontal + oscilación senoidal vertical. **Dispara recto** |
+| `diver` | Entra recto, luego se lanza hacia la posición del jugador. **Dispara apuntando** (el disparo telegrafía que va a lanzarse) |
+| `formation` | Miembro de un grupo de 6 ligado a un Power Core. No dispara |
+| `swarm` | Enjambre estilo Galaxian en horizontal: entra, aguanta una rejilla de 3×4 y se van descolgando de a uno para estrellarse contra el jugador. No dispara y **no suelta Power Core** |
 
 Añadir un patrón nuevo = añadir una función al registro de comportamientos y
 referenciarla por nombre desde los datos de la oleada. No se toca ninguna otra

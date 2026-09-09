@@ -63,6 +63,7 @@ function resetGame(): void {
 
 const devPlayEl = document.getElementById('dev-play') as HTMLElement;
 const devBossEl = document.getElementById('dev-boss') as HTMLElement;
+const devSwarmEl = document.getElementById('dev-swarm') as HTMLElement;
 const devWeaponsEl = document.getElementById('dev-weapons') as HTMLElement;
 const devReadoutEl = document.getElementById('dev-weapon-readout') as HTMLElement;
 
@@ -77,6 +78,15 @@ devBossEl.addEventListener('click', () => {
   resetGame();
   state.spawnIndex = STAGE_1.length;
   spawnBoss(state.boss, state.worldW, state.worldH);
+});
+
+devSwarmEl.addEventListener('click', () => {
+  resetGame();
+  const swarmIndex = STAGE_1.findIndex((ev) => 'kind' in ev && ev.kind === 'swarm');
+  if (swarmIndex >= 0) {
+    state.spawnIndex = swarmIndex;
+    state.stageTime = STAGE_1[swarmIndex].t;
+  }
 });
 
 devWeaponsEl.addEventListener('click', () => {

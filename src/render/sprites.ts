@@ -12,6 +12,7 @@ const ENEMY_COLORS: Record<string, string> = {
   sine: '#ffd23f',
   diver: '#ff8c3e',
   formation: '#c792ff',
+  swarm: '#5ee6ff',
 };
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {

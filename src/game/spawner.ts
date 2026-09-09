@@ -43,6 +43,10 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
     e.hp = isFormation ? 2 : wave.kind === 'diver' ? 2 : 1;
     e.maxHp = e.hp;
     e.triggerX = state.worldW * 0.55;
+    e.canShoot = false;
+    e.diveDelay = 0;
+    // Escalonado inicial para que una oleada entera no dispare a la vez.
+    e.fireCooldown = state.rng.range(0.8, 2.6);
 
     switch (wave.kind) {
       case 'scout':
@@ -54,11 +58,13 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.behavior = 'sine';
         e.vx = -55;
         e.vy = 0;
+        e.canShoot = true;
         break;
       case 'diver':
         e.behavior = 'diver';
         e.vx = -60;
         e.vy = 0;
+        e.canShoot = true;
         break;
       case 'formation': {
         e.behavior = 'formation';
@@ -71,9 +77,30 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.x = state.worldW + 40 + offset.x;
         break;
       }
+      case 'swarm': {
+        e.behavior = 'swarm';
+        e.vx = 0;
+        e.vy = 0;
+        e.t = 0;
+
+        const col = Math.floor(i / SWARM_ROWS);
+        const row = i % SWARM_ROWS;
+        e.anchorX = state.worldW - 140 - col * 48;
+        e.anchorY = state.worldH / 2 + (row - (SWARM_ROWS - 1) / 2) * 64;
+        e.x = state.worldW + 60 + col * 48;
+        e.y = e.anchorY;
+        e.baseY = e.anchorY;
+        e.diveDelay = SWARM_FIRST_DIVE + i * SWARM_DIVE_SPACING;
+        e.score = 150;
+        break;
+      }
     }
   }
 }
+
+const SWARM_ROWS = 4;
+const SWARM_FIRST_DIVE = 2.2;
+const SWARM_DIVE_SPACING = 0.5;
 
 function formationOffset(shape: 'v' | 'column' | 'line', i: number): { x: number; y: number } {
   switch (shape) {

@@ -406,3 +406,67 @@ lograrlo.
 Verificado: con la barra de desarrollo, `dev-play` + avance de `stageTime` a
 85s confirma `formations.size === 6` (las 6 disparadas) y `spawnIndex` en la
 posición correcta, sin afectar el disparo del jefe a `t=90`.
+
+## 2026-09-09 — Enemigos que disparan + enjambre estilo Galaxian
+
+El usuario propuso cuatro ideas (enemigos que disparan, nave acosadora con
+drop de item, nave rival con misiles, y enjambre pre-jefe) y pidió opinión
+antes de implementar. Se priorizaron las dos más baratas y de mayor impacto,
+que además reutilizan arquitectura ya existente.
+
+**Enemigos que disparan** (`world.ts::tryEnemyFire`): `Enemy.fireCooldown` ya
+existía en el tipo desde el milestone 1 pero **nunca se usaba** — el único que
+disparaba era el jefe, así que todo el peligro de los enemigos normales era
+por choque y el juego era unidimensional ("no toques nada").
+
+- `sine` dispara recto; `diver` dispara **apuntando** y solo antes de
+  lanzarse, así el disparo telegrafía el picado.
+- `scout` **nunca** dispara, a propósito: es la carne de cañón legible. Si
+  todo dispara, nada destaca.
+- Solo disparan estando dentro de pantalla (`x` entre 60 y `worldW-10`), para
+  que no aparezcan balas desde fuera de cuadro.
+- La cadencia se sortea con `state.rng` (el RNG con semilla), tanto la
+  inicial como la de cada disparo — así una oleada no dispara al unísono y la
+  simulación sigue siendo determinista para el multijugador futuro.
+- Se le añadieron límites en Y a las balas enemigas en `stepProjectiles`:
+  antes solo se reciclaban al salir por la izquierda, y los disparos
+  apuntados del `diver` pueden salir por arriba o por abajo (fuga de pool).
+
+**Enjambre** (`game/behaviors/swarm.ts`, nuevo patrón `swarm`): Galaxian en
+horizontal. 12 enemigos entran, se acomodan en una rejilla de 3×4 a la
+derecha, "respiran" alrededor de su ranura, y se van descolgando de a uno
+para fijar un vector hacia el jugador y estrellarse.
+
+- **Sin controlador de grupo**: el escalonado vive en el `diveDelay` de cada
+  enemigo (asignado en el spawner, 2.2s + 0.5s por miembro). Cada enemigo
+  sigue siendo autónomo igual que el resto de patrones, y aun así se lee como
+  "se descuelgan de a uno".
+- **No suelta Power Core** a propósito: es un gauntlet de supervivencia, y
+  darle core diluiría el lenguaje ya establecido de "formación de 6 = core".
+- Color propio (cian `#5ee6ff`) para que se distinga de un vistazo.
+- Va a los 88s y el jefe se corrió de 90 a 104: si se solapan, el enjambre se
+  come la secuencia de llegada del jefe y ambos momentos pierden fuerza.
+
+**Verificado en el navegador:**
+
+- Enjambre: rejilla 3×4 confirmada (anchorY 174/238/302/366, 4 filas cada
+  64px), aguanta ~2s y luego se vacía 12 → 10 → 8 → 6 → 4 → 2 → 0 a ~2 por
+  segundo. Screenshot de la rejilla completa.
+- Disparo enemigo, 12s por tipo: `scout` **0** balas, `sine` **7**,
+  `diver` **5**. Exactamente lo diseñado.
+- Un detalle que al principio pareció bug: el enjambre "se congelaba" en 4
+  enemigos. No era bug — había matado al jugador de prueba (que estaba
+  quieto), `gameOver` cortaba `step()` y todo quedaba detenido. Repetido con
+  el jugador invulnerable, la secuencia completa se ve bien. El enjambre es
+  letal si no esquivas, que es justamente el punto.
+
+**Nota de método:** el `loop.tick()` manual arrastra el `last` interno entre
+llamadas de herramienta, así que un solo tick puede quemar hasta `MAX_FRAME`
+(0.25s) de golpe y adelantar la simulación. Para fotografiar un instante
+exacto hay que **pausar primero** (la pausa corta `step()` de verdad) y
+recién después acomodar el estado.
+
+**Pendiente de la lista del usuario** (anotado en `LOGIC.md` §14): nave
+acosadora con drop de item (siguiente), nave rival con misiles (a mitad del
+stage, no pegada al jefe), y el hangar de items persistentes — este último es
+un milestone propio y choca con el multijugador autoritativo.
