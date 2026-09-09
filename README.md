@@ -1,26 +1,31 @@
 # Star Viper 2000
 
 Shoot-'em-up horizontal de arcade para navegador. Inspirado en los shooters
-espaciales clásicos y en los juegos móviles de principios de los 2000, pero con
-identidad visual, assets y diseño de juego propios.
+espaciales clásicos y en Contra Force (acabado de sprite NES), con identidad
+propia: no es un clon.
 
-Estado: **Milestone 1 — prototipo jugable con placeholders geométricos.**
+Hay dos sectores jugables: **Órbita Sentinel** (espacio) y **Jardines del
+Céfiro** (cielo). El cielo es un borrador de arte. El jugador aún no ha
+decidido si se queda, se redibuja al brief, o se tira.
 
 ---
 
-## Stack
+## Repositorio activo
 
-| Capa | Herramienta |
+**Este es el único repo. No hay otro.**
+
+| | |
 |---|---|
-| Lenguaje | TypeScript |
-| Build / dev server | Vite |
-| Render | HTML5 Canvas 2D |
-| Audio | Web Audio API (sonidos sintetizados, sin ficheros) |
-| Input móvil | Pointer Events |
-| Motor de juego | Ninguno — motor 2D propio sobre Canvas |
-| Deploy | Cloudflare Pages (ver `docs/LOGIC.md` § Deploy) |
+| Activo | https://github.com/albaez507/star-viper-2000 |
+| Carpeta local | `C:\Users\witha\Documents\DEVELOPMENT EMANUEL\star-viper-2000` |
+| Remoto `origin` | `albaez507/star-viper-2000` · rama `main` |
+| Privado | sí |
 
-Sin motor de juego en la v1. Sin dependencias de runtime.
+`albaez507/Star-Viper` fue una copia vacía del mismo día. **Se eliminó a
+propósito.** Si un agente ve ese nombre en un chat viejo, ignorarlo. No
+crear otro repo. No empujar a otro sitio.
+
+Cualquier cambio se commitea y se pushea a **este** `origin/main`.
 
 ---
 
@@ -28,149 +33,126 @@ Sin motor de juego en la v1. Sin dependencias de runtime.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5175
+npm run test     # simulación de sectores, armas y cores
 npm run build    # genera dist/
-npm run preview  # sirve dist/ para probar la build
+npm run preview  # sirve dist/
 ```
 
-Arriba del canvas hay una **barra de desarrollo** (solo en local, no se saca
-antes de publicar) para no tener que jugar el stage completo cada vez que se
-quiere probar algo:
+La barra DEV y el laboratorio visual están escondidos. Se abren con
+**Herramientas de vuelo +** abajo a la derecha.
 
 | Botón | Qué hace |
 |---|---|
-| ▶ Jugar | Empieza la partida normal desde el principio |
-| 👹 Ir al jefe | Salta directo a la secuencia de llegada del jefe (警告 y todo) |
-| 🔫 Probar armas | Pone un enemigo de práctica con mucha vida quieto en pantalla; cada click cicla SINGLE → DOUBLE → LASER para comparar daño/cadencia/patrón sin tener que ganar mejoras primero |
-
-El arma equipada también se ve siempre en el HUD ("ARMA: ...") junto a LIVES.
+| ▶ Jugar | Partida normal desde el principio |
+| 👹 Ir al jefe | Salta a la secuencia de llegada (警告) |
+| 🐝 Enjambre | Salta a la oleada de enjambre |
+| 🔫 Probar armas | Enemigo de práctica; cada click sube el arma / cambia de nave |
 
 ---
 
 ## Controles
 
-### Teclado (desarrollo / escritorio)
-
 | Tecla | Acción |
 |---|---|
 | Flechas / WASD | Mover |
-| Espacio | FIRE (disparo primario) |
-| M, X o Ctrl (izq.) | MISSILE |
-| Shift | PWR (activar la mejora seleccionada) |
+| Espacio | FIRE |
+| M, X o Ctrl (izq.) | MISSILE (bomba de área; segundo toque detona en el aire) |
 | Enter | Start / Restart |
-| P | Pausa / continuar |
+| P | Pausa |
 
-Hay además un botón de pausa (⏸) fijo en la esquina superior derecha de la
-pantalla, visible siempre durante la partida — no depende del teclado.
-
-**MISSILE es una bomba, no un arma secundaria de disparo continuo**: hace daño
-en área (explota al impactar y daña a todo lo que esté cerca del punto de
-explosión, no solo a un enemigo) y tiene un cooldown de ~1.4s (baja con la
-mejora MSL del medidor de poder). Se ve una barra "MISIL" bajo LIVES en el HUD
-que se llena mientras recarga y se pone naranja brillante — con el texto
-"MISIL LISTO" — en cuanto se puede volver a usar. El botón táctil MSL también
-brilla cuando está listo.
-
-**Detonación manual**: si ya hay un misil en vuelo y se vuelve a pulsar
-MISSILE, el misil en camino explota ahí mismo en vez de esperar a chocar con
-algo — así se puede elegir el punto exacto de la explosión en vez de depender
-de que un enemigo se cruce en la trayectoria.
-
-### Táctil (iPhone / móvil)
-
-```
-IZQUIERDA                        DERECHA
-
-       UP
-                                     FIRE
-LEFT  (PWR)  RIGHT
-                                    MISSILE
-      DOWN
-```
-
-- **PWR** es el botón circular central del D-pad. Se pulsa con el pulgar
-  izquierdo sin soltar la cruceta.
-- **FIRE** y **MISSILE** van apilados en vertical, no lado a lado.
-- Multi-touch real: mover y disparar a la vez es obligatorio.
-- Diseñado primero para pantalla tipo iPhone (390×844), en horizontal y en
-  vertical.
+Táctil: D-pad a la izquierda, FIRE encima de MISSILE a la derecha.
+Pensado primero para iPhone.
 
 ---
 
-## Cómo funciona el medidor de poder
+## Cómo funciona ahora
 
-Barra de 6 casillas, en orden fijo:
+Ya **no** hay medidor Gradius ni botón PWR. Cada nave tiene su arma:
 
-```
-SPEED · MISSILE · DOUBLE · LASER · OPTION · SHIELD
-```
+1. Empiezas con el disparo básico.
+2. Si destruyes una **formación de 6** entera (nadie escapa), cae un
+   **Power Core**.
+3. El primer core **activa el arma de tu nave**. Los siguientes la suben
+   de nivel (máximo 3).
+4. Un golpe te baja **un nivel de arma** (y una vida, si no hay escudo).
 
-1. Los enemigos llegan a veces en **formaciones de seis**, marcadas visualmente.
-2. Si el jugador destruye la formación **entera antes de que ninguno escape**,
-   suelta un **Power Core**.
-3. Si **uno solo escapa**, no hay core. Nada de "cores cada X kills".
-4. Recoger un core **avanza el cursor** una casilla en el medidor.
-5. Pulsar **PWR** activa la mejora donde esté el cursor y **reinicia el cursor**
-   a la primera casilla.
+| Nave | Arma | Trade-off |
+|---|---|---|
+| **VULCAN** | Ráfaga | 3 vidas. Más balas, daño 1 |
+| **LANCE** | Buscador | 2 vidas. Persigue, dispara poco |
 
-Es decir: el jugador decide entre gastar pronto (SPEED barato) o aguantar
-formaciones seguidas para llegar a OPTION o SHIELD.
+FORGE y MINE están en `docs/ARMAS.md` y **aún no existen**.
 
-**DOUBLE y LASER se ven y se sienten distintos, no solo cambian el número de
-daño:**
-
-| Arma | Disparo | Daño | Cadencia | Especial |
-|---|---|---|---|---|
-| SINGLE (inicial) | Un disparo dorado | 1 | Rápida | — |
-| DOUBLE | Dos disparos dorados en paralelo | 1 cada uno (2 en total por ráfaga) | Igual que SINGLE | El doble de balas en pantalla |
-| LASER | Un rayo alargado color teal | **2** por impacto | Algo más lenta | **Atraviesa enemigos** — un solo disparo puede dañar a varios en línea |
-
-DOUBLE y LASER se excluyen entre sí (activar uno reemplaza al otro).
-
-Detalle de cada mejora y del sistema de Options en `docs/LOGIC.md`.
+La acosadora suelta un **item de hangar** (progreso entre partidas). El
+enjambre no suelta core. Detalle en `docs/LOGIC.md` y `docs/HANGAR.md`.
 
 ---
 
-## Cómo funcionan los patrones de enemigos
+## To-do
 
-Cada enemigo tiene un **comportamiento** intercambiable: una función que recibe
-el enemigo, el delta-time y el estado del mundo, y actualiza su posición. El
-enemigo no sabe cómo se mueve; el comportamiento sí.
+Lista viva. Un agente que cierre un punto lo marca `[x]` y lo anota en
+`docs/BITACORA.md`. No inventar un segundo tablero.
 
-Patrones de la fase 1:
+### Decidir (el jugador, no el agente)
 
-| Patrón | Movimiento |
-|---|---|
-| `scout` | Recto en horizontal, velocidad constante. **No dispara** |
-| `sine` | Horizontal + oscilación senoidal vertical. **Dispara recto** |
-| `diver` | Entra recto, luego se lanza hacia la posición del jugador. **Dispara apuntando** (el disparo telegrafía que va a lanzarse) |
-| `formation` | Miembro de un grupo de 6 ligado a un Power Core. No dispara |
-| `harasser` | Nave acosadora. **No intenta matarte** y se aparta si te acercas; solo molesta y dispara. Huye a los 9s. Si la matas antes, **suelta un ITEM** para el hangar |
-| `rival` | Mini-jefe de mitad de stage. Te persigue en vertical para dispararte de frente y lanza misiles. 22 de vida, con barra propia |
-| `swarm` | Enjambre estilo Galaxian en horizontal: entra, aguanta una rejilla de 3×4 y se van descolgando de a uno para estrellarse contra el jugador. No dispara y **no suelta Power Core** |
+- [ ] **Arte del cielo.** ¿Se queda Jardines del Céfiro, se redibuja al
+      brief NES de `docs/ASSET_BRIEF.md`, o se tira y solo queda Órbita
+      Sentinel? No generar más packs de arte hasta que esto esté decidido.
+- [ ] ¿El jefe del cielo (el pez/guardián) se acepta o se vuelve a
+      Sentinel, fortaleza blocky?
 
-Añadir un patrón nuevo = añadir una función al registro de comportamientos y
-referenciarla por nombre desde los datos de la oleada. No se toca ninguna otra
-parte del motor.
+### Arte (cuando haya decisión)
+
+- [ ] Nave por **capas alineadas** (casco / alas / motor / cañón). Hoy
+      solo se dibuja el casco: las otras tres piezas no coinciden.
+- [ ] Enemigos dañados que faltan, a tamaño real del brief.
+- [ ] Fondos que repitan sin costura (960×540, 3 capas). El cielo actual
+      es una sola imagen.
+- [ ] Capa cercana de verdad, no un recorte del mismo fondo.
+
+### Juego
+
+- [ ] Naves **FORGE** y **MINE** (`docs/ARMAS.md`).
+- [ ] Probar balance otra vez después de jugar una run completa (cores
+      fáciles de coger, arma que no borra la pantalla).
+- [ ] Entrada de enemigos por arriba / abajo (pausado a propósito).
+- [ ] Obstáculos y colisión contra terreno (hace falta motor nuevo).
+
+### Publicar / probar
+
+- [ ] Esconder DEV + visual lab en la build que ve un jugador.
+- [ ] Probar en un **iPhone real**: táctil, audio, portrait.
+- [ ] Conectar **Cloudflare Pages** a este repo (`npm run build` → `dist/`).
+- [ ] Revisar volumen del audio sintetizado en dispositivo real.
+
+### Más adelante (no ahora)
+
+- [ ] Viaje continuo tierra → nubes → espacio → otro planeta.
+- [ ] Entornos cueva / océano / volcán / hielo.
+- [ ] Piezas de hangar que se vean puestas en la nave.
+- [ ] Multijugador cooperativo. El hangar en `localStorage` **no sirve**
+      para eso (`docs/HANGAR.md`).
+
+---
+
+## Stack
+
+TypeScript + Vite + Canvas 2D. Audio sintetizado (Web Audio). Sin motor
+de juego, sin dependencias de runtime. Deploy previsto: Cloudflare Pages.
 
 ---
 
 ## Documentación
 
-| Fichero | Contenido |
+| Fichero | Para qué |
 |---|---|
-| `docs/STRUCTURE.md` | Estructura de carpetas y qué hace cada módulo |
-| `docs/LOGIC.md` | Arquitectura, bucle de juego, sistemas, plan de multijugador |
-| `docs/BITACORA.md` | Registro cronológico de decisiones y avances |
-| `docs/ARMAS.md` | Propuesta del sistema de armas que sustituye al medidor de poder |
-| `docs/HANGAR.md` | Progreso persistente: items, mejoras y por qué choca con el multijugador |
-| `docs/ASSET_BRIEF.md` | Brief de sprites para pasar a otro modelo: tamaños, paleta, orientación |
+| `docs/STRUCTURE.md` | Carpetas y reglas de importación |
+| `docs/LOGIC.md` | Arquitectura y sistemas |
+| `docs/BITACORA.md` | Qué se hizo y por qué, en orden |
+| `docs/ARMAS.md` | Diseño de armas (FORGE/MINE aún no) |
+| `docs/HANGAR.md` | Items persistentes |
+| `docs/ASSET_BRIEF.md` | Brief de arte: Contra Force NES, paleta, tamaños |
 
----
-
-## Multijugador (futuro, NO en la fase 1)
-
-El objetivo a largo plazo es **cooperativo online para 2 jugadores desde dos
-teléfonos distintos**, con servidor autoritativo. La fase 1 no implementa red,
-pero la arquitectura ya separa estado / input / render para que se pueda añadir
-sin reescribir el juego. Ver `docs/LOGIC.md` § Preparación para multijugador.
+El código de simulación vive en `src/game/` y **no** toca DOM, Canvas ni
+`Math.random()`. El arte y el menú viven en `src/render/` y `src/main.ts`.
