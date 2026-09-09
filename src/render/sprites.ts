@@ -19,7 +19,7 @@ const ENEMY_COLORS: Record<string, string> = {
   rival: '#ff4fd8',
 };
 
-const ASSET_ROOT = '/assets/';
+const ASSET_ROOT = `${import.meta.env.BASE_URL}assets/`;
 const images = new Map<string, HTMLImageElement>();
 const failedAssets = new Set<string>();
 let visualStyle = 'classic';

@@ -13,7 +13,7 @@ export class Sky {
   readonly ready: Promise<void>;
 
   constructor() {
-    this.background.src = '/assets/sky/background.png';
+    this.background.src = `${import.meta.env.BASE_URL}assets/sky/background.png`;
     this.ready = this.background.decode().then(() => {
       this.tile = document.createElement('canvas');
       this.tile.width = 960;

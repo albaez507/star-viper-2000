@@ -16,7 +16,7 @@ export function setSkyActive(active: boolean): void { skyActive = active; }
 
 async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[]): Promise<void> {
   const img = new Image();
-  img.src = `/assets/sky/${file}.png`;
+  img.src = `${import.meta.env.BASE_URL}assets/sky/${file}.png`;
   await img.decode();
   const source = document.createElement('canvas');
   source.width = img.naturalWidth; source.height = img.naturalHeight;
