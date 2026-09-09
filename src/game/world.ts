@@ -14,6 +14,7 @@ import { type Formation, registerKill, registerEscape } from './formations';
 import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
+import { makeItem, spawnItem, stepItem, type Item } from './items';
 import { createPowerMeter, advanceCursor, activateSlot, type PowerMeter } from './powermeter';
 import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
@@ -34,10 +35,14 @@ export type GameState = {
   enemyBullets: Pool<Bullet>;
   missiles: Pool<Missile>;
   powerCores: Pool<PowerCore>;
+  items: Pool<Item>;
 
   boss: Boss;
 
   score: number;
+  /** Items de hangar recogidos en esta partida. Se suman al total
+   * persistente solo cuando la partida termina — morir no los regala. */
+  itemsCollected: number;
   stageTime: number;
   spawnIndex: number;
   nextEnemyId: number;
@@ -63,8 +68,10 @@ export function createWorld(worldW: number, worldH: number, seed = 1337): GameSt
     enemyBullets: new Pool(makeBullet, 32),
     missiles: new Pool(makeMissile, 8),
     powerCores: new Pool(makePowerCore, 4),
+    items: new Pool(makeItem, 4),
     boss: makeBoss(),
     score: 0,
+    itemsCollected: 0,
     stageTime: 0,
     spawnIndex: 0,
     nextEnemyId: 1,
@@ -99,6 +106,7 @@ export function step(state: GameState, input: InputFrame, dt: number): void {
   stepBoss(state, dt);
   stepCollisions(state);
   stepPowerCores(state, dt);
+  stepItems(state, dt);
 
   if (state.player.lives <= 0) {
     state.gameOver = true;
@@ -205,6 +213,23 @@ function tryEnemyFire(state: GameState, e: Enemy, dt: number): void {
   e.fireCooldown = state.rng.range(ENEMY_FIRE_MIN, ENEMY_FIRE_MAX);
 }
 
+const RIVAL_MISSILE_SPEED = 150;
+
+/** La rival lanza misiles lentos y grandes: se esquivan, pero te obligan a
+ * moverte, que es justo lo que ella quiere para ponerse a tu altura. */
+function tryRivalMissile(state: GameState, e: Enemy, dt: number): void {
+  if (e.missileCooldown <= 0) return;
+
+  e.missileCooldown -= dt;
+  if (e.missileCooldown > 0) return;
+
+  if (e.x > state.worldW - 10) return;
+
+  const b = state.enemyBullets.acquire();
+  spawnBullet(b, e.x - e.halfW, e.y, -RIVAL_MISSILE_SPEED, 0, 1, false, false, true);
+  e.missileCooldown = state.rng.range(2.6, 4.2);
+}
+
 function stepEnemies(state: GameState, dt: number): void {
   const ctx = { playerX: state.player.x, playerY: state.player.y };
 
@@ -214,12 +239,16 @@ function stepEnemies(state: GameState, dt: number): void {
     const behavior = behaviors[e.behavior];
     behavior(e, dt, ctx);
     tryEnemyFire(state, e, dt);
+    if (e.behavior === 'rival') tryRivalMissile(state, e, dt);
 
     if (e.x < -40) {
       if (e.formationId >= 0) {
         const f = state.formations.get(e.formationId);
         if (f) registerEscape(f);
       }
+      e.active = false;
+    } else if (e.behavior === 'harasser' && e.x > state.worldW + 60) {
+      // Huyó con el item: se pierde la oportunidad.
       e.active = false;
     } else if (e.y < -60 || e.y > state.worldH + 60) {
       // Un miembro del enjambre que se lanzó en diagonal puede salir por
@@ -250,6 +279,13 @@ function stepPowerCores(state: GameState, dt: number): void {
   for (const c of state.powerCores.active()) {
     stepPowerCore(c, dt, state.player.x, state.player.y);
     if (c.x < -30) c.active = false;
+  }
+}
+
+function stepItems(state: GameState, dt: number): void {
+  for (const it of state.items.active()) {
+    stepItem(it, dt, state.player.x, state.player.y);
+    if (it.x < -30) it.active = false;
   }
 }
 
@@ -307,6 +343,11 @@ function explodeMissile(state: GameState, x: number, y: number, dmg: number): vo
 function killEnemy(state: GameState, e: Enemy): void {
   state.score += e.score;
   state.events.emit({ type: 'enemyDeath', x: e.x, y: e.y });
+
+  if (e.dropsItem) {
+    const it = state.items.acquire();
+    spawnItem(it, e.x, e.y);
+  }
 
   if (e.formationId >= 0) {
     const f = state.formations.get(e.formationId);
@@ -403,6 +444,14 @@ function stepCollisions(state: GameState): void {
       c.active = false;
       advanceCursor(state.powerMeter);
       state.events.emit({ type: 'coreCollected', slot: state.powerMeter.cursor });
+    }
+  }
+
+  for (const it of state.items.active()) {
+    if (hits(it.x, it.y, 10, 10, p.x, p.y, PLAYER_HALF_W + 8, PLAYER_HALF_H + 8)) {
+      it.active = false;
+      state.itemsCollected++;
+      state.events.emit({ type: 'itemCollected', x: it.x, y: it.y });
     }
   }
 }

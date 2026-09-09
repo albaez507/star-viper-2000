@@ -470,3 +470,82 @@ recién después acomodar el estado.
 acosadora con drop de item (siguiente), nave rival con misiles (a mitad del
 stage, no pegada al jefe), y el hangar de items persistentes — este último es
 un milestone propio y choca con el multijugador autoritativo.
+
+## 2026-09-09 (cont.) — El bug real de las armas + acosadora, rival y hangar
+
+### Por qué "las armas nunca cambian" NO era lo que parecía
+
+El usuario reportó por segunda vez que las armas no cambian jugando normal, y
+mandó una captura clave: **9900 puntos y el medidor completamente vacío**. La
+sesión anterior yo había culpado a la escasez de formaciones y añadido dos
+más; eso ayudaba, pero no era la causa.
+
+Se simuló un jugador jugando el stage entero, con tres niveles de habilidad:
+
+| Jugador simulado | Formaciones que **dieron** core | Cores **recogidos** |
+|---|---|---|
+| Bueno, sin perseguir cores | 6 | **0** |
+| Realista (puntería imperfecta) | 6 | **1** |
+
+Las formaciones sí soltaban el core. **El jugador casi nunca lo cobraba.** El
+core aparecía en la posición del último enemigo muerto (x≈850), con la Y fija,
+derivando a la izquierda a 70 px/s: para recogerlo había que adivinar su
+altura y quedarse ahí ~10 segundos mientras esquivabas. En combate real eso no
+pasa nunca. El premio se ganaba y se perdía solo, en silencio.
+
+**Arreglo** (`game/powercore.ts`): magnetismo. Dentro de 170px el core acelera
+hacia el jugador con fuerza proporcional a la cercanía — se siente como imán,
+no como teletransporte — y la caja de recogida es un poco mayor. Misma
+medición después: **4-6 de 6 recogidos**, medidor llegando a DBL/LSR/OPT/SHD.
+Ir a buscarlo sigue siendo la jugada; adivinar el píxel exacto ya no.
+
+La misma lección se aplicó al item del hangar desde el principio
+(`game/items.ts` tiene su propio magnetismo).
+
+### Las tres features pedidas, en el orden recomendado
+
+**1. Nave acosadora** (`behaviors/harasser.ts`): entra, se planta a 2/3 de
+pantalla, ondula y dispara. **No te persigue y se aparta si te acercas** — no
+busca matarte. A los 9 segundos huye por la derecha. Si la matas antes, suelta
+un item. Verificado los dos desenlaces: persiguiéndola → 3 impactos, muere,
+suelta item, +500 pts, 1 item recogido; ignorándola → huye sin dejar nada.
+
+**2. Nave rival** (`behaviors/rival.ts`): mini-jefe a mitad de stage (t=58).
+Se implementó como un enemigo con mucha vida (22) y no como un segundo sistema
+de jefe — no hacía falta duplicar esa maquinaria. **Te persigue en vertical**
+para dispararte de frente, y lanza misiles lentos y grandes. Lleva barra de
+vida propia (cualquier enemigo con maxHp > 6 la dibuja). Verificado que sigue
+tu altura sin llegar a igualarte (jugador 448 → rival 450, jugador 100 →
+rival 131: siempre por detrás, es más lenta que tú).
+
+Va a mitad de stage **a propósito, no pegada al jefe**: dos set-pieces
+seguidos le quitan impacto al jefe final.
+
+**3. Hangar** (`meta/progress.ts` + overlay HTML): items persistentes en
+`localStorage` y tres mejoras permanentes. Detalle completo en `docs/HANGAR.md`.
+Vive en `src/meta/`, **fuera de `src/game/`**, para no romper la regla de que
+la simulación no toca DOM ni almacenamiento (§12 de `LOGIC.md`). `main.ts`
+traduce el progreso a campos del jugador; `game/` no sabe que el hangar existe.
+
+Verificado el ciclo entero: morir con 5 items → se banquean → hangar muestra 5
+→ comprar CASCO (3) → quedan 2 y el casco sube a nivel 1 → partida nueva
+empieza con **4 vidas** → sobrevive a recargar la página.
+
+**Advertencia dejada por escrito en `HANGAR.md`:** esto no sirve tal cual para
+el multijugador. `localStorage` lo edita cualquiera desde la consola, y dos
+jugadores con mejoras distintas entran con naves desiguales. Cuando exista el
+servidor autoritativo, inventario y mejoras tienen que vivir y validarse ahí.
+
+### Bug encontrado de paso
+
+`resetGame()` no limpiaba `paused`: reiniciar estando en pausa arrancaba la
+partida congelada, sin nada en pantalla que explicara por qué. Se detectó
+porque una prueba automatizada se quedó sin avanzar. Arreglado.
+
+### Nota de método
+
+El harness de pruebas manuales necesita un reloj **monótono compartido**
+(`window.__t`). Al arrancar cada script con `performance.now()` fresco, el
+reloj quedaba por detrás del `last` interno del loop, los deltas salían
+negativos y el acumulador se hundía — el mundo dejaba de avanzar y parecía un
+bug del juego. No lo era.

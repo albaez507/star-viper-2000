@@ -5,6 +5,7 @@ import type { Enemy } from '../game/enemy';
 import type { Bullet } from '../game/bullets';
 import type { Missile } from '../game/missiles';
 import type { PowerCore } from '../game/powercore';
+import type { Item } from '../game/items';
 import type { Boss } from '../game/boss';
 
 const ENEMY_COLORS: Record<string, string> = {
@@ -13,6 +14,8 @@ const ENEMY_COLORS: Record<string, string> = {
   diver: '#ff8c3e',
   formation: '#c792ff',
   swarm: '#5ee6ff',
+  harasser: '#9dff5e',
+  rival: '#ff4fd8',
 };
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
@@ -74,7 +77,49 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   ctx.lineTo(e.halfW * 0.4, e.halfH);
   ctx.closePath();
   ctx.fill();
+
+  // La acosadora lleva un aura: hay que verla desde lejos para decidir si
+  // vale la pena ir por ella antes de que huya.
+  if (e.behavior === 'harasser') {
+    ctx.strokeStyle = `rgba(157, 255, 94, ${0.35 + Math.sin(e.t * 7) * 0.25})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, e.halfW + 9, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   ctx.restore();
+
+  // Barra de vida solo para enemigos que aguantan varios impactos (la rival).
+  if (e.maxHp > 6 && e.hp < e.maxHp) {
+    const w = e.halfW * 2;
+    const x = e.x - w / 2;
+    const y = e.y - e.halfH - 12;
+    ctx.fillStyle = 'rgba(6, 8, 16, 0.7)';
+    ctx.fillRect(x - 1, y - 1, w + 2, 6);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(x, y, w, 4);
+    ctx.fillStyle = ENEMY_COLORS[e.behavior] ?? '#ff5470';
+    ctx.fillRect(x, y, w * Math.max(0, e.hp / e.maxHp), 4);
+  }
+}
+
+export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
+  const pulse = 1 + Math.sin(it.t * 7) * 0.18;
+  ctx.save();
+  ctx.translate(it.x, it.y);
+  ctx.rotate(it.t * 2.2);
+  ctx.fillStyle = '#9dff5e';
+  ctx.fillRect(-7 * pulse, -7 * pulse, 14 * pulse, 14 * pulse);
+  ctx.fillStyle = '#0a0e17';
+  ctx.fillRect(-3 * pulse, -3 * pulse, 6 * pulse, 6 * pulse);
+  ctx.restore();
+
+  ctx.strokeStyle = `rgba(157, 255, 94, ${0.4 + Math.sin(it.t * 9) * 0.3})`;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(it.x, it.y, 15, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 const BOSS_PHASE_COLOR: Record<1 | 2 | 3, string> = {

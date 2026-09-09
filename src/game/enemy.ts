@@ -28,6 +28,12 @@ export type Enemy = {
   /** Segundos que este miembro del enjambre aguanta en formación antes de
    * lanzarse. Escalonado por miembro para que se descuelguen de a uno. */
   diveDelay: number;
+  /** Segundos que la acosadora aguanta antes de huir por la derecha. */
+  lifetime: number;
+  /** Si al morir suelta un item de hangar (solo la acosadora, por ahora). */
+  dropsItem: boolean;
+  /** Cadencia de misil, solo para la nave rival. 0 = no lanza misiles. */
+  missileCooldown: number;
   active: boolean;
 };
 
@@ -38,6 +44,7 @@ export function makeEnemy(): Enemy {
     fireCooldown: 0, score: 100, halfW: 13, halfH: 12,
     formationId: -1, triggerX: 0, diving: false, divingVx: 0, divingVy: 0,
     canShoot: false, anchorX: 0, anchorY: 0, diveDelay: 0,
+    lifetime: 0, dropsItem: false, missileCooldown: 0,
     active: false,
   };
 }

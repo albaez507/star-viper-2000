@@ -145,6 +145,8 @@ Patrones de la fase 1:
 | `sine` | Horizontal + oscilación senoidal vertical. **Dispara recto** |
 | `diver` | Entra recto, luego se lanza hacia la posición del jugador. **Dispara apuntando** (el disparo telegrafía que va a lanzarse) |
 | `formation` | Miembro de un grupo de 6 ligado a un Power Core. No dispara |
+| `harasser` | Nave acosadora. **No intenta matarte** y se aparta si te acercas; solo molesta y dispara. Huye a los 9s. Si la matas antes, **suelta un ITEM** para el hangar |
+| `rival` | Mini-jefe de mitad de stage. Te persigue en vertical para dispararte de frente y lanza misiles. 22 de vida, con barra propia |
 | `swarm` | Enjambre estilo Galaxian en horizontal: entra, aguanta una rejilla de 3×4 y se van descolgando de a uno para estrellarse contra el jugador. No dispara y **no suelta Power Core** |
 
 Añadir un patrón nuevo = añadir una función al registro de comportamientos y
@@ -160,6 +162,7 @@ parte del motor.
 | `docs/STRUCTURE.md` | Estructura de carpetas y qué hace cada módulo |
 | `docs/LOGIC.md` | Arquitectura, bucle de juego, sistemas, plan de multijugador |
 | `docs/BITACORA.md` | Registro cronológico de decisiones y avances |
+| `docs/HANGAR.md` | Progreso persistente: items, mejoras y por qué choca con el multijugador |
 | `docs/ASSET_BRIEF.md` | Brief de sprites para pasar a otro modelo: tamaños, paleta, orientación |
 
 ---

@@ -77,6 +77,46 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.x = state.worldW + 40 + offset.x;
         break;
       }
+      case 'harasser': {
+        e.behavior = 'harasser';
+        e.vx = 0;
+        e.vy = 0;
+        e.t = 0;
+        e.hp = 4;
+        e.maxHp = 4;
+        e.anchorX = state.worldW * 0.68;
+        e.anchorY = state.worldH / 2;
+        e.x = state.worldW + 40;
+        e.y = e.anchorY;
+        e.baseY = e.anchorY;
+        e.canShoot = true;
+        e.dropsItem = true;
+        e.lifetime = 9;
+        e.score = 400;
+        e.halfW = 15;
+        e.halfH = 14;
+        break;
+      }
+      case 'rival': {
+        e.behavior = 'rival';
+        e.vx = 0;
+        e.vy = 0;
+        e.t = 0;
+        e.hp = 22;
+        e.maxHp = 22;
+        e.anchorX = state.worldW * 0.74;
+        e.anchorY = state.worldH / 2;
+        e.x = state.worldW + 60;
+        e.y = e.anchorY;
+        e.baseY = e.anchorY;
+        e.canShoot = true;
+        e.missileCooldown = 2.5;
+        e.fireCooldown = 1.2;
+        e.score = 1200;
+        e.halfW = 26;
+        e.halfH = 22;
+        break;
+      }
       case 'swarm': {
         e.behavior = 'swarm';
         e.vx = 0;

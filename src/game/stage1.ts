@@ -1,6 +1,6 @@
 export type WaveSpawn = {
   t: number;
-  kind: 'scout' | 'sine' | 'diver' | 'formation' | 'swarm';
+  kind: 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival';
   count: number;
   shape?: 'v' | 'column' | 'line';
 };
@@ -24,17 +24,22 @@ export const STAGE_1: StageEvent[] = [
   { t: 8.0, kind: 'formation', count: 6, shape: 'v' },
   { t: 16.0, kind: 'sine', count: 4 },
   { t: 22.0, kind: 'formation', count: 6, shape: 'column' },
-  { t: 30.0, kind: 'diver', count: 3 },
-  { t: 36.0, kind: 'formation', count: 6, shape: 'line' },
-  { t: 44.0, kind: 'scout', count: 6 },
-  { t: 50.0, kind: 'formation', count: 6, shape: 'v' },
-  { t: 58.0, kind: 'sine', count: 5 },
-  { t: 64.0, kind: 'formation', count: 6, shape: 'column' },
-  { t: 72.0, kind: 'diver', count: 4 },
-  { t: 78.0, kind: 'formation', count: 6, shape: 'line' },
+  { t: 28.0, kind: 'harasser', count: 1 },
+  { t: 34.0, kind: 'diver', count: 3 },
+  { t: 40.0, kind: 'formation', count: 6, shape: 'line' },
+  { t: 46.0, kind: 'scout', count: 6 },
+  { t: 52.0, kind: 'formation', count: 6, shape: 'v' },
+  // Mini-jefe a mitad de stage. NO pegado al jefe final: dos set-pieces
+  // seguidos le quitan impacto al jefe.
+  { t: 58.0, kind: 'rival', count: 1 },
+  { t: 68.0, kind: 'formation', count: 6, shape: 'column' },
+  { t: 74.0, kind: 'harasser', count: 1 },
+  { t: 78.0, kind: 'sine', count: 5 },
+  { t: 84.0, kind: 'diver', count: 4 },
+  { t: 90.0, kind: 'formation', count: 6, shape: 'line' },
   // Enjambre: el crescendo justo antes del jefe. NO suelta Power Core a
   // propósito — es un gauntlet de supervivencia, y darle core diluiría el
   // lenguaje establecido de "formación de 6 = core".
-  { t: 88.0, kind: 'swarm', count: 12 },
-  { t: 104.0, boss: 'sentinel' },
+  { t: 96.0, kind: 'swarm', count: 12 },
+  { t: 112.0, boss: 'sentinel' },
 ];

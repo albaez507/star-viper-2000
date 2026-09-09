@@ -63,6 +63,10 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
       tone(engine, 660, 'triangle', 0.09, 0.3);
       tone(engine, 990, 'triangle', 0.12, 0.22);
       break;
+    case 'itemCollected':
+      tone(engine, 880, 'triangle', 0.08, 0.28);
+      tone(engine, 1320, 'triangle', 0.14, 0.2);
+      break;
     case 'coreDenied':
       tone(engine, 140, 'square', 0.08, 0.15);
       break;

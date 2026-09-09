@@ -226,3 +226,107 @@ body {
 @media (min-width: 900px) {
   #touch-layer { display: none; }
 }
+
+/* --- hangar --- */
+
+#btn-hangar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 6px 10px;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid rgba(157, 255, 94, 0.5);
+  background: var(--sv-panel);
+  color: #9dff5e;
+  font-family: var(--sv-font);
+  font-size: 11px;
+  pointer-events: auto;
+  z-index: 6;
+}
+
+#hangar {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 8, 16, 0.9);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.hangar-panel {
+  width: min(420px, 90%);
+  max-height: 88%;
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid rgba(157, 255, 94, 0.4);
+  border-radius: var(--sv-radius);
+  background: var(--sv-bg);
+  font-family: var(--sv-font);
+}
+
+.hangar-panel h2 {
+  margin: 0 0 4px;
+  color: #9dff5e;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.hangar-items {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--sv-ink);
+}
+
+.hangar-items strong { color: #9dff5e; }
+
+.hangar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(234, 246, 255, 0.12);
+}
+
+.hangar-row-info { flex: 1; }
+
+.hangar-row-name {
+  font-size: 12px;
+  color: var(--sv-ink);
+}
+
+.hangar-row-desc {
+  font-size: 10px;
+  color: rgba(234, 246, 255, 0.6);
+}
+
+.hangar-row button {
+  font-family: var(--sv-font);
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid rgba(157, 255, 94, 0.5);
+  background: rgba(157, 255, 94, 0.12);
+  color: #9dff5e;
+  white-space: nowrap;
+}
+
+.hangar-row button:disabled {
+  opacity: 0.35;
+  border-color: rgba(234, 246, 255, 0.2);
+  color: rgba(234, 246, 255, 0.5);
+  background: transparent;
+}
+
+#hangar-close {
+  margin-top: 16px;
+  width: 100%;
+  padding: 9px;
+  font-family: var(--sv-font);
+  font-size: 12px;
+  border-radius: var(--sv-radius-sm);
+  border: 1px solid var(--sv-panel-border);
+  background: var(--sv-panel);
+  color: var(--sv-ink);
+}

@@ -3,6 +3,7 @@ import { createWorld, step, type GameState } from './game/world';
 import { bossWarpMultiplier, spawnBoss } from './game/boss';
 import { STAGE_1 } from './game/stage1';
 import type { Weapon } from './core/types';
+import { loadProgress, banquearItems, comprar, nivelDe, puedeComprar, UPGRADES, type Progress } from './meta/progress';
 import { InputManager } from './input/input';
 import { AudioEngine } from './audio/audio';
 import { playSfx } from './audio/sfx';
@@ -56,9 +57,33 @@ let mode: ScreenMode = 'title';
 let elapsed = 0;
 let paused = false;
 
+let progress: Progress = loadProgress();
+
+/** Traduce el progreso persistente a campos del jugador. Vive aquí y no en
+ * `game/` para que la simulación siga sin saber nada de almacenamiento. */
+function aplicarMejoras(): void {
+  state.player.lives += nivelDe(progress, 'hull');
+  state.player.speedLevel += nivelDe(progress, 'engines');
+  if (nivelDe(progress, 'shield') > 0) state.player.shield = state.player.shieldMax;
+}
+
+/** Los items solo se abonan al terminar la partida: morir no los regala a
+ * medias, y así recogerlos tiene sentido incluso en una run que va mal. */
+function banquearRun(): void {
+  if (state.itemsCollected > 0) {
+    progress = banquearItems(progress, state.itemsCollected);
+    state.itemsCollected = 0;
+    renderHangar();
+  }
+}
+
 function resetGame(): void {
   state = createWorld(WORLD_W, WORLD_H);
+  aplicarMejoras();
   mode = 'playing';
+  // Sin esto, reiniciar mientras estabas en pausa arranca la partida
+  // congelada y sin nada que indique por qué.
+  paused = false;
 }
 
 const devPlayEl = document.getElementById('dev-play') as HTMLElement;
@@ -131,6 +156,9 @@ function handleEvents(s: GameState): void {
       case 'coreCollected':
         particles.burst(s.player.x, s.player.y, 10, '#ffd23f', 60);
         break;
+      case 'itemCollected':
+        particles.burst(ev.x, ev.y, 18, '#9dff5e', 110);
+        break;
       case 'shake':
         shake.trigger(ev.strength, ev.duration);
         break;
@@ -176,8 +204,8 @@ const loop = new GameLoop({
     step(state, frame, dt);
     handleEvents(state);
 
-    if (state.gameOver) mode = 'gameover';
-    if (state.victory) mode = 'victory';
+    if (state.gameOver) { mode = 'gameover'; banquearRun(); }
+    else if (state.victory) { mode = 'victory'; banquearRun(); }
   },
   render: () => {
     renderer.draw(state, mode, elapsed);
@@ -187,7 +215,59 @@ const loop = new GameLoop({
     pauseEl.hidden = mode !== 'playing';
     missileEl.classList.toggle('ready', mode === 'playing' && !paused && state.player.missileCooldown <= 0);
     devReadoutEl.textContent = mode === 'playing' ? `ARMA: ${state.player.weapon.toUpperCase()}` : '';
+    hangarBtn.hidden = mode === 'playing';
   },
 });
 
+const hangarEl = document.getElementById('hangar') as HTMLElement;
+const hangarBtn = document.getElementById('btn-hangar') as HTMLElement;
+const hangarCloseBtn = document.getElementById('hangar-close') as HTMLElement;
+const hangarCountEl = document.getElementById('hangar-count') as HTMLElement;
+const hangarListEl = document.getElementById('hangar-list') as HTMLElement;
+
+function renderHangar(): void {
+  hangarCountEl.textContent = String(progress.items);
+  hangarListEl.replaceChildren();
+
+  for (const def of UPGRADES) {
+    const nivel = nivelDe(progress, def.id);
+    const alMaximo = nivel >= def.maxNivel;
+
+    const fila = document.createElement('div');
+    fila.className = 'hangar-row';
+
+    const info = document.createElement('div');
+    info.className = 'hangar-row-info';
+    const nombre = document.createElement('div');
+    nombre.className = 'hangar-row-name';
+    nombre.textContent = `${def.nombre}  [${nivel}/${def.maxNivel}]`;
+    const desc = document.createElement('div');
+    desc.className = 'hangar-row-desc';
+    desc.textContent = def.descripcion;
+    info.append(nombre, desc);
+
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.textContent = alMaximo ? 'MÁXIMO' : `${def.costo} ITEMS`;
+    boton.disabled = alMaximo || !puedeComprar(progress, def);
+    boton.addEventListener('click', () => {
+      progress = comprar(progress, def);
+      renderHangar();
+    });
+
+    fila.append(info, boton);
+    hangarListEl.append(fila);
+  }
+}
+
+hangarBtn.addEventListener('click', () => {
+  renderHangar();
+  hangarEl.hidden = false;
+});
+hangarCloseBtn.addEventListener('click', () => { hangarEl.hidden = true; });
+
+renderHangar();
+hangarEl.hidden = true;
+
 loop.start();
+
