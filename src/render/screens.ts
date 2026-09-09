@@ -1,10 +1,11 @@
 import type { GameState } from '../game/world';
 import type { Boss } from '../game/boss';
+import { STAGES } from '../game/stages';
 
 export type ScreenMode = 'title' | 'playing' | 'gameover' | 'victory';
 
 export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode: ScreenMode): void {
-  if (mode === 'playing') return;
+  if (mode === 'playing' || mode === 'title') return;
 
   ctx.save();
   ctx.fillStyle = 'rgba(6, 8, 16, 0.72)';
@@ -16,15 +17,7 @@ export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode
   const cx = state.worldW / 2;
   const cy = state.worldH / 2;
 
-  if (mode === 'title') {
-    ctx.font = 'bold 34px "Courier New", monospace';
-    ctx.fillStyle = '#3ee6c4';
-    ctx.fillText('STAR VIPER 2000', cx, cy - 50);
-    ctx.font = '14px "Courier New", monospace';
-    ctx.fillStyle = '#eaf6ff';
-    ctx.fillText('ENTER / toca la pantalla para empezar', cx, cy);
-    ctx.fillText('Flechas o D-pad: mover  ·  FIRE: espacio  ·  MISIL: M/X', cx, cy + 24);
-  } else if (mode === 'gameover') {
+  if (mode === 'gameover') {
     ctx.font = 'bold 30px "Courier New", monospace';
     ctx.fillStyle = '#ff5470';
     ctx.fillText('GAME OVER', cx, cy - 30);
@@ -36,7 +29,7 @@ export function drawScreen(ctx: CanvasRenderingContext2D, state: GameState, mode
   } else if (mode === 'victory') {
     ctx.font = 'bold 28px "Courier New", monospace';
     ctx.fillStyle = '#3ee6c4';
-    ctx.fillText('STAGE 1 CLEAR', cx, cy - 30);
+    ctx.fillText(`${STAGES[state.stageId].name.toUpperCase()} — COMPLETADO`, cx, cy - 30);
     ctx.font = '16px "Courier New", monospace';
     ctx.fillStyle = '#eaf6ff';
     ctx.fillText(`SCORE ${state.score}`, cx, cy + 6);
@@ -90,6 +83,53 @@ export function drawPauseOverlay(ctx: CanvasRenderingContext2D, worldW: number, 
   ctx.fillStyle = '#eaf6ff';
   ctx.fillText('P / botón de pausa para continuar', cx, cy + 12);
 
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+/** Anuncio grande y breve de que el arma característica se acaba de activar.
+ * Sin esto, el primer core solo cambiaba unos números en el HUD y el momento
+ * pasaba desapercibido. */
+export function drawWeaponBanner(
+  ctx: CanvasRenderingContext2D,
+  worldW: number,
+  worldH: number,
+  nombre: string,
+  restante: number,
+  duracion: number,
+): void {
+  const t = 1 - restante / duracion;
+  const alpha = restante < 0.35 ? restante / 0.35 : Math.min(1, t * 6);
+  const subir = (1 - Math.min(1, t * 3)) * 18;
+
+  // Centro de la pantalla, no arriba: ahí choca con el rótulo de sector.
+  const cy = worldH * 0.5 + subir;
+  const texto = `${nombre} ACTIVADA`;
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = alpha;
+
+  // Panel oscuro detrás. Sin esto el texto turquesa desaparece sobre los
+  // entornos claros — se diseñó cuando el fondo era espacio negro.
+  ctx.font = 'bold 30px "Courier New", monospace';
+  const anchoTexto = ctx.measureText(texto).width;
+  const panelW = Math.max(anchoTexto + 56, 300);
+  const panelH = 74;
+  ctx.fillStyle = 'rgba(6, 8, 16, 0.82)';
+  ctx.fillRect(worldW / 2 - panelW / 2, cy - 40, panelW, panelH);
+  ctx.strokeStyle = 'rgba(62, 230, 196, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(worldW / 2 - panelW / 2, cy - 40, panelW, panelH);
+
+  ctx.fillStyle = '#3ee6c4';
+  ctx.fillText(texto, worldW / 2, cy - 8);
+
+  ctx.font = '12px "Courier New", monospace';
+  ctx.fillStyle = '#eaf6ff';
+  ctx.fillText('tu nave estrenó su arma', worldW / 2, cy + 16);
+
+  ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
   ctx.restore();
 }

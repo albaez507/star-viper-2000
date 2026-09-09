@@ -18,8 +18,8 @@ export class ScreenShake {
     const t = this.timer / this.duration;
     const mag = this.strength * t;
     return {
-      x: (Math.random() * 2 - 1) * mag,
-      y: (Math.random() * 2 - 1) * mag,
+      x: Math.round((Math.random() * 2 - 1) * mag),
+      y: Math.round((Math.random() * 2 - 1) * mag),
     };
   }
 }

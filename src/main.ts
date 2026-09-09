@@ -1,7 +1,7 @@
 import { GameLoop } from './core/loop';
 import { createWorld, step, type GameState } from './game/world';
 import { bossWarpMultiplier, spawnBoss } from './game/boss';
-import { STAGE_1 } from './game/stage1';
+import { STAGES, stageId } from './game/stages';
 import { SHIP_ORDER, SHIPS, nombreArma, MAX_WEAPON_LEVEL, type WeaponLevel } from './game/weapons';
 import { loadProgress, banquearItems, comprar, nivelDe, puedeComprar, UPGRADES, type Progress } from './meta/progress';
 import { InputManager } from './input/input';
@@ -11,16 +11,39 @@ import { Starfield } from './render/starfield';
 import { ParticleSystem } from './fx/particles';
 import { ScreenShake } from './fx/shake';
 import { Renderer } from './render/renderer';
-import { drawPauseOverlay, type ScreenMode } from './render/screens';
+import { drawPauseOverlay, drawWeaponBanner, type ScreenMode } from './render/screens';
+import { setSpriteVisualStyle } from './render/sprites';
+import { skyAssetsReady } from './render/sky-assets';
 
 const WORLD_W = 960;
 const WORLD_H = 540;
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
-canvas.width = WORLD_W;
-canvas.height = WORLD_H;
-const ctx = canvas.getContext('2d');
-if (!ctx) throw new Error('2D canvas context unavailable');
+const rawCtx = canvas.getContext('2d');
+if (!rawCtx) throw new Error('2D canvas context unavailable');
+const ctx = rawCtx;
+
+/** Fill the play area, but keep an integer pixel scale so sprites stay sharp. */
+function fitCanvas(): void {
+  const parent = canvas.parentElement;
+  if (!parent) return;
+  const fit = Math.min(parent.clientWidth / WORLD_W, parent.clientHeight / WORLD_H);
+  const cssScale = Number.isFinite(fit) && fit > 0 ? fit : 1;
+  // Integer window scale: match the backing store 1:1. Fractional window
+  // scale: keep a 1× bitmap and let `image-rendering: pixelated` enlarge it.
+  // A 2× bitmap shown at 1.5× has to shrink, and that is what looked soft.
+  const pixelScale = cssScale >= 1 && Math.abs(cssScale - Math.round(cssScale)) < 0.03
+    ? Math.round(cssScale)
+    : 1;
+  canvas.style.width = `${Math.round(WORLD_W * cssScale)}px`;
+  canvas.style.height = `${Math.round(WORLD_H * cssScale)}px`;
+  canvas.width = WORLD_W * pixelScale;
+  canvas.height = WORLD_H * pixelScale;
+  ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
 
 const dpadEl = document.getElementById('dpad') as HTMLElement;
 const fireEl = document.getElementById('btn-fire') as HTMLElement;
@@ -52,10 +75,17 @@ const particles = new ParticleSystem(200);
 const shake = new ScreenShake();
 const renderer = new Renderer(ctx, starfield, particles, shake);
 
-let state: GameState = createWorld(WORLD_W, WORLD_H);
+let selectedStage = stageId(localStorage.getItem('sv-stage'));
+let selectedShip = localStorage.getItem('sv-ship') === 'lance' ? 'lance' as const : 'vulcan' as const;
+let assetsReady = false;
+let state: GameState = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
 let mode: ScreenMode = 'title';
 let elapsed = 0;
 let paused = false;
+
+const BANNER_DURACION = 1.6;
+let bannerArma = '';
+let bannerTimer = 0;
 
 let progress: Progress = loadProgress();
 
@@ -77,13 +107,19 @@ function banquearRun(): void {
   }
 }
 
-function resetGame(): void {
-  state = createWorld(WORLD_W, WORLD_H);
+function resetGame(): boolean {
+  if (selectedStage === 'sky' && !assetsReady) return false;
+  bannerTimer = 0;
+  state = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
+  state.player.ship = selectedShip;
   aplicarMejoras();
   mode = 'playing';
+  hangarEl.hidden = true;
+  document.body.dataset.mode = mode;
   // Sin esto, reiniciar mientras estabas en pausa arranca la partida
   // congelada y sin nada que indique por qué.
   paused = false;
+  return true;
 }
 
 const devPlayEl = document.getElementById('dev-play') as HTMLElement;
@@ -95,6 +131,7 @@ const visualStyleEl = document.getElementById('visual-style') as HTMLSelectEleme
 const visualWeaponEl = document.getElementById('visual-weapon') as HTMLSelectElement;
 const visualLightingEl = document.getElementById('visual-lighting') as HTMLInputElement;
 const styleReadoutEl = document.getElementById('style-readout') as HTMLElement;
+const stylePreviewEl = document.getElementById('style-preview') as HTMLImageElement;
 
 const savedVisualStyle = localStorage.getItem('sv-visual-style');
 const savedLighting = localStorage.getItem('sv-visual-lighting') === 'true';
@@ -102,15 +139,69 @@ if (savedVisualStyle && [...visualStyleEl.options].some((o) => o.value === saved
 visualLightingEl.checked = savedLighting;
 function applyVisualLab(): void {
   document.body.dataset.visualStyle = visualStyleEl.value;
+  setSpriteVisualStyle(visualStyleEl.value);
   document.body.dataset.lighting = String(visualLightingEl.checked);
   localStorage.setItem('sv-visual-style', visualStyleEl.value);
   localStorage.setItem('sv-visual-lighting', String(visualLightingEl.checked));
   styleReadoutEl.textContent = `${visualStyleEl.selectedOptions[0].text} · ${visualWeaponEl.selectedOptions[0].text}`;
+  stylePreviewEl.hidden = visualStyleEl.value !== 'detailed';
 }
 visualStyleEl.addEventListener('change', applyVisualLab);
 visualWeaponEl.addEventListener('change', applyVisualLab);
 visualLightingEl.addEventListener('change', applyVisualLab);
 applyVisualLab();
+
+const menuEl = document.getElementById('mission-menu')!;
+const startEl = document.getElementById('start-mission') as HTMLButtonElement;
+const missionStatus = document.getElementById('mission-status')!;
+const sectorButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-stage]')];
+const shipButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-ship]')];
+function updateMissionSelection(): void {
+  document.body.dataset.stage = selectedStage;
+  sectorButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stage === selectedStage)));
+  shipButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ship === selectedShip)));
+  startEl.disabled = selectedStage === 'sky' && !assetsReady;
+  startEl.firstElementChild!.textContent = startEl.disabled ? 'PREPARANDO VUELO…' : 'INICIAR MISIÓN';
+  missionStatus.textContent = startEl.disabled ? 'Cargando los assets del archipiélago…' : `${STAGES[selectedStage].name} · ENTER para despegar`;
+  if (mode === 'title') {
+    state.stageId = selectedStage;
+    state.player.ship = selectedShip;
+  }
+  localStorage.setItem('sv-stage', selectedStage);
+  localStorage.setItem('sv-ship', selectedShip);
+}
+sectorButtons.forEach(b => b.addEventListener('click', () => {
+  selectedStage = stageId(b.dataset.stage ?? null); updateMissionSelection();
+}));
+shipButtons.forEach(b => b.addEventListener('click', () => {
+  selectedShip = b.dataset.ship === 'lance' ? 'lance' : 'vulcan'; updateMissionSelection();
+}));
+startEl.addEventListener('click', () => { resetGame(); canvas.focus(); });
+menuEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.repeat && hangarEl.hidden) {
+    e.preventDefault(); resetGame(); canvas.focus();
+  }
+});
+document.getElementById('btn-missions')!.addEventListener('click', () => {
+  mode = 'title'; paused = false; bannerTimer = 0;
+  state = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
+  updateMissionSelection();
+});
+document.getElementById('toggle-lab')!.addEventListener('click', e => {
+  const button = e.currentTarget as HTMLButtonElement;
+  const open = button.getAttribute('aria-expanded') !== 'true';
+  button.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('lab-open', open);
+  fitCanvas();
+});
+canvas.tabIndex = 0;
+updateMissionSelection();
+Promise.all([skyAssetsReady, renderer.sky.ready]).then(() => {
+  assetsReady = true; updateMissionSelection();
+}).catch((error: unknown) => {
+  console.error('Sky assets failed to load', error);
+  missionStatus.textContent = 'No se pudieron cargar los assets. Recarga la página o elige Órbita Sentinel.';
+});
 
 let shipTestIndex = 0;
 let nivelTest: WeaponLevel = 1;
@@ -120,25 +211,26 @@ devPlayEl.addEventListener('click', () => {
 });
 
 devBossEl.addEventListener('click', () => {
-  resetGame();
-  state.spawnIndex = STAGE_1.length;
+  if (!resetGame()) return;
+  state.spawnIndex = STAGES[state.stageId].events.length;
   spawnBoss(state.boss, state.worldW, state.worldH);
 });
 
 devSwarmEl.addEventListener('click', () => {
-  resetGame();
-  const swarmIndex = STAGE_1.findIndex((ev) => 'kind' in ev && ev.kind === 'swarm');
+  if (!resetGame()) return;
+  const timeline = STAGES[state.stageId].events;
+  const swarmIndex = timeline.findIndex((ev) => 'kind' in ev && ev.kind === 'swarm');
   if (swarmIndex >= 0) {
     state.spawnIndex = swarmIndex;
-    state.stageTime = STAGE_1[swarmIndex].t;
+    state.stageTime = timeline[swarmIndex].t;
   }
 });
 
 devWeaponsEl.addEventListener('click', () => {
   const alreadyInTest = mode === 'playing' && state.enemies.active().some((e) => e.id === 99999);
   if (!alreadyInTest) {
-    resetGame();
-    state.spawnIndex = STAGE_1.length;
+    if (!resetGame()) return;
+    state.spawnIndex = STAGES[state.stageId].events.length;
     state.player.optionCount = 2;
 
     const dummy = state.enemies.acquire();
@@ -175,9 +267,11 @@ function handleEvents(s: GameState): void {
         particles.burst(ev.x, ev.y, 5, '#ffd23f', 70);
         break;
       case 'enemyDeath':
+        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed);
         particles.burst(ev.x, ev.y, 16, '#ff8c3e', 130);
         break;
       case 'bossDeath':
+        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 240);
         particles.burst(ev.x, ev.y, 40, '#ff5470', 180);
         break;
       case 'bossEnrage':
@@ -186,6 +280,12 @@ function handleEvents(s: GameState): void {
       case 'coreCollected':
         particles.burst(s.player.x, s.player.y, 10, '#ffd23f', 60);
         break;
+      case 'weaponActivated':
+        bannerArma = ev.nombre;
+        bannerTimer = BANNER_DURACION;
+        particles.burst(s.player.x, s.player.y, 24, '#3ee6c4', 130);
+        shake.trigger(4, 0.18);
+        break;
       case 'itemCollected':
         particles.burst(ev.x, ev.y, 18, '#9dff5e', 110);
         break;
@@ -193,6 +293,7 @@ function handleEvents(s: GameState): void {
         shake.trigger(ev.strength, ev.duration);
         break;
       case 'missileImpact':
+        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 80);
         particles.burst(ev.x, ev.y, 26, '#ff8c3e', 150);
         break;
     }
@@ -202,6 +303,7 @@ function handleEvents(s: GameState): void {
 const loop = new GameLoop({
   step: (dt) => {
     const frame = input.sample();
+    const startPressed = input.consumeStartPressed();
     const pausePressed = input.consumePausePressed() || pauseRequested;
     pauseRequested = false;
 
@@ -218,15 +320,17 @@ const loop = new GameLoop({
     starfield.update(dt, warp);
     particles.update(dt);
     shake.update(dt);
+    if (bannerTimer > 0) bannerTimer = Math.max(0, bannerTimer - dt);
 
     if (mode === 'title') {
-      if (input.consumeStartPressed() || frame.fire || tapToStart) resetGame();
+      const editing = document.activeElement?.matches('button, select, input');
+      if (!editing && hangarEl.hidden && (startPressed || tapToStart)) resetGame();
       tapToStart = false;
       return;
     }
 
     if (mode === 'gameover' || mode === 'victory') {
-      if (input.consumeStartPressed() || frame.power || tapToStart) resetGame();
+      if (startPressed || frame.power || tapToStart) resetGame();
       tapToStart = false;
       return;
     }
@@ -238,7 +342,12 @@ const loop = new GameLoop({
     else if (state.victory) { mode = 'victory'; banquearRun(); }
   },
   render: () => {
+    menuEl.hidden = mode !== 'title';
+    document.body.dataset.mode = mode;
     renderer.draw(state, mode, elapsed);
+    if (bannerTimer > 0 && mode === 'playing') {
+      drawWeaponBanner(ctx, WORLD_W, WORLD_H, bannerArma, bannerTimer, BANNER_DURACION);
+    }
     if (paused && mode === 'playing') drawPauseOverlay(ctx, WORLD_W, WORLD_H);
 
     pauseEl.textContent = paused ? '▶' : '⏸';
@@ -302,5 +411,6 @@ renderHangar();
 hangarEl.hidden = true;
 
 loop.start();
+
 
 

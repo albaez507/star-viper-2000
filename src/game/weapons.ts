@@ -48,11 +48,17 @@ export const SHIPS: Record<ShipId, ShipDef> = {
 
 export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance'];
 
-/** Cadencia en segundos. El arma básica es igual para todos. */
+/**
+ * Cadencia en segundos.
+ *
+ * El arma básica es **deliberadamente sosa y lenta**: es el estado del que
+ * quieres salir. Si se parece al arma característica, activar la tuya no se
+ * siente como nada — que es exactamente el error que tenía esto antes.
+ */
 export function fireCooldownFor(ship: ShipId, level: WeaponLevel): number {
-  if (level === 0) return 0.14;
-  if (ship === 'vulcan') return 0.09;
-  return 0.34; // lance dispara poco, pero no falla
+  if (level === 0) return 0.22;
+  if (ship === 'vulcan') return level >= 3 ? 0.10 : level === 2 ? 0.12 : 0.14;
+  return level >= 3 ? 0.36 : 0.38;
 }
 
 export type DisparoSpec = {
@@ -70,34 +76,33 @@ export type DisparoSpec = {
  * se lee de un vistazo — no en un número escondido.
  */
 export function disparosDe(ship: ShipId, level: WeaponLevel): DisparoSpec[] {
+  // Básica: una bala lenta y sola. Tiene que verse pobre al lado de la tuya.
   if (level === 0) {
-    return [{ offsetY: 0, vx: 560, vy: 0, dmg: 1, homing: false }];
+    return [{ offsetY: 0, vx: 500, vy: 0, dmg: 1, homing: false }];
   }
 
   if (ship === 'vulcan') {
-    if (level === 1) return [{ offsetY: 0, vx: 640, vy: 0, dmg: 1, homing: false }];
-    if (level === 2) {
+    if (level === 1) {
       return [
-        { offsetY: -6, vx: 640, vy: 0, dmg: 1, homing: false },
-        { offsetY: 6, vx: 640, vy: 0, dmg: 1, homing: false },
+        { offsetY: -5, vx: 620, vy: 0, dmg: 1, homing: false },
+        { offsetY: 5, vx: 620, vy: 0, dmg: 1, homing: false },
       ];
     }
     return [
-      { offsetY: -8, vx: 640, vy: -70, dmg: 1, homing: false },
-      { offsetY: 0, vx: 640, vy: 0, dmg: 1, homing: false },
-      { offsetY: 8, vx: 640, vy: 70, dmg: 1, homing: false },
+      { offsetY: -8, vx: 620, vy: 0, dmg: 1, homing: false },
+      { offsetY: 0, vx: 620, vy: 0, dmg: 1, homing: false },
+      { offsetY: 8, vx: 620, vy: 0, dmg: 1, homing: false },
     ];
   }
 
-  // lance: buscadores, pocos y caros de fallar
-  const n = level;
+  const shots = level >= 3 ? 2 : 1;
   const specs: DisparoSpec[] = [];
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < shots; i++) {
     specs.push({
-      offsetY: (i - (n - 1) / 2) * 12,
-      vx: 380,
+      offsetY: shots === 1 ? 0 : (i === 0 ? -8 : 8),
+      vx: 360,
       vy: 0,
-      dmg: 2,
+      dmg: level >= 3 ? 2 : 1,
       homing: true,
     });
   }
@@ -107,9 +112,9 @@ export function disparosDe(ship: ShipId, level: WeaponLevel): DisparoSpec[] {
 /** Options que acompañan al nivel de arma. Subir de arma también engorda tu
  * escolta, así que cada core se nota dos veces. */
 export function optionsPara(level: WeaponLevel): number {
-  if (level >= 3) return 2;
-  if (level >= 2) return 1;
-  return 0;
+  // Solo al máximo. Antes aparecían en el nivel 2 y confundían: parecía que
+  // el juego regalaba un poder que no habías elegido.
+  return level >= 3 ? 2 : 0;
 }
 
 export function nombreArma(ship: ShipId, level: WeaponLevel): string {

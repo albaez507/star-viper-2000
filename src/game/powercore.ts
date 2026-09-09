@@ -5,15 +5,15 @@ export type PowerCore = {
 };
 
 /** Radio dentro del cual el core empieza a irse solo hacia el jugador. */
-export const CORE_MAGNET_RADIUS = 170;
-const MAGNET_SPEED = 320;
+export const CORE_MAGNET_RADIUS = 420;
+const MAGNET_SPEED = 400;
 
 export function makePowerCore(): PowerCore {
-  return { x: 0, y: 0, vx: -70, active: false };
+  return { x: 0, y: 0, vx: -42, active: false };
 }
 
 export function spawnPowerCore(c: PowerCore, x: number, y: number): void {
-  c.x = x; c.y = y; c.vx = -70; c.active = true;
+  c.x = Math.min(x, 520); c.y = y; c.vx = -42; c.active = true;
 }
 
 /**
@@ -35,7 +35,7 @@ export function stepPowerCore(c: PowerCore, dt: number, playerX: number, playerY
     // Cuanto más cerca, más fuerte tira — se siente como un imán, no como
     // un teletransporte.
     const pull = 1 - dist / CORE_MAGNET_RADIUS;
-    const speed = MAGNET_SPEED * pull;
+    const speed = MAGNET_SPEED * (0.4 + 0.6 * pull);
     c.x += (dx / dist) * speed * dt;
     c.y += (dy / dist) * speed * dt;
   }

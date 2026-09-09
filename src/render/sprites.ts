@@ -7,6 +7,7 @@ import type { Missile } from '../game/missiles';
 import type { PowerCore } from '../game/powercore';
 import type { Item } from '../game/items';
 import type { Boss } from '../game/boss';
+import { drawSkySprite, skyActive } from './sky-assets';
 
 const ENEMY_COLORS: Record<string, string> = {
   scout: '#ff5470',
@@ -21,6 +22,8 @@ const ENEMY_COLORS: Record<string, string> = {
 const ASSET_ROOT = '/assets/';
 const images = new Map<string, HTMLImageElement>();
 const failedAssets = new Set<string>();
+let visualStyle = 'classic';
+export function setSpriteVisualStyle(style: string): void { visualStyle = style; }
 function asset(name: string): HTMLImageElement {
   let img = images.get(name);
   if (!img) {
@@ -41,10 +44,23 @@ function drawAsset(ctx: CanvasRenderingContext2D, name: string, w: number, h: nu
 
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 20) % 2 === 0) return;
+  if (skyActive && drawSkySprite(ctx, p.ship, p.x, p.y, 48, 32, p.hitFlash > 0)) {
+    if (p.shield > 0) {
+      ctx.save(); ctx.strokeStyle = '#fff5b3'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, 31, 25, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    return;
+  }
 
   ctx.save();
   ctx.translate(p.x, p.y);
   if (p.hitFlash <= 0) {
+    if (visualStyle === 'detailed') {
+      if (drawAsset(ctx, 'ship-detailed.png', 58, 38)) {
+        if (p.shield > 0) { ctx.strokeStyle = 'rgba(122,92,255,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0,0,PLAYER_HALF_W+6,0,Math.PI*2); ctx.stroke(); }
+        ctx.restore(); return;
+      }
+    }
     // De momento solo el casco. Las otras tres capas llegaron dibujadas como
     // objetos sueltos a lienzo completo (un motor, un cañón), no como partes
     // alineadas sobre la misma nave, así que apilarlas da un amasijo. El
@@ -82,6 +98,7 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
 
 export function drawOption(ctx: CanvasRenderingContext2D, o: Option): void {
   if (!o.active) return;
+  if (skyActive && drawSkySprite(ctx, 'option', o.x, o.y, 18, 18)) return;
   ctx.save();
   ctx.translate(o.x, o.y);
   ctx.fillStyle = '#7a5cff';
@@ -96,6 +113,15 @@ export function drawOption(ctx: CanvasRenderingContext2D, o: Option): void {
 }
 
 export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  if (skyActive && drawSkySprite(ctx, e.behavior, e.x, e.y, e.halfW * 2 + 8, e.halfH * 2 + 8, e.hitFlash > 0)) {
+    if (e.formationId >= 0 || e.dropsItem) {
+      ctx.save(); ctx.strokeStyle = e.dropsItem ? '#fff9bd' : '#73569d';
+      ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(e.halfW, e.halfH) + 7, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    drawEnemyHealthBar(ctx, e);
+    return;
+  }
   ctx.save();
   ctx.translate(e.x, e.y);
   const damaged = e.hp < e.maxHp;
@@ -153,6 +179,7 @@ function drawEnemyHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
 }
 
 export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
+  if (skyActive && drawSkySprite(ctx, 'item', it.x, it.y + Math.sin(it.t * 5) * 2, 22, 26)) return;
   const pulse = 1 + Math.sin(it.t * 7) * 0.18;
   ctx.save();
   ctx.translate(it.x, it.y);
@@ -178,6 +205,7 @@ const BOSS_PHASE_COLOR: Record<1 | 2 | 3, string> = {
 
 export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   if (!b.active || !b.revealed) return;
+  if (skyActive && drawSkySprite(ctx, `boss${b.phase}`, b.x, b.y, b.halfW * 2, b.halfH * 2, b.hitFlash > 0 || b.enrageFlash > 0)) return;
   ctx.save();
   ctx.translate(b.x, b.y);
   if (b.hitFlash <= 0 && b.enrageFlash <= 0 && drawAsset(ctx, `boss-sentinel-${b.phase}.png`, b.halfW * 2, b.halfH * 2)) {
@@ -282,6 +310,9 @@ function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
 }
 
 export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
+  if (skyActive && drawSkySprite(ctx, b.fromPlayer ? 'bolt' : 'orb', b.x, b.y,
+    b.fromPlayer ? 22 : b.big ? 22 : 12, b.fromPlayer ? 9 : b.big ? 22 : 12,
+    false, b.fromPlayer ? Math.atan2(b.vy, b.vx) : 0)) return;
   if (b.fromPlayer && b.pierce) {
     ctx.fillStyle = 'rgba(62, 230, 196, 0.35)';
     ctx.fillRect(b.x - 18, b.y - 2, 14, 4);
@@ -313,6 +344,7 @@ export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
 }
 
 export function drawMissile(ctx: CanvasRenderingContext2D, m: Missile): void {
+  if (skyActive && drawSkySprite(ctx, 'missile', m.x, m.y, 30, 14)) return;
   ctx.fillStyle = '#ff8c3e';
   ctx.fillRect(m.x - 7, m.y - 3, 14, 6);
   ctx.fillStyle = 'rgba(255,140,62,0.4)';
@@ -320,6 +352,7 @@ export function drawMissile(ctx: CanvasRenderingContext2D, m: Missile): void {
 }
 
 export function drawPowerCore(ctx: CanvasRenderingContext2D, c: PowerCore, t: number): void {
+  if (skyActive && drawSkySprite(ctx, 'core', c.x, c.y + Math.sin(t * 5) * 3, 28, 30)) return;
   const pulse = 1 + Math.sin(t * 8) * 0.15;
   ctx.save();
   ctx.translate(c.x, c.y);

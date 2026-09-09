@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="/src/styles/ui.css" />
 </head>
 <body>
+  <header id="flight-header">
+    <a class="wordmark" href="./" aria-label="Star Viper 2000 inicio"><span>✦</span> STAR VIPER <b>2000</b></a>
+    <span class="header-caption">CUADERNO DE VUELO / 02</span>
+    <button id="btn-missions" type="button">Mapa de sectores <span>↗</span></button>
+  </header>
   <div id="dev-toolbar">
     <span class="dev-label">DEV</span>
     <button id="dev-play" type="button">▶ Jugar</button>
@@ -34,7 +39,38 @@
         <button id="btn-missile" class="action-btn action-missile" aria-label="Misil">MSL</button>
       </div>
     </div>
-    <div id="screens"></div>
+    <div id="screens">
+      <section id="mission-menu" aria-label="Elegir misión">
+        <div class="mission-intro">
+          <p class="eyebrow">UNA NUEVA FRONTERA</p>
+          <h1>Más allá<br>de las nubes<span>.</span></h1>
+          <p class="mission-copy">Islas suspendidas. Antiguos guardianes.<br>Tu próxima aventura empieza en el cielo.</p>
+          <p class="flight-note"><span>✦</span> JARDINES DEL CÉFIRO <small>NUEVO SECTOR</small></p>
+        </div>
+        <div class="mission-panel">
+          <div class="panel-heading"><span>01 / ELIGE TU DESTINO</span><small>2 SECTORES</small></div>
+          <div class="sector-options" role="group" aria-label="Sector">
+            <button class="sector-card" data-stage="sky" aria-pressed="true" type="button">
+              <span class="sector-art sky-art"></span>
+              <span class="sector-info"><small>02 · ARCHIPIÉLAGO CELESTE</small><strong>Jardines del Céfiro</strong><span>Cielo abierto · guardián ancestral</span></span>
+              <span class="sector-check">✓</span>
+            </button>
+            <button class="sector-card" data-stage="orbit" aria-pressed="false" type="button">
+              <span class="sector-art orbit-art">✦</span>
+              <span class="sector-info"><small>01 · ESPACIO PROFUNDO</small><strong>Órbita Sentinel</strong><span>La misión original · flota hostil</span></span>
+              <span class="sector-check">✓</span>
+            </button>
+          </div>
+          <div class="panel-heading ship-heading"><span>02 / ELIGE TU NAVE</span></div>
+          <div class="ship-options" role="group" aria-label="Nave">
+            <button type="button" data-ship="vulcan" aria-pressed="true"><span class="ship-portrait vulcan-portrait"></span><span><strong>VULCAN</strong><small>Ráfaga · 3 vidas</small></span></button>
+            <button type="button" data-ship="lance" aria-pressed="false"><span class="ship-portrait lance-portrait"></span><span><strong>LANCE</strong><small>Buscador · 2 vidas</small></span></button>
+          </div>
+          <button id="start-mission" type="button" disabled><span>PREPARANDO VUELO…</span><span>→</span></button>
+          <p id="mission-status" role="status">Cargando los assets del archipiélago…</p>
+        </div>
+      </section>
+    </div>
     <button id="btn-hangar" type="button">🛠 HANGAR</button>
     <div id="hangar" hidden>
       <div class="hangar-panel">
@@ -45,6 +81,7 @@
       </div>
     </div>
   </div>
+  <footer id="flight-footer"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> MOVER</span><span><kbd>ESPACIO</kbd> DISPARAR</span><span><kbd>M</kbd> / <kbd>X</kbd> MISIL</span><span><kbd>P</kbd> PAUSA</span><button id="toggle-lab" type="button" aria-expanded="false">Herramientas de vuelo +</button></footer>
   <section id="style-lab" aria-label="Laboratorio visual de desarrollo">
     <div class="style-lab-heading">
       <span class="dev-label">VISUAL LAB</span>
@@ -66,6 +103,7 @@
       </select>
     </label>
     <label class="style-toggle"><input id="visual-lighting" type="checkbox"> Previsualizar luces</label>
+    <img id="style-preview" src="/assets/style-detailed-atlas.png" alt="Previsualización del estilo detallado" hidden>
     <span id="style-readout" role="status"></span>
   </section>
   <script type="module" src="/src/main.ts"></script>

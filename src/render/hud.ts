@@ -2,9 +2,22 @@ import type { GameState } from '../game/world';
 import { missileCooldownFor } from '../game/player';
 import { nombreArma, MAX_WEAPON_LEVEL } from '../game/weapons';
 import { clamp } from '../core/math';
+import { STAGES } from '../game/stages';
 
 export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, t: number): void {
   ctx.save();
+  if (state.stageId === 'sky') {
+    ctx.fillStyle = 'rgba(17, 47, 65, .91)';
+    ctx.fillRect(0, 0, state.worldW, 70);
+    ctx.fillStyle = '#d6b975'; ctx.fillRect(0, 69, state.worldW, 1);
+  }
+  const stage = STAGES[state.stageId];
+  ctx.textAlign = 'center'; ctx.font = 'bold 12px monospace'; ctx.fillStyle = '#fff2ca';
+  ctx.fillText(state.boss.active ? stage.boss : stage.name.toUpperCase(), state.worldW / 2 + 45, 22);
+  const bossTime = stage.events[stage.events.length - 1].t;
+  ctx.fillStyle = '#345967'; ctx.fillRect(state.worldW / 2 - 60, 34, 210, 3);
+  ctx.fillStyle = '#e2c77d'; ctx.fillRect(state.worldW / 2 - 60, 34, 210 * Math.min(1, state.stageTime / bossTime), 3);
+  ctx.textAlign = 'left';
   ctx.font = '14px "Courier New", monospace';
   ctx.textBaseline = 'top';
 

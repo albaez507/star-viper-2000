@@ -15,11 +15,13 @@ import { makeBullet, spawnBullet, stepBullet, type Bullet } from './bullets';
 import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles';
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { makeItem, spawnItem, stepItem, type Item } from './items';
-import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, type WeaponLevel } from './weapons';
+import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, SHIPS, type WeaponLevel } from './weapons';
 import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
 import { updateSpawner } from './spawner';
+import type { StageId } from './stages';
 
 export type GameState = {
+  stageId: StageId;
   worldW: number;
   worldH: number;
 
@@ -54,9 +56,9 @@ export type GameState = {
   events: EventBus;
 };
 
-export function createWorld(worldW: number, worldH: number, seed = 1337): GameState {
+export function createWorld(worldW: number, worldH: number, seed = 1337, stageId: StageId = 'orbit'): GameState {
   return {
-    worldW, worldH,
+    worldW, worldH, stageId,
     player: createPlayer(90, worldH / 2),
     history: new PositionHistory(),
     options: createOptions(),
@@ -119,6 +121,7 @@ function stepPlayer(state: GameState, input: InputFrame, dt: number): void {
   const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
   const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
   movePlayer(p, dx, dy, dt, { w: state.worldW, h: state.worldH });
+  if (state.stageId === 'sky') p.y = Math.max(86, Math.min(state.worldH - 28, p.y));
 
   state.history.push(p.x, p.y);
   updateOptions(state.options, p.optionCount, state.history);
@@ -170,8 +173,8 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
   }
 }
 
-const ENEMY_FIRE_MIN = 1.6;
-const ENEMY_FIRE_MAX = 3.4;
+const ENEMY_FIRE_MIN = 1.25;
+const ENEMY_FIRE_MAX = 2.7;
 
 /** Un enemigo solo dispara mientras está dentro de pantalla y no pegado al
  * borde izquierdo — si no, aparecen balas "de la nada" fuera de cuadro. */
@@ -244,7 +247,7 @@ function stepEnemies(state: GameState, dt: number): void {
   }
 }
 
-const HOMING_TURN = 3.6;
+const HOMING_TURN = 2.5;
 
 /** Corrige el rumbo hacia el enemigo más cercano por delante, con giro
  * limitado: persigue, pero no es infalible — si te colocas mal, falla. */
@@ -316,6 +319,10 @@ function damagePlayer(state: GameState): void {
     p.shield--;
   } else {
     p.lives--;
+    if (p.weaponLevel > 0) {
+      p.weaponLevel = (p.weaponLevel - 1) as typeof p.weaponLevel;
+      p.optionCount = optionsPara(p.weaponLevel);
+    }
   }
   p.hitFlash = 0.25;
   p.invulnTimer = INVULN_TIME;
@@ -364,11 +371,20 @@ function explodeMissile(state: GameState, x: number, y: number, dmg: number): vo
  * sistema anterior se rompía. */
 function subirArma(state: GameState): void {
   const p = state.player;
+  const eraBasica = p.weaponLevel === 0;
+
   if (p.weaponLevel < MAX_WEAPON_LEVEL) {
     p.weaponLevel = (p.weaponLevel + 1) as WeaponLevel;
     p.optionCount = optionsPara(p.weaponLevel);
   }
-  state.events.emit({ type: 'coreCollected', slot: p.weaponLevel });
+
+  // El primer core no es "una mejora más": es el momento en que tu nave
+  // estrena su arma. Se anuncia distinto a propósito.
+  if (eraBasica) {
+    state.events.emit({ type: 'weaponActivated', nombre: SHIPS[p.ship].armaNombre });
+  } else {
+    state.events.emit({ type: 'coreCollected', slot: p.weaponLevel });
+  }
 }
 
 function killEnemy(state: GameState, e: Enemy): void {
@@ -471,14 +487,14 @@ function stepCollisions(state: GameState): void {
   }
 
   for (const c of state.powerCores.active()) {
-    if (hits(c.x, c.y, 10, 10, p.x, p.y, PLAYER_HALF_W + 8, PLAYER_HALF_H + 8)) {
+    if (hits(c.x, c.y, 14, 14, p.x, p.y, PLAYER_HALF_W + 16, PLAYER_HALF_H + 16)) {
       c.active = false;
       subirArma(state);
     }
   }
 
   for (const it of state.items.active()) {
-    if (hits(it.x, it.y, 10, 10, p.x, p.y, PLAYER_HALF_W + 8, PLAYER_HALF_H + 8)) {
+    if (hits(it.x, it.y, 14, 14, p.x, p.y, PLAYER_HALF_W + 16, PLAYER_HALF_H + 16)) {
       it.active = false;
       state.itemsCollected++;
       state.events.emit({ type: 'itemCollected', x: it.x, y: it.y });

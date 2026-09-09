@@ -10,15 +10,15 @@ export type Item = {
   active: boolean;
 };
 
-export const ITEM_MAGNET_RADIUS = 190;
-const MAGNET_SPEED = 340;
+export const ITEM_MAGNET_RADIUS = 320;
+const MAGNET_SPEED = 400;
 
 export function makeItem(): Item {
-  return { x: 0, y: 0, vx: -55, t: 0, active: false };
+  return { x: 0, y: 0, vx: -40, t: 0, active: false };
 }
 
 export function spawnItem(it: Item, x: number, y: number): void {
-  it.x = x; it.y = y; it.vx = -55; it.t = 0; it.active = true;
+  it.x = Math.min(x, 520); it.y = y; it.vx = -40; it.t = 0; it.active = true;
 }
 
 /** Mismo magnetismo que el Power Core, y por la misma razón: un premio que
@@ -32,7 +32,7 @@ export function stepItem(it: Item, dt: number, playerX: number, playerY: number)
 
   if (dist < ITEM_MAGNET_RADIUS && dist > 0.001) {
     const pull = 1 - dist / ITEM_MAGNET_RADIUS;
-    const speed = MAGNET_SPEED * pull;
+    const speed = MAGNET_SPEED * (0.4 + 0.6 * pull);
     it.x += (dx / dist) * speed * dt;
     it.y += (dy / dist) * speed * dt;
   }

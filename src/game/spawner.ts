@@ -1,15 +1,21 @@
 import type { GameState } from './world';
-import { STAGE_1, isBossSpawn, type WaveSpawn } from './stage1';
+import { isBossSpawn, type WaveSpawn } from './stage1';
+import { STAGES } from './stages';
+import { makeEnemy } from './enemy';
 import { createFormation } from './formations';
 import { spawnBoss } from './boss';
 
 export function updateSpawner(state: GameState): void {
+  const timeline = STAGES[state.stageId].events;
   while (
-    state.spawnIndex < STAGE_1.length &&
-    state.stageTime >= STAGE_1[state.spawnIndex].t
+    state.spawnIndex < timeline.length &&
+    state.stageTime >= timeline[state.spawnIndex].t
   ) {
-    const ev = STAGE_1[state.spawnIndex];
+    const ev = timeline[state.spawnIndex];
     if (isBossSpawn(ev)) {
+      // La entrada del jefe empieza con una arena limpia.
+      state.enemies.releaseAll();
+      state.enemyBullets.releaseAll();
       spawnBoss(state.boss, state.worldW, state.worldH);
     } else {
       spawnWave(state, ev);
@@ -27,6 +33,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
 
   for (let i = 0; i < wave.count; i++) {
     const e = state.enemies.acquire();
+    // Los objetos reciclados no deben heredar drops ni misiles de otra oleada.
+    Object.assign(e, makeEnemy(), { active: true });
     e.id = state.nextEnemyId++;
     e.hitFlash = 0;
     e.t = state.rng.range(0, 6.28);
@@ -40,7 +48,7 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
     e.x = state.worldW + 40 + i * 46;
     e.halfW = 13;
     e.halfH = 12;
-    e.hp = isFormation ? 2 : wave.kind === 'diver' ? 2 : 1;
+    e.hp = isFormation ? 3 : wave.kind === 'diver' ? 3 : wave.kind === 'sine' ? 2 : 1;
     e.maxHp = e.hp;
     e.triggerX = state.worldW * 0.55;
     e.canShoot = false;
@@ -82,8 +90,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.vx = 0;
         e.vy = 0;
         e.t = 0;
-        e.hp = 4;
-        e.maxHp = 4;
+        e.hp = 5;
+        e.maxHp = 5;
         e.anchorX = state.worldW * 0.68;
         e.anchorY = state.worldH / 2;
         e.x = state.worldW + 40;
@@ -102,8 +110,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.vx = 0;
         e.vy = 0;
         e.t = 0;
-        e.hp = 22;
-        e.maxHp = 22;
+        e.hp = 28;
+        e.maxHp = 28;
         e.anchorX = state.worldW * 0.74;
         e.anchorY = state.worldH / 2;
         e.x = state.worldW + 60;
@@ -131,6 +139,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.y = e.anchorY;
         e.baseY = e.anchorY;
         e.diveDelay = SWARM_FIRST_DIVE + i * SWARM_DIVE_SPACING;
+        e.hp = 2;
+        e.maxHp = 2;
         e.score = 150;
         break;
       }
