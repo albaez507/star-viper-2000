@@ -59,10 +59,22 @@ Los sprites entregados vienen a **~313 px** y el juego los muestra a **~34
 px**. Se pierde el 99% de los píxeles. El motor ya reduce lo mejor que puede,
 pero **el detalle que no cabe no se ve: solo ensucia el resultado.**
 
-**Dibuja cerca del tamaño final de las tablas de abajo.** Un sprite de 40×36
-pensado píxel a píxel se ve muchísimo mejor que uno de 313 px reducido. Si
-necesitas trabajar en grande, hazlo a un **múltiplo entero** (2× o 4×: 80×72
-o 160×144) y reduce tú antes de entregar — nunca a un tamaño arbitrario.
+**Dibuja al DOBLE del tamaño de las tablas de abajo.** Ese es el punto dulce,
+y conviene entender por qué no es ni el tamaño exacto ni 300 px:
+
+Un mismo enemigo ocupa **42 px** en una ventana normal y **~90 px** a pantalla
+completa en un monitor grande. Son los dos extremos que hay que servir:
+
+| Tamaño del arte | En ventana (42 px) | A pantalla completa (90 px) |
+|---|---|---|
+| 314 px (lo entregado) | reduce 7.5× — se ensucia | reduce 3.4× — mejor, aún lossy |
+| 40 px (tamaño exacto) | 1:1, perfecto | **estira 2.3× — sale a bloques** |
+| **~72 px (el doble)** | reduce 1.7× — limpio | estira 1.25× — aceptable |
+
+Por eso: **enemigos a 72×64, nave a 96×64, jefe a 512×448.** El doble de lo
+que dicen las tablas. Si prefieres trabajar más grande, usa un **múltiplo
+entero** de eso (×2 o ×4) y reduce tú antes de entregar — nunca un tamaño
+arbitrario como 314.
 
 Esto es lo primero que hay que corregir en el próximo lote.
 
