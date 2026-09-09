@@ -54,7 +54,44 @@ function fitCanvas(): void {
   ctx.imageSmoothingEnabled = false;
 }
 fitCanvas();
-window.addEventListener('resize', fitCanvas);
+
+/**
+ * iOS informa tamaños viejos justo cuando gira la pantalla: si solo escuchas
+ * `resize`, la partida se queda con las medidas del vertical y aparece
+ * diminuta en una esquina. Por eso se vuelve a medir en el frame siguiente y
+ * otra vez pasado un momento, cuando la barra del navegador ya se ha movido.
+ */
+function reajustar(): void {
+  fitCanvas();
+  requestAnimationFrame(fitCanvas);
+  setTimeout(fitCanvas, 350);
+}
+// Esconder la cabecera al empezar la partida cambia el alto disponible sin
+// que se dispare ningún `resize`. El observador lo cubre sin tener que
+// acordarse de llamar a fitCanvas en cada sitio que cambia de pantalla.
+if (canvas.parentElement) new ResizeObserver(() => fitCanvas()).observe(canvas.parentElement);
+window.addEventListener('resize', reajustar);
+window.addEventListener('orientationchange', reajustar);
+window.visualViewport?.addEventListener('resize', reajustar);
+
+const fullscreenEl = document.getElementById('btn-fullscreen') as HTMLElement;
+fullscreenEl?.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    await document.documentElement.requestFullscreen();
+    // Solo Android lo permite; en iOS lanza y no pasa nada más.
+    await (screen.orientation as { lock?: (o: string) => Promise<void> })
+      .lock?.('landscape');
+  } catch {
+    // Safari en iPhone no tiene fullscreen de elementos. No es un fallo que
+    // deba romper nada: el juego se sigue jugando, solo con la barra puesta.
+  }
+  reajustar();
+});
+document.addEventListener('fullscreenchange', reajustar);
 
 const dpadEl = document.getElementById('dpad') as HTMLElement;
 const fireEl = document.getElementById('btn-fire') as HTMLElement;
