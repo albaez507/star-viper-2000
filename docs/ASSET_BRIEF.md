@@ -1,29 +1,29 @@
 # Asset Brief — Star Viper 2000
 
-Documento para pasar a otro modelo/artista que va a generar los sprites.
-El código y la integración los hago yo (Claude Code); este documento es el
-contrato de qué archivos necesito, en qué tamaño, con qué convención y por
-qué. **Yo valido cada asset** contra este brief antes de integrarlo — así que
-cuanto más se ciña el otro modelo a esto, menos ida y vuelta habrá.
+> **Documento de entrega para el modelo/artista que genera los sprites.**
+> Es autocontenido: no hace falta conocer el proyecto ni el código.
+> Auditado contra el código real el 2026-09-09 — todos los tamaños de aquí
+> salen de las hitboxes que el juego usa hoy, no son estimaciones.
 
-Todo lo que hoy es geometría generada por código (naves como triángulos,
-balas como rectángulos) se sustituye por estos PNG sin tocar la lógica del
-juego — el motor ya está desacoplado del render.
+Estos assets son **provisionales**. Sustituyen a la geometría que el juego
+dibuja hoy por código (triángulos, rectángulos). Más adelante se reemplazarán
+por trabajo de artistas humanos, así que el objetivo aquí es **desbloquear el
+desarrollo**, no producir el arte definitivo.
+
+**Prioridad de esta tanda: la nave del jugador y los enemigos.** Todo lo demás
+(proyectiles, UI, entornos) está más abajo y puede esperar.
 
 ---
 
-## 1. Por qué naves y no personajes
+## 1. El juego en una frase
 
-El juego es de naves espaciales, no de personajes con piernas. Eso es
-deliberado y es una ventaja para el pipeline de arte con IA: **no hace falta
-ciclo de caminata, ni de correr, ni poses articuladas**. Cada nave/criatura es
-**un solo sprite estático** (más, como mucho, 1-2 frames de variación simple
-tipo "flash de impacto" — y eso el motor ya lo resuelve por código, pintando
-el sprite en blanco 2-3 frames, así que ni eso hace falta dibujarlo aparte).
+Shoot-'em-up horizontal de arcade: tu nave va por la izquierda, los enemigos
+entran por la derecha, el fondo es espacio oscuro. Estética retro/pixel, pocos
+colores, siluetas muy legibles a tamaño pequeño.
 
-Lo único remotamente parecido a animación que pediría más adelante es un
-sprite sheet de 2-3 frames para el jefe en su fase de muerte (opcional, ver
-§7) — todo lo demás es un frame fijo por entidad.
+**Ventaja del género para este pipeline:** son naves, no personajes. **No hace
+falta ningún ciclo de animación** — ni caminar, ni correr, ni poses. Cada
+entidad es un sprite fijo (más un par de variantes de estado, ver §5).
 
 ---
 
@@ -32,194 +32,212 @@ sprite sheet de 2-3 frames para el jefe en su fase de muerte (opcional, ver
 | Restricción | Detalle |
 |---|---|
 | Formato | PNG con canal alfa (fondo transparente) |
-| Estilo | Pixel art / retro, silueta legible a tamaño pequeño |
-| Render | `image-rendering: pixelated` — los píxeles deben ser nítidos, no anti-aliased ni con gradientes suaves |
-| Paleta | Limitada, ver §3. No usar colores fuera de la paleta salvo negro/blanco puro para contorno/flash |
-| Orientación | Ver §4 — es crítico, si se dibuja al revés hay que rehacerlo |
-| Fondo | Transparente, sin bordes ni sombra paja fuera de la silueta |
-| Frames | 1 solo frame por sprite salvo que se indique lo contrario |
-| Márgenes | Sin padding extra alrededor del sprite — el bounding box del PNG debe ajustarse a la silueta (recortar transparencia sobrante) |
+| Estilo | Pixel art retro, silueta legible a tamaño pequeño |
+| Render | El juego usa `image-rendering: pixelated`: píxeles nítidos, **sin** anti-aliasing suave ni degradados difusos |
+| Paleta | La de §3. Todo debe salir de ahí, salvo blanco/negro puro para contorno |
+| Orientación | Ver §4. Es crítico: si se dibuja al revés hay que rehacerlo |
+| Recorte | Sin margen transparente sobrante: el bounding box del PNG ajustado a la silueta |
+| Frames | Un solo frame por sprite. Las variantes de estado son archivos separados |
+
+Si trabajas a mayor resolución y luego reduces, perfecto — pero **entrega al
+tamaño de las tablas**, ya recortado.
 
 ---
 
-## 3. Paleta de color
+## 3. Paleta
 
-Viene de `src/styles/tokens.css`, es la que ya usa el HUD y los placeholders.
-No es obligatorio usar cada color en cada sprite, pero todo debe salir de aquí
-o de negro/blanco:
+Es la que ya usa el juego. Cada entidad tiene un color de identidad: el jugador
+la reconoce por **silueta + color** desde lejos.
 
-| Nombre | Hex | Uso actual |
+| Uso | Hex |
+|---|---|
+| Fondo (espacio) | `#0a0e17` |
+| Tinta / HUD / estrellas | `#eaf6ff` |
+| **Jugador** | `#3ee6c4` (turquesa) |
+| Options (orbes de apoyo) | `#7a5cff` (violeta) |
+| Enemigo `scout` | `#ff5470` (rojo) |
+| Enemigo `sine` | `#ffd23f` (amarillo) |
+| Enemigo `diver` | `#ff8c3e` (naranja) |
+| Enemigo `formation` | `#c792ff` (lila) |
+| Enemigo `swarm` | `#5ee6ff` (cian) |
+| Enemigo `harasser` | `#9dff5e` (verde lima) |
+| Enemigo `rival` | `#ff4fd8` (magenta) |
+| Jefe fase 1 / 2 / 3 | `#ff5470` / `#d43a5c` / `#9c1f3c` |
+| Item de hangar | `#9dff5e` |
+
+Puedes variar el tono dentro del mismo color (sombras, brillos), pero **no
+cambies el hue**: un `scout` azul rompe la lectura del juego.
+
+---
+
+## 4. Orientación (crítico)
+
+El mundo se desplaza de derecha a izquierda. El código **no rota ni voltea**
+los sprites: llegan ya orientados o no sirven.
+
+| Entidad | Mira hacia |
+|---|---|
+| Nave del jugador | **Derecha →** |
+| Todos los enemigos y el jefe | **Izquierda ←** |
+| Misil del jugador | **Derecha →**, con estela detrás |
+| Options, Power Core, Item | Sin dirección (son orbes/gemas) |
+
+---
+
+## 5. PRIORIDAD 1 — Nave del jugador
+
+### 5.1 Importante: entrégala **por piezas**, no como una sola imagen
+
+El juego va a tener mejoras que **cambian el aspecto de la nave** (más adelante
+el jugador compra piezas y quiere verlas puestas). Si la nave llega como un
+único PNG cerrado, cada mejora obliga a redibujar la nave entera.
+
+Por eso: **dibuja la nave en 4 capas separadas**, todas del mismo tamaño de
+lienzo y alineadas entre sí, para que el juego pueda apilarlas:
+
+| Capa | Archivo | Qué es |
 |---|---|---|
-| Fondo espacio | `#0a0e17` | Fondo del canvas |
-| Tinta / texto | `#eaf6ff` | HUD, estrellas |
-| Acento (jugador) | `#3ee6c4` | Nave del jugador, escudo |
-| Acento 2 (Options) | `#7a5cff` | Orbes Option |
-| Peligro | `#ff5470` | Enemigo `scout`, balas enemigas, jefe |
-| Advertencia / oro | `#ffd23f` | Enemigo `sine`, balas del jugador, Power Core |
-| — | `#ff8c3e` | Enemigo `diver`, misil |
-| — | `#c792ff` | Enemigo `formation` |
+| Casco | `ship-hull.png` | El cuerpo central. Es la única capa obligatoria |
+| Alas | `ship-wings.png` | Superior e inferior, en el mismo archivo |
+| Motor | `ship-engine.png` | La parte trasera / propulsión |
+| Cañón | `ship-cannon.png` | El morro / arma frontal |
 
-Estos colores son el **color de identidad** de cada entidad — el jugador
-reconoce a un enemigo por su silueta + color desde lejos. Si el nuevo sprite
-cambia el tono, que sea una variación cercana del mismo hue, no un color
-distinto (ej: el `scout` puede pasar de `#ff5470` a un rojo/magenta cercano,
-pero no a azul).
+- **Lienzo: 48 × 32 px** para las cuatro capas (mismo lienzo, contenido
+  distinto). Apiladas en orden casco → alas → motor → cañón deben formar una
+  nave coherente.
+- La **hitbox real es 30 × 20 px** centrada. El sprite es más grande a
+  propósito: en un shmup la nave se ve algo mayor de lo que colisiona, así el
+  jugador siente que esquivó.
+- El morro puede sobresalir un poco por la derecha del área de colisión.
 
----
+Si esto te complica demasiado, entrega al menos `ship-hull.png` completo
+(48×32, la nave entera) y lo demás después — pero las piezas separadas ahorran
+muchísimo trabajo futuro.
 
-## 4. Convención de orientación (crítico)
+### 5.2 Variantes de pieza (opcional, para después)
 
-El mundo se desplaza de derecha a izquierda. Esto determina hacia dónde mira
-cada sprite:
+Cuando existan las mejoras, harán falta 2-3 variantes de cada capa (por ejemplo
+`ship-cannon-b.png`, `ship-engine-b.png`) — misma silueta base, aspecto más
+pesado/afilado/agresivo. **No las hagas todavía**, pero tenlo en cuenta al
+diseñar: que la capa base admita variantes sin rehacer el resto.
 
-| Entidad | Mira hacia | Por qué |
-|---|---|---|
-| Nave del jugador | **Derecha** (→) | Avanza hacia los enemigos que vienen de la derecha |
-| Options (orbes) | Sin dirección fija | Son orbes/geometría simple, no necesitan "cara" |
-| Enemigos (`scout`, `sine`, `diver`, `formation`) | **Izquierda** (←) | Entran por la derecha y avanzan hacia la izquierda, hacia el jugador |
-| Jefe | **Izquierda** (←) | Igual que los enemigos, pero se ancla en vez de cruzar toda la pantalla |
-| Balas del jugador | N/A (rectángulo/proyectil simple) | — |
-| Balas enemigas / del jefe | N/A | — |
-| Misil | **Derecha** (→), con estela detrás | Lo dispara el jugador hacia la derecha |
-| Power Core | Sin dirección (orbe/gema) | — |
+### 5.3 Options
 
-Cada sprite se entrega **ya orientado**. El código no rota ni voltea el
-sprite del enemigo — si llega mirando a la derecha por error, no sirve.
+- `option-orb.png` — **16 × 16 px**. Orbe/gema pequeña violeta que flota junto
+  a la nave. Mismo lenguaje visual que el jugador, pero claramente "satélite",
+  no una nave completa.
 
 ---
 
-## 5. Tamaños exactos
+## 6. PRIORIDAD 1 — Enemigos
 
-Los tamaños están atados a las hitboxes reales del motor (en
-`src/game/*.ts`), así que no son estéticos — hay que respetarlos para que la
-colisión visual coincida con la colisión real. La convención es: el PNG mide
-**el doble del hitbox** (padding visual de "aura" de la nave más allá de su
-caja de colisión, como en cualquier shmup — el jugador siente que esquivó
-aunque el sprite roce).
+**Todos miran a la izquierda.** Cada uno debe distinguirse por **silueta**, no
+solo por color: el jugador tiene que reconocer el patrón de movimiento por la
+forma, incluso en blanco y negro.
 
-| Entidad | Hitbox (half-width × half-height) | Tamaño de sprite recomendado |
-|---|---|---|
-| Jugador | 15 × 10 px | **44 × 32 px** |
-| Enemigo `scout` / `sine` / `diver` / `formation` | 13 × 12 px | **36 × 32 px** cada uno |
-| Jefe "Sentinel" (fase 1) | 128 × 112 px | **260 × 230 px** — deliberadamente gigante y de silueta **blocky/octogonal**, no una nave estilizada (se lee como fortaleza). Crece de verdad en fases 2 y 3 (ver §6.4) |
-| Option (orbe de apoyo) | — | **12 × 12 px** |
-| Power Core | — | **20 × 20 px** |
-| Bala del jugador (single/double) | — | **12 × 6 px** |
-| Bala del jugador (láser) | — | **32 × 6 px** — mucho más alargada, con estela detrás; es el arma más fuerte y debe leerse como un rayo, no como una bala más |
-| Bala enemiga (normal) | — | **10 × 6 px** |
-| Bala del jefe | — | **32 × 32 px** — un orbe con halo, notablemente más grande que una bala normal; el jefe es gigante, su disparo debe sentirse igual de amenazante |
-| Misil | — | **20 × 10 px** |
+| Archivo | Tamaño | Color | Qué comunica la forma |
+|---|---|---|---|
+| `enemy-scout.png` | 40 × 36 | `#ff5470` | El más simple y genérico. Carne de cañón: afilado, agresivo, olvidable a propósito |
+| `enemy-sine.png` | 40 × 36 | `#ffd23f` | Se mueve ondulando: alas curvas, formas redondeadas |
+| `enemy-diver.png` | 40 × 36 | `#ff8c3e` | Se lanza en picado: punta de flecha, pico, algo que "apunta" |
+| `enemy-formation.png` | 40 × 36 | `#c792ff` | Viaja en escuadrones de 6: geométrico, uniforme, tipo dron |
+| `enemy-swarm.png` | 40 × 36 | `#5ee6ff` | Enjambre que aguanta rejilla y se lanza: insectoide, ligero |
+| `enemy-harasser.png` | 44 × 40 | `#9dff5e` | **No intenta matarte, te molesta y huye.** Debe leerse como "valioso, atrápalo antes de que escape": más adornado, casi como un contrabandista |
+| `enemy-rival.png` | 72 × 60 | `#ff4fd8` | Mini-jefe: **otra nave de combate**, no una estructura. Que se lea como un rival a tu altura, con cañones visibles |
 
-Actualizado tras subir el tamaño del jugador y los enemigos regulares a
-petición del usuario — se sentían demasiado pequeños en pantalla. El jefe
-queda igual de grande en términos absolutos, pero la diferencia de escala
-frente a los enemigos se redujo un poco (de ~7-8× a ~5×), lo cual sigue
-leyéndose como "gigante" sin dejar de distinguir bien a los enemigos
-normales.
+Hitboxes reales (por si ayuda a centrar): los cinco primeros 26×24, el
+`harasser` 30×28, el `rival` 52×44.
 
-Todos los tamaños son múltiplos de 4 a propósito, para que escalen limpio en
-pixel art (2x, 4x) sin sub-píxeles raros.
+### 6.1 Estado dañado
 
-Si el otro modelo trabaja mejor a mayor resolución (ej. 128×128) y luego se
-reduce, está bien — lo importante es que el archivo final entregado ya venga
-al tamaño de la tabla, recortado a la silueta.
+Cada enemigo que sobrevive a más de un impacto necesita **una segunda versión
+dañada**, misma silueta con daño visible (grietas, un ala rota, chispas,
+oscurecido). Nombre: `enemy-<tipo>-dmg.png`.
 
----
+**Hazlo solo para estos**, que son los que hoy aguantan más de un disparo:
 
-## 6. Lista de sprites a generar
+- `enemy-formation-dmg.png` (aguanta 2 impactos)
+- `enemy-diver-dmg.png` (2)
+- `enemy-harasser-dmg.png` (4)
+- `enemy-rival-dmg.png` (22 — este es el que más se va a ver dañado)
 
-### 6.1 Jugador
+> **Nota para el equipo del juego, no para el artista:** `scout`, `sine` y
+> `swarm` mueren de un solo disparo, así que un estado dañado nunca se vería.
+> Si se quiere que todos lo tengan, primero hay que subirles la vida a 2 —
+> es una decisión de dificultad, no de arte.
 
-- `player-ship.png` — 32×24 px, mirando a la derecha. Estilo "viper" ágil,
-  silueta triangular/afilada reconocible al instante.
-
-### 6.2 Options (apoyo)
-
-- `option-orb.png` — 12×12 px. Un orbe o gema pequeña, mismo lenguaje visual
-  que la nave del jugador pero claramente "satélite", no una nave completa.
-
-### 6.3 Enemigos (fase 1)
-
-Cuatro sprites, cada uno **claramente distinto en silueta**, no solo en
-color, porque el jugador debe poder identificar el patrón de movimiento por
-la forma sin leer el color:
-
-- `enemy-scout.png` — 24×24 px. El más simple/genérico, "carne de cañón".
-  Silueta afilada y agresiva.
-- `enemy-sine.png` — 24×24 px. Sugerir movimiento ondulante en el diseño
-  (alas curvas, forma más redondeada).
-- `enemy-diver.png` — 24×24 px. Forma de "punta de flecha" o pico, que
-  comunique "esto se va a lanzar en picado".
-- `enemy-formation.png` — 24×24 px. El que viaja en grupos de 6. Debe leerse
-  como "parte de un escuadrón" — más geométrico/uniforme, tipo dron.
-
-### 6.4 Jefe
-
-- `boss-sentinel.png` — 260×230 px, mirando a la izquierda. Silueta **blocky/
-  octogonal** — piensa "fortaleza acorazada", no "nave elegante". Con un
-  "núcleo" o punto débil visible (actualmente se pinta un círculo oscuro en
-  el centro-derecha del jefe — mantener un punto focal ahí para que quede
-  coherente con los disparos que salen de esa zona).
-- **Confirmado, no opcional (a diferencia de la versión anterior de este
-  brief):** `boss-sentinel-phase2.png` y `-phase3.png`, ligeramente más
-  grandes que el sprite base (×1.08 y ×1.18 — el motor ya redimensiona la
-  hitbox real en esas fases, así que el arte debe acompañar) y con más daño
-  visible: grietas, partes rotas, color más intenso/oscuro. El motor ya
-  genera esto por código (grietas procedurales + cambio de color) como
-  placeholder, así que no bloquea nada — pero si el otro modelo los genera,
-  se integran directamente. Ver `LOGIC.md` §8 para el detalle exacto de color
-  por fase (`#ff5470` → `#d43a5c` → `#9c1f3c`).
-
-### 6.5 Proyectiles y pickups
-
-- `bullet-player.png` — 12×6 px, dorado/amarillo (`#ffd23f`).
-- `bullet-enemy.png` — 10×6 px, rojo (`#ff5470`).
-- `missile.png` — 20×10 px, naranja (`#ff8c3e`), con pequeña estela.
-- `power-core.png` — 20×20 px, gema/núcleo pulsante en dorado. Debe leerse
-  como "objeto valioso a recoger", distinto de una bala.
-
-### 6.6 Iconos del medidor de poder (opcional, nice-to-have)
-
-Hoy el medidor de poder (`SPD · MSL · DBL · LSR · OPT · SHD`) se dibuja como
-texto. Si sobra tiempo, 6 iconos pequeños cuadrados de **16×16 px**, uno por
-mejora, mismo lenguaje visual que el resto:
-
-- `icon-speed.png`, `icon-missile.png`, `icon-double.png`, `icon-laser.png`,
-  `icon-option.png`, `icon-shield.png`
-
-### 6.7 Lo que NO hace falta generar
-
-- Fondo / estrellas — se generan por código (parallax de rectángulos).
-- Partículas de explosión — se generan por código.
-- Cualquier ciclo de animación (caminar, correr, parpadeo de ojos, etc.) — no
-  aplica, son naves.
+El **destello blanco** al recibir un impacto y las **partículas de explosión**
+ya los genera el juego por código: no hay que dibujarlos.
 
 ---
 
-## 7. Sobre el sistema de "evolución por fases" (confirmado, solo para el jefe)
+## 7. PRIORIDAD 1 — Jefe "Sentinel"
 
-El jefe cambia de forma visual y de tamaño real según su vida (100% → 60% →
-30%), no solo de patrón de ataque: crece (×1.08, ×1.18), se oscurece y se
-agrieta más con cada fase (ver `LOGIC.md` §8 para el detalle exacto). Ya
-implementado por código como placeholder; los sprites `boss-sentinel-phase2.png`
-y `-phase3.png` de §6.4 lo sustituyen con arte real cuando estén listos.
+Nave **gigante** (ocupa casi la mitad de alto de la pantalla), silueta
+**blocky/acorazada** — se lee como fortaleza, no como una nave grande. Tiene un
+**núcleo/punto débil visible** en el centro-derecha, de donde salen sus
+disparos.
 
-**Se decidió explícitamente NO extender esto a los enemigos regulares** —
-mueren en 1-2 golpes, no da tiempo a que se note la transformación, y
-multiplicaría el trabajo de arte por cada tipo. No generar variantes de fase
-para `enemy-scout`/`enemy-sine`/`enemy-diver`/`enemy-formation`.
+| Archivo | Tamaño | Color | Estado |
+|---|---|---|---|
+| `boss-sentinel-1.png` | 320 × 280 | `#ff5470` | Intacto |
+| `boss-sentinel-2.png` | 346 × 302 | `#d43a5c` | Dañado: grietas, placas sueltas |
+| `boss-sentinel-3.png` | 378 × 330 | `#9c1f3c` | Crítico: muy roto, oscuro, casi negro |
+
+El jefe **crece de verdad** entre fases (×1.08 y ×1.18) — por eso los tres
+tamaños distintos. Hitbox real: 256×224 en fase 1.
 
 ---
 
-## 8. Entrega
+## 8. PRIORIDAD 2 — Proyectiles y recogibles
 
-- Un PNG por archivo, nombrado exactamente como en §6 (minúsculas, guiones).
-- Carpeta de entrega: todo junto, sin subcarpetas.
-- Si el modelo genera variantes/opciones, marcarlas claramente
-  (`player-ship-v1.png`, `player-ship-v2.png`) y yo elijo/valido cuál se
-  integra.
-- Cuando lleguen, los reviso contra las hitboxes reales, los integro en
-  `src/render/sprites.ts` (hoy dibuja geometría; pasa a `drawImage`), y aviso
-  si alguno no lee bien a tamaño de juego real (esto pasa mucho con pixel art
-  generado a resoluciones grandes y luego reducido — hay que probarlo en el
-  canvas, no solo mirarlo en grande).
+Pueden esperar a la siguiente tanda.
+
+| Archivo | Tamaño | Color | Nota |
+|---|---|---|---|
+| `bullet-player.png` | 16 × 8 | `#ffd23f` | Disparo normal del jugador |
+| `bullet-laser.png` | 40 × 8 | `#3ee6c4` | Arma fuerte: **rayo alargado con estela**, tiene que leerse como rayo, no como otra bala |
+| `bullet-enemy.png` | 12 × 8 | `#ff5470` | Disparo enemigo normal |
+| `bullet-boss.png` | 32 × 32 | `#ff5470` | Orbe con halo. Mucho más grande que una bala normal: el jefe es gigante y su disparo debe sentirse igual |
+| `missile.png` | 28 × 14 | `#ff8c3e` | Misil del jugador, mirando a la derecha, con estela |
+| `power-core.png` | 24 × 24 | `#ffd23f` | Gema/núcleo que se recoge durante la partida. "Valioso", distinto de una bala |
+| `item.png` | 24 × 24 | `#9dff5e` | Item de hangar. Debe leerse como **botín permanente**, más "objeto" que "energía" — distinto del Power Core a simple vista |
+
+---
+
+## 9. Lo que NO hay que dibujar
+
+Todo esto lo genera el juego por código. No pierdas tiempo:
+
+- Fondo y estrellas (parallax de 3 capas)
+- Partículas de explosión y chispas
+- Destello blanco de impacto
+- Grietas del jefe (ya son procedurales; los sprites de §7 las sustituirían)
+- Barras de vida, HUD, texto, botones táctiles
+- Cualquier ciclo de animación
+
+---
+
+## 10. Futuro (NO hacer todavía)
+
+Anotado para que lo tengas en cuenta al diseñar, no para producirlo ahora:
+
+- **Entornos**: el juego hoy transcurre solo en el espacio. La idea es llegar a
+  lugares con identidad propia — cueva, océano, volcán, hielo — que además
+  servirán para introducir obstáculos. Eso pedirá capas de fondo con parallax y
+  tilesets de obstáculos.
+- **Variantes de pieza de la nave** (§5.2).
+
+---
+
+## 11. Entrega
+
+- Un PNG por archivo, con los nombres exactos de las tablas (minúsculas,
+  guiones).
+- Todo junto, sin subcarpetas.
+- Si generas alternativas, márcalas (`enemy-scout-v1.png`, `-v2.png`) y se
+  elige después.
+- Se validan integrándolos y mirándolos **a tamaño real dentro del juego**.
+  Es habitual que un pixel art generado en grande se vuelva ilegible al
+  reducirlo: si pasa, se pide una versión con menos detalle y silueta más
+  fuerte.
