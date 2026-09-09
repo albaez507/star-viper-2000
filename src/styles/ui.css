@@ -244,6 +244,13 @@ body {
   z-index: 6;
 }
 
+/* Sin esto el panel no se cierra nunca: el atributo `hidden` se apoya en la
+   regla `[hidden] { display: none }` del navegador (especificidad 0-1-0), y
+   cualquier `display` puesto con un selector de ID (1-0-0) le gana. */
+#hangar[hidden] {
+  display: none;
+}
+
 #hangar {
   position: absolute;
   inset: 0;

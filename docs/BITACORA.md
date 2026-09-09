@@ -549,3 +549,24 @@ El harness de pruebas manuales necesita un reloj **monótono compartido**
 reloj quedaba por detrás del `last` interno del loop, los deltas salían
 negativos y el acumulador se hundía — el mundo dejaba de avanzar y parecía un
 bug del juego. No lo era.
+
+## 2026-09-09 (cont. 2) — El hangar no se podía cerrar
+
+El usuario quedó atrapado en el hangar: CERRAR no hacía nada.
+
+Causa: el atributo HTML `hidden` funciona a través de la regla
+`[hidden] { display: none }` de la hoja de estilos del navegador, cuya
+especificidad es **0-1-0**. Mi regla `#hangar { display: flex }` es **1-0-0**,
+así que le ganaba: `hidden` se ponía en el DOM, pero el panel seguía visible.
+Arreglado con una regla explícita `#hangar[hidden] { display: none }`.
+
+**Por qué se me pasó:** verifiqué el hangar solo por estado — que el progreso
+se banqueara, que la compra descontara items, que la mejora se aplicara en la
+run siguiente. Todo eso pasaba. Nunca abrí y cerré el panel mirando la
+pantalla. Un fallo puramente de CSS es invisible para ese tipo de prueba.
+Ahora verificado con capturas: oculto al cargar → abre con el botón → cierra
+con CERRAR.
+
+Revisados los otros dos elementos que se ocultan por JS (`#btn-hangar`,
+`#btn-pause`): ninguno declara `display` en un selector de ID, así que no
+tienen el mismo problema.
