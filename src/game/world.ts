@@ -354,6 +354,7 @@ const MISSILE_SPLASH_RADIUS = 46;
 
 function explodeMissile(state: GameState, x: number, y: number, dmg: number): void {
   for (const e of state.enemies.active()) {
+    if (e.indestructible) continue;
     if (dist(x, y, e.x, e.y) <= MISSILE_SPLASH_RADIUS + Math.max(e.halfW, e.halfH)) {
       e.hp -= dmg;
       e.hitFlash = 0.12;
@@ -423,6 +424,14 @@ function stepCollisions(state: GameState): void {
     if (!b.active) continue;
     for (const e of state.enemies.active()) {
       if (hits(b.x, b.y, PLAYER_BULLET_HIT_HALF, PLAYER_BULLET_HIT_HALF, e.x, e.y, e.halfW, e.halfH)) {
+        if (e.indestructible) {
+          // La bala se apaga contra la roca: sin destello y sin daño, para
+          // que en dos disparos quede claro que esto no se mata, se esquiva.
+          if (!b.pierce) b.active = false;
+          state.events.emit({ type: 'hit', x: b.x, y: b.y });
+          if (!b.pierce) break;
+          continue;
+        }
         e.hp -= b.dmg;
         e.hitFlash = 0.12;
         state.events.emit({ type: 'hit', x: b.x, y: b.y });

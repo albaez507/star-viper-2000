@@ -363,6 +363,82 @@ saturado se reserva para lo que mata.
 
 ---
 
+## 9C. PRIORIDAD 2 — Obstáculos
+
+> Sección añadida el 2026-09-09. Los obstáculos **ya funcionan en el juego**
+> con un dibujo provisional hecho a código (un polígono gris). Se puede jugar
+> hoy. Lo que falta es el arte de verdad.
+
+Un obstáculo no es un enemigo. Es lo único del juego que **no se puede
+destruir**: las balas se apagan contra él. Por eso lo más importante del
+dibujo no es que sea bonito, es que **en medio segundo el jugador entienda
+que a eso no hay que dispararle, hay que esquivarlo**.
+
+### La regla de lectura
+
+| Enemigo | Obstáculo |
+|---|---|
+| Simétrico, con morro y dirección | Asimétrico, sin dirección, sin "frente" |
+| Color saturado (rojo, cian, magenta) | Gris, tierra, piedra. **Sin saturación** |
+| Detalle mecánico: cabina, motores, cañones | Detalle mineral: grietas, aristas, erosión |
+| Destella en blanco al recibir un impacto | No reacciona nunca |
+
+Si al mirarlo dudas de si es una nave enemiga, está mal.
+
+### Lo que hay que dibujar
+
+| Archivo | Tamaño | Qué es |
+|---|---|---|
+| `hazard-rock-a.png` | 96 × 88 | Roca grande, angular, silueta muy irregular |
+| `hazard-rock-b.png` | 96 × 88 | Otra roca distinta. Que no parezca la misma girada |
+| `hazard-rock-small.png` | 56 × 52 | Roca pequeña, para grupos densos |
+| `hazard-debris.png` | 96 × 88 | Chatarra: metal viejo, retorcido, oxidado. Sin cabina |
+
+Cuatro imágenes sueltas, con transparencia. **Tamaño doble del que se ve en
+pantalla** (igual que los enemigos, ver §0 / §6): se muestran a la mitad.
+
+### Y una capa más: el foreground que tapa
+
+Esto es distinto de las rocas. Es una capa que pasa **por delante de todo**,
+más rápido que el fondo, que no hace daño y no choca — solo **te tapa la
+vista un segundo**. Da sensación de velocidad y de estar volando dentro de
+algo.
+
+| Archivo | Tamaño | Nota |
+|---|---|---|
+| `fg-clouds.png` | 960 × 540 | Jirones de nube sueltos. Con alfa. Repetible en horizontal |
+| `fg-rocks.png` | 960 × 540 | Siluetas de roca oscura arriba y abajo. Con alfa |
+
+Reglas que no se pueden romper, porque si no el juego se vuelve injusto:
+- **Nunca ocupar más de un tercio de la altura** de un tirón.
+- **Dejar libre la banda central**, que es donde se juega.
+- **Elementos separados**, con huecos grandes entre ellos. Nunca una masa
+  continua que cruce la pantalla entera.
+- Muy oscuro o muy claro, pero de un solo tono: tiene que leerse como "esto
+  está delante", no competir con la acción.
+
+---
+
+## 9D. Sectores nuevos del viaje (contexto, todavía NO producir)
+
+La idea que guía el juego es que los niveles son **un viaje continuo**, no
+escenarios sueltos: empiezas rasante sobre el suelo con el horizonte a lo
+lejos, subes entre nubes, sigues subiendo hasta que el cielo se apaga, y
+llegas al espacio y después a otro planeta.
+
+Hoy existen dos sectores: `Jardines del Céfiro` (nubes) y `Órbita Sentinel`
+(espacio). Faltan los dos que los unen:
+
+| Sector | Dónde encaja | Identidad visual | Obstáculo propio |
+|---|---|---|---|
+| **Rasante** | Antes de las nubes | Suelo cerca, horizonte bajo, luz de amanecer. Verdes y dorados | Torres y estructuras del suelo que pasan altísimas |
+| **Alta atmósfera** | Entre las nubes y el espacio | Cielo apagándose, azul muy oscuro, primeras estrellas, aire fino | Hielo a la deriva y restos de satélites |
+
+Cada uno necesita las mismas 3 capas de §9B más su foreground de §9C. **No
+empieces con estos.** Van después de que la nave por piezas esté cerrada.
+
+---
+
 ## 10. Futuro (NO hacer todavía)
 
 Anotado para que lo tengas en cuenta al diseñar, no para producirlo ahora:

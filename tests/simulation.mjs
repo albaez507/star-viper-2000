@@ -19,7 +19,7 @@ test('both sectors have an ordered, complete timeline and distinct encounters', 
     assert.ok('boss' in stage.events.at(-1));
     for (let i = 1; i < stage.events.length; i++) assert.ok(stage.events[i].t > stage.events[i - 1].t);
   }
-  assert.equal(new Set(SKY_STAGE.filter(e => 'kind' in e).map(e => e.kind)).size, 7);
+  assert.equal(new Set(SKY_STAGE.filter(e => 'kind' in e).map(e => e.kind)).size, 8);
   assert.notDeepEqual(STAGES.orbit.events, SKY_STAGE);
 });
 
@@ -77,7 +77,10 @@ test('both ships fire, upgrade on cores 1/3/5, and gain options at max', () => {
 
 test('projectile collisions eliminate formations and award a core', () => {
   const state = createWorld(960, 540, 1337, 'sky');
-  state.spawnIndex = 1; state.stageTime = 7; updateSpawner(state);
+  // Buscado, no fijo: insertar una oleada nueva antes de la primera
+  // formación no debe romper esta prueba.
+  const idx = SKY_STAGE.findIndex(e => e.kind === 'formation');
+  state.spawnIndex = idx; state.stageTime = SKY_STAGE[idx].t; updateSpawner(state);
   const enemies = state.enemies.active(); assert.equal(enemies.length, 6);
   enemies.forEach((e, i) => {
     Object.assign(e, { x: 300 + i * 65, y: 270, baseY: 270, t: 0 });
@@ -154,4 +157,20 @@ test('production sheets exist and both sprite sheets preserve PNG alpha', async 
     assert.ok(png.readUInt32BE(16) >= 1024);
     if (file !== 'background') assert.equal(png[25], 6, `${file} must be RGBA`);
   }
+});
+
+test('hazards absorb fire instead of dying', () => {
+  const state = createWorld(960, 540, 99, 'sky');
+  const idx = SKY_STAGE.findIndex(e => e.kind === 'hazard');
+  state.spawnIndex = idx; state.stageTime = SKY_STAGE[idx].t; updateSpawner(state);
+  const roca = state.enemies.active()[0];
+  assert.equal(roca.indestructible, true);
+  assert.equal(roca.score, 0);
+  Object.assign(roca, { x: 300, y: 270, baseY: 270 });
+  for (let i = 0; i < 20; i++) {
+    spawnBullet(state.playerBullets.acquire(), roca.x, roca.y, 0, 0, 4, true);
+    step(state, idle, dt);
+  }
+  assert.equal(roca.active, true, 'la roca no se destruye');
+  assert.equal(state.score, 0, 'y no da puntos');
 });

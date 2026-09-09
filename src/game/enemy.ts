@@ -34,6 +34,12 @@ export type Enemy = {
   dropsItem: boolean;
   /** Cadencia de misil, solo para la nave rival. 0 = no lanza misiles. */
   missileCooldown: number;
+  /** No se puede destruir: las balas no le hacen daño ni lo hacen destellar.
+   * Es lo que distingue un obstáculo de un enemigo. */
+  indestructible: boolean;
+  /** Vaivén vertical del obstáculo. 0 = fijo, >0 = móvil. */
+  driftAmp: number;
+  driftFreq: number;
   active: boolean;
 };
 
@@ -45,6 +51,7 @@ export function makeEnemy(): Enemy {
     formationId: -1, triggerX: 0, diving: false, divingVx: 0, divingVy: 0,
     canShoot: false, anchorX: 0, anchorY: 0, diveDelay: 0,
     lifetime: 0, dropsItem: false, missileCooldown: 0,
+    indestructible: false, driftAmp: 0, driftFreq: 1,
     active: false,
   };
 }

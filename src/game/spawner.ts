@@ -53,6 +53,8 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
     e.triggerX = state.worldW * 0.55;
     e.canShoot = false;
     e.diveDelay = 0;
+    e.indestructible = false;
+    e.driftAmp = 0;
     // Escalonado inicial para que una oleada entera no dispare a la vez.
     e.fireCooldown = state.rng.range(0.8, 2.6);
 
@@ -123,6 +125,26 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.score = 1200;
         e.halfW = 26;
         e.halfH = 22;
+        break;
+      }
+      case 'hazard': {
+        e.behavior = 'hazard';
+        e.indestructible = true;
+        e.hp = 9999; e.maxHp = 9999;
+        e.vx = -95;
+        e.vy = 0;
+        e.t = state.rng.range(0, 6.28);
+        e.score = 0;
+        e.halfW = 22;
+        e.halfH = 20;
+        // La mitad se mueven: un obstáculo que solo pasa recto se memoriza,
+        // uno que sube y baja hay que leerlo.
+        const movil = i % 2 === 1;
+        e.driftAmp = movil ? 70 : 0;
+        e.driftFreq = 0.9 + state.rng.range(0, 0.5);
+        e.baseY = 110 + state.rng.range(0, state.worldH - 220);
+        e.y = e.baseY;
+        e.x = state.worldW + 50 + i * 210;
         break;
       }
       case 'swarm': {

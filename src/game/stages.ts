@@ -3,15 +3,22 @@ import { STAGE_1, type StageEvent } from './stage1';
 export type StageId = 'orbit' | 'sky';
 export const SKY_STAGE: StageEvent[] = [
   { t: 2, kind: 'scout', count: 4 },
-  { t: 7, kind: 'formation', count: 6, shape: 'line' },
-  { t: 16, kind: 'sine', count: 4 },
+  // Primer obstáculo solo, sin enemigos encima: la primera vez que ves una
+  // roca tienes que poder dispararle, ver que no pasa nada y esquivarla sin
+  // que además te estén disparando.
+  { t: 6, kind: 'hazard', count: 2 },
+  { t: 12, kind: 'formation', count: 6, shape: 'line' },
+  { t: 20, kind: 'sine', count: 4 },
   { t: 23, kind: 'formation', count: 6, shape: 'v' },
   { t: 30, kind: 'harasser', count: 1 },
   { t: 36, kind: 'diver', count: 3 },
+  // Ahora sí: obstáculos mezclados con enemigos, y ya con los móviles.
+  { t: 40, kind: 'hazard', count: 4 },
   { t: 43, kind: 'formation', count: 6, shape: 'column' },
   { t: 51, kind: 'rival', count: 1 },
   { t: 62, kind: 'formation', count: 6, shape: 'line' },
   { t: 69, kind: 'sine', count: 5 },
+  { t: 72, kind: 'hazard', count: 5 },
   { t: 75, kind: 'harasser', count: 1 },
   { t: 81, kind: 'formation', count: 6, shape: 'v' },
   { t: 89, kind: 'swarm', count: 12 },

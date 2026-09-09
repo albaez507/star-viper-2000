@@ -195,6 +195,7 @@ const behaviors: Record<string, Behavior> = {
 | `formation` | Sigue un punto de anclaje del grupo (formación en V, columna u onda); el grupo se mueve como una unidad |
 | `harasser` | Entra, se planta a 2/3 de pantalla, ondula y dispara. **Se aparta si el jugador se acerca** (`KEEP_AWAY`): no busca el choque. A los 9s huye por la derecha. Si muere antes, suelta un item de hangar |
 | `rival` | Mini-jefe de mitad de stage. Persigue la **altura** del jugador para dispararle de frente, pero más lento que él, así que siempre se le puede escapar. Lanza misiles lentos y grandes. Implementado como enemigo con mucha vida (22), no como un segundo sistema de jefe |
+| `hazard` | **Obstáculo, no enemigo.** `indestructible: true`: las balas y el misil no le hacen nada y no destella al recibirlas. Avanza a velocidad constante; con `driftAmp > 0` además sube y baja. Es lo único del juego que no se resuelve disparando — ver `OBSTACULOS.md` |
 | `swarm` | Enjambre estilo Galaxian, horizontal. Tres etapas por miembro: entra → aguanta su ranura en la rejilla "respirando" → al cumplirse su `diveDelay` fija un vector hacia el jugador y se lanza. **Sin controlador de grupo**: el escalonado vive en el `diveDelay` de cada enemigo (asignado en el spawner), así que cada miembro sigue siendo autónomo igual que el resto de patrones, y aun así se ve como que "se descuelgan de a uno" |
 
 ### Disparo enemigo (`world.ts::tryEnemyFire`)

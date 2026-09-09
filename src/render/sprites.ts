@@ -113,6 +113,10 @@ export function drawOption(ctx: CanvasRenderingContext2D, o: Option): void {
 }
 
 export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  if (e.behavior === 'hazard') {
+    drawHazard(ctx, e);
+    return;
+  }
   if (skyActive && drawSkySprite(ctx, e.behavior, e.x, e.y, e.halfW * 2 + 8, e.halfH * 2 + 8, e.hitFlash > 0)) {
     if (e.formationId >= 0 || e.dropsItem) {
       ctx.save(); ctx.strokeStyle = e.dropsItem ? '#fff9bd' : '#73569d';
@@ -176,6 +180,35 @@ function drawEnemyHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
     ctx.fillStyle = ENEMY_COLORS[e.behavior] ?? '#ff5470';
     ctx.fillRect(x, y, w * Math.max(0, e.hp / e.maxHp), 4);
   }
+}
+
+/**
+ * Obstáculo, con marcador provisional (falta arte, ver ASSET_BRIEF).
+ *
+ * Se dibuja **deliberadamente distinto de un enemigo**: gris pétreo, forma
+ * angular e irregular, sin destello al recibir disparos. Si un obstáculo se
+ * pareciera a un enemigo, el jugador le dispararía, no moriría nada, y se
+ * sentiría estafado. La silueta tiene que decir "esto se esquiva".
+ */
+function drawHazard(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.fillStyle = '#6b6f7a';
+  ctx.beginPath();
+  ctx.moveTo(-e.halfW, -e.halfH * 0.4);
+  ctx.lineTo(-e.halfW * 0.35, -e.halfH);
+  ctx.lineTo(e.halfW * 0.7, -e.halfH * 0.75);
+  ctx.lineTo(e.halfW, e.halfH * 0.2);
+  ctx.lineTo(e.halfW * 0.25, e.halfH);
+  ctx.lineTo(-e.halfW * 0.7, e.halfH * 0.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#2b2f38';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = '#878c98';
+  ctx.fillRect(-e.halfW * 0.3, -e.halfH * 0.35, e.halfW * 0.5, e.halfH * 0.3);
+  ctx.restore();
 }
 
 export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
