@@ -248,7 +248,7 @@ function stepProjectiles(state: GameState, dt: number): void {
 
 function stepPowerCores(state: GameState, dt: number): void {
   for (const c of state.powerCores.active()) {
-    stepPowerCore(c, dt);
+    stepPowerCore(c, dt, state.player.x, state.player.y);
     if (c.x < -30) c.active = false;
   }
 }
@@ -399,7 +399,7 @@ function stepCollisions(state: GameState): void {
   }
 
   for (const c of state.powerCores.active()) {
-    if (hits(c.x, c.y, 6, 6, p.x, p.y, PLAYER_HALF_W + 6, PLAYER_HALF_H + 6)) {
+    if (hits(c.x, c.y, 10, 10, p.x, p.y, PLAYER_HALF_W + 8, PLAYER_HALF_H + 8)) {
       c.active = false;
       advanceCursor(state.powerMeter);
       state.events.emit({ type: 'coreCollected', slot: state.powerMeter.cursor });
