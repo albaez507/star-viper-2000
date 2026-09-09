@@ -20,16 +20,19 @@ const ENEMY_COLORS: Record<string, string> = {
 
 const ASSET_ROOT = '/assets/';
 const images = new Map<string, HTMLImageElement>();
+const failedAssets = new Set<string>();
 function asset(name: string): HTMLImageElement {
   let img = images.get(name);
   if (!img) {
     img = new Image();
     img.src = `${ASSET_ROOT}${name}`;
+    img.onerror = () => failedAssets.add(name);
     images.set(name, img);
   }
   return img;
 }
 function drawAsset(ctx: CanvasRenderingContext2D, name: string, w: number, h: number): boolean {
+  if (failedAssets.has(name)) return false;
   const img = asset(name);
   if (!img.complete || img.naturalWidth === 0) return false;
   ctx.drawImage(img, -w / 2, -h / 2, w, h);
@@ -42,10 +45,12 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   ctx.save();
   ctx.translate(p.x, p.y);
   if (p.hitFlash <= 0) {
+    // De momento solo el casco. Las otras tres capas llegaron dibujadas como
+    // objetos sueltos a lienzo completo (un motor, un cañón), no como partes
+    // alineadas sobre la misma nave, así que apilarlas da un amasijo. El
+    // casco por sí solo ya es una nave completa y correcta.
+    // TODO: reactivar cuando las capas vengan alineadas entre sí.
     drawAsset(ctx, 'ship-hull.png', 48, 32);
-    drawAsset(ctx, 'ship-wings.png', 48, 32);
-    drawAsset(ctx, 'ship-engine.png', 48, 32);
-    drawAsset(ctx, 'ship-cannon.png', 48, 32);
   }
   if (p.hitFlash <= 0) {
     if (p.shield > 0) {
