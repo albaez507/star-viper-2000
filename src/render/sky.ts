@@ -4,7 +4,6 @@ import { drawSkySprite } from './sky-assets';
 export class Sky {
   private background = new Image();
   private tile: HTMLCanvasElement | null = null;
-  private clouds: HTMLCanvasElement | null = null;
   private bursts: { x: number; y: number; t: number; size: number }[] = [];
   /** Desplazamiento acumulado propio. Antes el scroll salía de `elapsed`, así
    * que el fondo del cielo era inmune al "warp" de llegada del jefe: la
@@ -22,16 +21,10 @@ export class Sky {
       const ctx = this.tile.getContext('2d')!;
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(this.background, 0, 0, 960, 540);
-      this.clouds = document.createElement('canvas');
-      this.clouds.width = 960;
-      this.clouds.height = 130;
-      const cloudCtx = this.clouds.getContext('2d')!;
-      cloudCtx.imageSmoothingEnabled = false;
-      cloudCtx.drawImage(this.tile, 0, 410, 960, 130, 0, 0, 960, 130);
-      cloudCtx.globalCompositeOperation = 'destination-in';
-      const fade = cloudCtx.createLinearGradient(0, 0, 0, 80);
-      fade.addColorStop(0, 'transparent'); fade.addColorStop(1, 'white');
-      cloudCtx.fillStyle = fade; cloudCtx.fillRect(0, 0, 960, 130);
+      // Aquí iba un "foreground" que era un recorte de la MISMA imagen de
+      // fondo, redibujado abajo al 70% de opacidad. No era una capa de
+      // parallax: era la imagen encima de sí misma, y se notaba. Un
+      // foreground de verdad necesita arte propio (ver ASSET_BRIEF §9B).
     });
   }
 
@@ -62,21 +55,6 @@ export class Sky {
         ctx.drawImage(this.tile, 0, 0, w, h);
         ctx.restore();
       }
-    }
-    if (this.clouds) {
-      const scroll = Math.round(this.scroll * 31);
-      const first = Math.floor(scroll / w);
-      ctx.globalAlpha = 0.7;
-      for (let i = first; i <= first + 1; i++) {
-        const x = i * w - scroll;
-        ctx.save();
-        ctx.translate(x + (i % 2 ? w : 0), h - 130);
-        ctx.scale(i % 2 ? -1 : 1, 1);
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(this.clouds, 0, 0, w, 130);
-        ctx.restore();
-      }
-      ctx.globalAlpha = 1;
     }
     ctx.fillStyle = '#f4ffeb'; ctx.globalAlpha = 0.55;
     for (let i = 0; i < 18; i++) {

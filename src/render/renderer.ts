@@ -24,7 +24,10 @@ export class Renderer {
     const ctx = this.ctx;
     const { worldW, worldH } = state;
     const sky = state.stageId === 'sky';
-    setSkyActive(sky);
+    // Las naves y los enemigos son los mismos vayas donde vayas: el atlas
+    // sirve para cualquier sector, no solo para el cielo. Solo el FONDO
+    // depende del stage.
+    setSkyActive(true);
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'low';
 

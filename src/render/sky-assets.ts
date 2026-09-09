@@ -89,13 +89,22 @@ export function drawSkySprite(ctx: CanvasRenderingContext2D, name: SkySprite, x:
   const scale = Math.min(boxW / frame.width, boxH / frame.height);
   const dw = Math.max(1, Math.round(frame.width * scale));
   const dh = Math.max(1, Math.round(frame.height * scale));
+
+  // Nitidez: el canvas puede tener más píxeles reales que unidades de mundo
+  // (ver `fitCanvas`). Si reducimos el frame a unidades de mundo y luego la
+  // transformación lo agranda, estamos tirando detalle y volviéndolo a
+  // estirar. Reduciendo directamente a **píxeles de pantalla**, el dibujo
+  // acaba siendo 1:1 y se ve todo lo nítido que el arte permite.
+  const escalaPantalla = ctx.getTransform().a || 1;
+  const pw = Math.max(1, Math.round(dw * escalaPantalla));
+  const ph = Math.max(1, Math.round(dh * escalaPantalla));
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   ctx.translate(Math.round(x), Math.round(y));
   if (FLIP_X.has(name)) ctx.scale(-1, 1);
   if (angle) ctx.rotate(angle);
   if (flash) ctx.filter = 'brightness(2.5)';
-  ctx.drawImage(scaledFrame(name, frame, dw, dh), -Math.round(dw / 2), -Math.round(dh / 2));
+  ctx.drawImage(scaledFrame(name, frame, pw, ph), -Math.round(dw / 2), -Math.round(dh / 2), dw, dh);
   ctx.restore();
   return true;
 }

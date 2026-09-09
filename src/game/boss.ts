@@ -97,10 +97,14 @@ export function updateBossIntro(b: Boss, dt: number): void {
   }
 }
 
+/**
+ * Solo congela el fondo durante la pausa previa. **No acelera**: la animación
+ * de "viajar rápido hacia el jefe" se quitó a petición del usuario — lo que
+ * funciona de esa secuencia es el 警告 y el silencio, no el zoom.
+ */
 export function bossWarpMultiplier(b: Boss): number {
   if (!b.active || b.revealed) return 1;
   if (b.introPhase === 'hold') return 0;
-  if (b.introPhase === 'warp') return 6;
   return 1;
 }
 
