@@ -265,15 +265,84 @@ Todo esto lo genera el juego por código. No pierdas tiempo:
 
 ---
 
+## 9B. PRIORIDAD 1 (nueva) — Fondos y entornos
+
+> Esta sección se añadió después de ver los primeros sprites en el juego. Los
+> sprites estaban bien, pero **flotaban sobre un vacío negro**: hoy el fondo
+> son literalmente 165 puntos blancos sobre color plano. Por muy bueno que sea
+> un sprite, sin mundo detrás el juego se ve pobre. Esto es ahora lo que más
+> impacto tiene.
+
+### Cómo funciona el fondo en este juego
+
+El mundo se desplaza **de derecha a izquierda**, sin fin. El fondo se compone
+de **3 capas con parallax**: cuanto más lejos, más despacio se mueve. Eso crea
+la profundidad.
+
+| Capa | Velocidad | Qué va aquí |
+|---|---|---|
+| Lejana | Muy lenta | Nebulosas, planetas, siluetas gigantes. Muy oscuro, poco contraste |
+| Media | Media | Estructuras, formaciones, escombros. Contraste medio |
+| Cercana | Rápida | Elementos que pasan **por delante** de la acción. Ver aviso abajo |
+
+### Requisitos técnicos
+
+- **Cada capa: 960 × 540 px.**
+- **Debe repetir sin costura en horizontal**: el borde derecho tiene que
+  encajar con el izquierdo, porque la capa se repite en bucle. Si no encaja,
+  se ve un corte cada pocos segundos y no sirve.
+- **Capas media y cercana: con transparencia** (PNG con alfa), porque se
+  dibujan encima de la lejana.
+- La capa lejana puede ser opaca (es el fondo del todo).
+
+### ⚠️ Aviso sobre la capa cercana
+
+Todo lo que pase por delante **tapa al jugador y a las balas**. En un juego
+donde te matan por un píxel, eso es peligroso. Por eso:
+
+- Muy oscuro (casi silueta), para que se lea como "esto está delante" y no
+  compita con la acción.
+- Poco denso: elementos sueltos, no una masa continua.
+- Nunca en la banda vertical central, que es donde se juega.
+
+### Qué pedir primero
+
+**Solo el entorno espacial (el del stage 1).** Hasta que no veamos una capa
+real dentro del juego no sabemos si el tamaño, el contraste y la costura
+funcionan. Cuando eso esté validado, se piden los demás con la misma receta.
+
+| Archivo | Capa | Nota |
+|---|---|---|
+| `bg-space-far.png` | Lejana | Nebulosa muy tenue, alguna estrella grande. Casi negro |
+| `bg-space-mid.png` | Media | Planeta lejano, cinturón de asteroides, estación rota. Con alfa |
+| `bg-space-near.png` | Cercana | Pocos asteroides oscuros en silueta. Con alfa, muy poco denso |
+
+### Los otros entornos (todavía NO, pero para que los tengas en la cabeza)
+
+Cada uno debe reconocerse **de un vistazo**, por color y por forma:
+
+| Entorno | Identidad visual | Idea de obstáculo (futuro) |
+|---|---|---|
+| **Cueva** | Roca, estalactitas, tonos tierra y ocre, espacios cerrados | Techos y suelos que estrechan el paso |
+| **Océano** | Azules y verdes, luz filtrada desde arriba, burbujas, siluetas de criaturas | Corrientes que empujan la nave |
+| **Volcán** | Rojos y negros, ceniza, lava brillando desde abajo | Géiseres de lava con ritmo |
+| **Hielo** | Blancos y cianes, cristales, niebla | Bloques a la deriva |
+
+**Nota importante para quien dibuje esto:** el color de identidad del entorno
+no puede chocar con los colores de los enemigos (§3). El entorno de hielo es
+cian y el enemigo `swarm` también — si el fondo es cian brillante, el enjambre
+desaparece. Los fondos van siempre **desaturados y oscuros**; el color
+saturado se reserva para lo que mata.
+
+---
+
 ## 10. Futuro (NO hacer todavía)
 
 Anotado para que lo tengas en cuenta al diseñar, no para producirlo ahora:
 
-- **Entornos**: el juego hoy transcurre solo en el espacio. La idea es llegar a
-  lugares con identidad propia — cueva, océano, volcán, hielo — que además
-  servirán para introducir obstáculos. Eso pedirá capas de fondo con parallax y
-  tilesets de obstáculos.
 - **Variantes de pieza de la nave** (§5.2).
+- **Tilesets de obstáculos** para cada entorno (§9B) — cuando el motor tenga
+  colisión contra terreno, que hoy no tiene.
 
 ---
 

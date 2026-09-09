@@ -162,6 +162,7 @@ parte del motor.
 | `docs/STRUCTURE.md` | Estructura de carpetas y qué hace cada módulo |
 | `docs/LOGIC.md` | Arquitectura, bucle de juego, sistemas, plan de multijugador |
 | `docs/BITACORA.md` | Registro cronológico de decisiones y avances |
+| `docs/ARMAS.md` | Propuesta del sistema de armas que sustituye al medidor de poder |
 | `docs/HANGAR.md` | Progreso persistente: items, mejoras y por qué choca con el multijugador |
 | `docs/ASSET_BRIEF.md` | Brief de sprites para pasar a otro modelo: tamaños, paleta, orientación |
 
