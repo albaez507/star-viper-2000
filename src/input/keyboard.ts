@@ -16,6 +16,7 @@ export class KeyboardSource {
     return this.keys.has('KeyM') || this.keys.has('KeyX') || this.keys.has('ControlLeft');
   }
   get power(): boolean { return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'); }
+  get dash(): boolean { return this.keys.has('KeyC') || this.keys.has('ShiftRight'); }
   get start(): boolean { return this.keys.has('Enter'); }
   get pauseToggle(): boolean { return this.keys.has('KeyP'); }
 }

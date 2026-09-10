@@ -46,6 +46,10 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
     case 'fire':
       tone(engine, 720, 'square', 0.06, 0.14);
       break;
+    case 'dash':
+      // Corto y agudo, nada de explosión: es un movimiento, no un impacto.
+      tone(engine, 980, 'triangle', 0.05, 0.11);
+      break;
     case 'missileFire':
       tone(engine, 220, 'sawtooth', 0.14, 0.25);
       break;

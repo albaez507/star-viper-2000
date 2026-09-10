@@ -18,6 +18,7 @@ const ZONA_MUERTA = 0.35;
 export class GamepadSource {
   up = false; down = false; left = false; right = false;
   fire = false; missile = false; power = false;
+  dash = false; detonate = false;
   start = false; pauseToggle = false;
 
   /** Nombre del mando conectado, o null. Solo para avisar en pantalla. */
@@ -31,6 +32,7 @@ export class GamepadSource {
       this.connected = null;
       this.up = this.down = this.left = this.right = false;
       this.fire = this.missile = this.power = false;
+      this.dash = this.detonate = false;
       this.start = this.pauseToggle = false;
       return;
     }
@@ -50,10 +52,14 @@ export class GamepadSource {
     this.left = btn(14) || eje(0) < -ZONA_MUERTA || hat.left;
     this.right = btn(15) || eje(0) > ZONA_MUERTA || hat.right;
 
-    // Disparo con cualquier botón de cara o gatillo: en un mando genérico no
-    // se puede saber cuál es "A", y obligar a adivinar es peor que sobrar.
-    this.fire = btn(0) || btn(2) || btn(4) || btn(6) || btn(7);
-    this.missile = btn(1) || btn(3) || btn(5);
+    // Los botones de cara disparan y lanzan; no se puede saber cuál es "A"
+    // en un mando genérico, así que sobran a propósito.
+    this.fire = btn(0) || btn(2);
+    this.missile = btn(1) || btn(3);
+    // Los gatillos: L dashea, R queda para detonar. El dash va al índice
+    // izquierdo porque es lo que se pulsa en pánico sin soltar el disparo.
+    this.dash = btn(4) || btn(6);
+    this.detonate = btn(5) || btn(7);
     this.power = btn(10) || btn(11);
 
     this.start = btn(9) || btn(0);

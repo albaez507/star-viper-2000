@@ -404,9 +404,13 @@ const loop = new GameLoop({
     // Más fuerte si aceleras hacia delante y más flojo si frenas, para que se
     // vea que la nave responde en vez de arrastrar una llama fija.
     if (!paused && state.player.alive && !state.gameOver) {
-      const fuerza = frame.right ? 1.45 : frame.left ? 0.6 : 1;
-      const color = Math.random() < 0.35 ? '#ff8c3e' : '#ffd23f';
-      particles.thruster(state.player.x - 17, state.player.y, color, fuerza);
+      if (state.player.dashTimer > 0) {
+        particles.dashTrail(state.player.x, state.player.y);
+      } else {
+        const fuerza = frame.right ? 1.45 : frame.left ? 0.6 : 1;
+        const color = Math.random() < 0.35 ? '#ff8c3e' : '#ffd23f';
+        particles.thruster(state.player.x - 17, state.player.y, color, fuerza);
+      }
     }
 
     step(state, frame, dt);

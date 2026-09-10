@@ -58,6 +58,27 @@ export class ParticleSystem {
     }
   }
 
+  /**
+   * Estela del dash: partículas grandes, azules y casi quietas, para que
+   * queden atrás marcando por dónde pasaste. Al contrario que `thruster`,
+   * que las empuja hacia atrás, estas se dejan caer donde estaban: lo que se
+   * lee es el rastro, no el empuje.
+   */
+  dashTrail(x: number, y: number): void {
+    for (let i = 0; i < 3; i++) {
+      const p = this.particles[this.cursor];
+      this.cursor = (this.cursor + 1) % this.capacity;
+      p.x = x + (Math.random() - 0.5) * 16;
+      p.y = y + (Math.random() - 0.5) * 14;
+      p.vx = -(10 + Math.random() * 30);
+      p.vy = (Math.random() - 0.5) * 12;
+      p.life = p.maxLife = 0.26 + Math.random() * 0.18;
+      p.size = 3 + Math.random() * 3.5;
+      p.color = Math.random() < 0.5 ? '#4fc3ff' : '#a8e8ff';
+      p.active = true;
+    }
+  }
+
   update(dt: number): void {
     for (const p of this.particles) {
       if (!p.active) continue;

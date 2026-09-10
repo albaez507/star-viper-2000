@@ -9,6 +9,18 @@ export const MISSILE_COOLDOWN_BASE = 1.4;
 export const INVULN_TIME = 1.5;
 export const SHIELD_MAX = 3;
 
+/**
+ * El dash da VELOCIDAD, no inmunidad.
+ *
+ * Es la decisión que define la mecánica: con inmunidad, la respuesta a todo
+ * el juego pasa a ser dashear y los obstáculos dejan de existir. Sin ella,
+ * te saca de la trayectoria de una bala pero no te deja atravesar una roca,
+ * así que hay que dashear HACIA un hueco -- que es donde está la habilidad.
+ */
+export const DASH_SPEED_MULT = 3.5;
+export const DASH_TIME = 0.16;
+export const DASH_COOLDOWN = 0.7;
+
 export function fireCooldownFor(ship: ShipId, level: WeaponLevel): number {
   return cadenciaDe(ship, level);
 }
@@ -23,6 +35,12 @@ export type Player = {
   cores: number;
   fireCooldown: number;
   missileCooldown: number;
+  /** Segundos que queda de dash. >0 = dasheando: no puedes disparar. */
+  dashTimer: number;
+  dashCooldown: number;
+  /** Dirección congelada al arrancar: el dash no se corrige a media carrera. */
+  dashDX: number;
+  dashDY: number;
   missileLevel: number;
   optionCount: number;
   shield: number;
@@ -43,6 +61,10 @@ export function createPlayer(x: number, y: number): Player {
     fireCooldown: 0,
     missileCooldown: 0,
     missileLevel: 0,
+    dashTimer: 0,
+    dashCooldown: 0,
+    dashDX: 0,
+    dashDY: 0,
     optionCount: 0,
     shield: 0,
     shieldMax: SHIELD_MAX,

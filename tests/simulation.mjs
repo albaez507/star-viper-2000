@@ -174,3 +174,43 @@ test('hazards absorb fire instead of dying', () => {
   assert.equal(roca.active, true, 'la roca no se destruye');
   assert.equal(state.score, 0, 'y no da puntos');
 });
+
+test('dash: recorre un hueco, no media pantalla, y no dispara', () => {
+  const state = createWorld(960, 540, 7, 'sky');
+  const p = state.player;
+  p.x = 300; p.y = 270;
+  const dash = { ...idle, dash: true, right: true };
+
+  const x0 = p.x;
+  step(state, dash, dt);
+  // Se mantiene pulsado: el frame ya no cuenta como pulsación nueva.
+  const seguir = { ...idle, right: true, fire: true };
+  let frames = 1;
+  while (p.dashTimer > 0 && frames < 200) {
+    step(state, seguir, dt);
+    frames++;
+    // Solo mientras el dash sigue vivo: en el frame en que termina ya puede
+    // disparar otra vez, y eso es correcto.
+    if (p.dashTimer > 0) {
+      assert.equal(state.playerBullets.active().length, 0, 'no se dispara dasheando');
+    }
+  }
+  const recorrido = p.x - x0;
+
+  assert.ok(recorrido > 90 && recorrido < 160, `recorrido ${recorrido} px fuera de rango`);
+
+  // Y el enfriamiento impide encadenarlos.
+  const x1 = p.x;
+  step(state, dash, dt);
+  assert.equal(p.dashTimer, 0, 'el enfriamiento bloquea el segundo dash');
+  assert.ok(p.x - x1 < 10, 'sin dash, se mueve a velocidad normal');
+});
+
+test('dash sin dirección va hacia delante', () => {
+  const state = createWorld(960, 540, 7, 'sky');
+  const p = state.player;
+  p.x = 300; p.y = 270;
+  step(state, { ...idle, dash: true }, dt);
+  assert.equal(p.dashDX, 1);
+  assert.equal(p.dashDY, 0);
+});

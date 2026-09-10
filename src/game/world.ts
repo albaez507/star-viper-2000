@@ -5,7 +5,7 @@ import { EventBus } from '../core/events';
 import { hits } from './collision';
 import { dist } from '../core/math';
 
-import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H } from './player';
+import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H, DASH_SPEED_MULT, DASH_TIME, DASH_COOLDOWN } from './player';
 import { PositionHistory } from './history';
 import { createOptions, updateOptions, type Option } from './options';
 import { makeEnemy, type Enemy } from './enemy';
@@ -118,8 +118,30 @@ function stepPlayer(state: GameState, input: InputFrame, dt: number): void {
   if (p.hitFlash > 0) p.hitFlash = Math.max(0, p.hitFlash - dt);
   if (p.invulnTimer > 0) p.invulnTimer = Math.max(0, p.invulnTimer - dt);
 
-  const dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-  const dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+  if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - dt);
+
+  let dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  let dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+
+  if (input.dash && p.dashTimer <= 0 && p.dashCooldown <= 0) {
+    // Va hacia donde estés pulsando; sin nada pulsado, hacia delante. Es lo
+    // que hace que se sienta como "pongo la dirección y pulso", sin secuencias.
+    const largo = Math.hypot(dx, dy);
+    p.dashDX = largo > 0 ? dx / largo : 1;
+    p.dashDY = largo > 0 ? dy / largo : 0;
+    p.dashTimer = DASH_TIME;
+    p.dashCooldown = DASH_COOLDOWN;
+    state.events.emit({ type: 'dash', x: p.x, y: p.y });
+  }
+
+  if (p.dashTimer > 0) {
+    p.dashTimer = Math.max(0, p.dashTimer - dt);
+    // La dirección quedó congelada al arrancar: corregirla a media carrera
+    // convertiría el dash en "ir rápido", que es otra cosa.
+    dx = p.dashDX * DASH_SPEED_MULT;
+    dy = p.dashDY * DASH_SPEED_MULT;
+  }
+
   movePlayer(p, dx, dy, dt, { w: state.worldW, h: state.worldH });
   if (state.stageId === 'sky') p.y = Math.max(86, Math.min(state.worldH - 28, p.y));
 
@@ -147,6 +169,8 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
   void dt;
   const p = state.player;
   if (!p.alive) return;
+
+  if (p.dashTimer > 0) return;
 
   if (input.fire && p.fireCooldown <= 0) {
     fireFrom(state, p.x, p.y, false);

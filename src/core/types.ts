@@ -10,11 +10,13 @@ export type InputFrame = {
   fire: boolean;
   missile: boolean;
   power: boolean;
+  /** Pulsación, no mantenido: un dash por toque. */
+  dash: boolean;
   tick: number;
 };
 
 export function emptyInput(tick: number): InputFrame {
-  return { up: false, down: false, left: false, right: false, fire: false, missile: false, power: false, tick };
+  return { up: false, down: false, left: false, right: false, fire: false, missile: false, power: false, dash: false, tick };
 }
 
 export type EntityId = number;

@@ -2,12 +2,23 @@ type DpadState = { up: boolean; down: boolean; left: boolean; right: boolean; po
 
 const DEAD_ZONE = 14;
 
+/**
+ * En el teléfono no caben seis botones, así que el dash es un GESTO: un
+ * deslizamiento rápido sobre la cruceta. No roba sitio a nada y el dedo ya
+ * está ahí.
+ */
+const DASH_DIST = 44;
+const DASH_MS = 190;
+
 export class TouchSource {
   private dpad: DpadState = { up: false, down: false, left: false, right: false, power: false };
   private firePressed = false;
   private missilePressed = false;
 
   private dpadPointers = new Map<number, HTMLElement>();
+  /** Punto y momento en que cada dedo tocó, para medir el deslizamiento. */
+  private swipeStart = new Map<number, { x: number; y: number; t: number }>();
+  private dashPulse = false;
 
   constructor(
     dpadEl: HTMLElement,
@@ -47,15 +58,26 @@ export class TouchSource {
 
     dpadEl.addEventListener('pointerdown', (e) => {
       dpadEl.setPointerCapture(e.pointerId);
+      this.swipeStart.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
       update(e.pointerId, e.clientX, e.clientY, true);
       e.preventDefault();
     });
     dpadEl.addEventListener('pointermove', (e) => {
       if (!this.dpadPointers.has(e.pointerId)) return;
+      const inicio = this.swipeStart.get(e.pointerId);
+      if (inicio) {
+        const recorrido = Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y);
+        if (recorrido > DASH_DIST && performance.now() - inicio.t < DASH_MS) {
+          this.dashPulse = true;
+          // Se consume el inicio: un deslizamiento largo es un dash, no diez.
+          this.swipeStart.delete(e.pointerId);
+        }
+      }
       update(e.pointerId, e.clientX, e.clientY, true);
       e.preventDefault();
     });
     const release = (e: PointerEvent): void => {
+      this.swipeStart.delete(e.pointerId);
       update(e.pointerId, e.clientX, e.clientY, false);
     };
     dpadEl.addEventListener('pointerup', release);
@@ -102,4 +124,10 @@ export class TouchSource {
   get power(): boolean { return this.dpad.power; }
   get fire(): boolean { return this.firePressed; }
   get missile(): boolean { return this.missilePressed; }
+  /** Se consume al leerlo: un gesto = un dash, no uno por frame. */
+  get dash(): boolean {
+    const v = this.dashPulse;
+    this.dashPulse = false;
+    return v;
+  }
 }

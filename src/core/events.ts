@@ -9,6 +9,7 @@ export type GameEvent =
   | { type: 'itemCollected'; x: number; y: number }
   | { type: 'playerDamage' }
   | { type: 'playerDeath' }
+  | { type: 'dash'; x: number; y: number }
   | { type: 'bossDeath'; x: number; y: number }
   | { type: 'bossEnrage'; x: number; y: number }
   | { type: 'shake'; strength: number; duration: number };

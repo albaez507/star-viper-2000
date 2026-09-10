@@ -9,6 +9,7 @@ export class InputManager {
   private pad = new GamepadSource();
 
   private prevMissile = false;
+  private prevDash = false;
   private prevPower = false;
   private prevStart = false;
   private prevPause = false;
@@ -35,6 +36,7 @@ export class InputManager {
     const fire = kb.fire || (t?.fire ?? false) || g.fire;
     const missileHeld = kb.missile || (t?.missile ?? false) || g.missile;
     const powerHeld = kb.power || (t?.power ?? false) || g.power;
+    const dashHeld = kb.dash || g.dash || (t?.dash ?? false);
 
     const frame: InputFrame = emptyInput(this.tick++);
     frame.up = up;
@@ -44,9 +46,12 @@ export class InputManager {
     frame.fire = fire;
     frame.missile = missileHeld && !this.prevMissile;
     frame.power = powerHeld && !this.prevPower;
+    // Pulsación: mantener el botón no encadena dashes.
+    frame.dash = dashHeld && !this.prevDash;
 
     this.prevMissile = missileHeld;
     this.prevPower = powerHeld;
+    this.prevDash = dashHeld;
 
     return frame;
   }
