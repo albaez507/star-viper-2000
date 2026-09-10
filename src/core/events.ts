@@ -10,6 +10,8 @@ export type GameEvent =
   | { type: 'playerDamage' }
   | { type: 'playerDeath' }
   | { type: 'dash'; x: number; y: number }
+  | { type: 'chargeReady' }
+  | { type: 'chargeShot'; ratio: number }
   | { type: 'bossDeath'; x: number; y: number }
   | { type: 'bossEnrage'; x: number; y: number }
   | { type: 'shake'; strength: number; duration: number };

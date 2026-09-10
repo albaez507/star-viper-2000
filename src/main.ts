@@ -13,7 +13,9 @@ import { ScreenShake } from './fx/shake';
 import { Renderer } from './render/renderer';
 import { drawPauseOverlay, drawWeaponBanner, type ScreenMode } from './render/screens';
 import { setSpriteVisualStyle } from './render/sprites';
-import { skyAssetsReady } from './render/sky-assets';
+import { getEnemyVariant, setEnemyVariant, skyAssetsReady, type ManagedEnemyVariant, type ManagedEnemyFamily } from './render/sky-assets';
+import { ENEMY_ASSET_OPTIONS, MANAGED_ENEMY_FAMILIES } from './render/asset-registry';
+import { CHARGE_TIME } from './game/player';
 
 const WORLD_W = 960;
 const WORLD_H = 540;
@@ -96,10 +98,11 @@ document.addEventListener('fullscreenchange', reajustar);
 const dpadEl = document.getElementById('dpad') as HTMLElement;
 const fireEl = document.getElementById('btn-fire') as HTMLElement;
 const missileEl = document.getElementById('btn-missile') as HTMLElement;
+const chargeEl = document.getElementById('btn-charge') as HTMLElement;
 const pauseEl = document.getElementById('btn-pause') as HTMLElement;
 
 const input = new InputManager();
-input.attachTouch(dpadEl, fireEl, missileEl);
+input.attachTouch(dpadEl, fireEl, missileEl, chargeEl);
 
 let pauseRequested = false;
 pauseEl.addEventListener('pointerdown', (e) => {
@@ -216,10 +219,78 @@ visualLightingEl.addEventListener('change', applyVisualLab);
 applyVisualLab();
 
 const menuEl = document.getElementById('mission-menu')!;
+const homeViewEl = document.getElementById('home-view')!;
+const onePlayerViewEl = document.getElementById('one-player-view')!;
+const optionsViewEl = document.getElementById('options-view')!;
+const spriteManagementEl = document.getElementById('sprite-management')!;
+const assetManagerListEl = document.getElementById('asset-manager-list')!;
+const assetManagerStatusEl = document.getElementById('asset-manager-status')!;
 const startEl = document.getElementById('start-mission') as HTMLButtonElement;
 const missionStatus = document.getElementById('mission-status')!;
 const sectorButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-stage]')];
 const shipButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-ship]')];
+type MenuView = 'home' | 'one-player' | 'options' | 'sprites';
+const menuViews: Record<MenuView, HTMLElement> = {
+  home: homeViewEl, 'one-player': onePlayerViewEl, options: optionsViewEl, sprites: spriteManagementEl,
+};
+function showMenuView(view: MenuView): void {
+  for (const [name, element] of Object.entries(menuViews)) element.hidden = name !== view;
+}
+
+const assetFamilyInfo: Record<ManagedEnemyFamily, { name: string; role: string }> = {
+  scout: { name: 'SCOUT', role: 'INTERCEPTOR BÁSICO' },
+  diver: { name: 'DIVER', role: 'NAVE DE PICADO' },
+  formation: { name: 'FORMATION', role: 'ESCUADRÓN DE DRONES' },
+};
+
+function renderAssetManager(): void {
+  assetManagerListEl.replaceChildren();
+  for (const family of MANAGED_ENEMY_FAMILIES) {
+    const familyCard = document.createElement('section');
+    familyCard.className = 'asset-family-card';
+
+    const heading = document.createElement('div');
+    heading.className = 'asset-family-heading';
+    const familyName = document.createElement('strong');
+    familyName.textContent = assetFamilyInfo[family].name;
+    const familyRole = document.createElement('small');
+    familyRole.textContent = assetFamilyInfo[family].role;
+    heading.append(familyName, familyRole);
+
+    const choiceGrid = document.createElement('div');
+    choiceGrid.className = 'asset-choice-grid';
+    const current = getEnemyVariant(family);
+    for (const option of ENEMY_ASSET_OPTIONS[family]) {
+      const choice = document.createElement('button');
+      choice.type = 'button';
+      choice.className = 'asset-choice';
+      choice.setAttribute('aria-pressed', String(option.id === current));
+      choice.setAttribute('aria-label', `${assetFamilyInfo[family].name} ${option.label}`);
+      choice.title = option.description;
+
+      const preview = document.createElement('span');
+      preview.className = 'asset-choice-preview';
+      preview.style.backgroundImage = `url("${option.sheet}")`;
+      preview.style.backgroundSize = '300% 100%';
+      preview.style.backgroundPosition = `${option.position} 50%`;
+      preview.style.setProperty('--asset-accent', option.accent);
+
+      const label = document.createElement('span');
+      label.className = 'asset-choice-label';
+      label.textContent = option.label;
+      choice.append(preview, label);
+      choice.addEventListener('click', () => {
+        setEnemyVariant(family, option.id as ManagedEnemyVariant);
+        assetManagerStatusEl.textContent = `${assetFamilyInfo[family].name} → ${option.label} · ACTIVO EN SENTINEL`;
+        renderAssetManager();
+      });
+      choiceGrid.append(choice);
+    }
+    familyCard.append(heading, choiceGrid);
+    assetManagerListEl.append(familyCard);
+  }
+}
+
 function updateMissionSelection(): void {
   document.body.dataset.stage = selectedStage;
   sectorButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stage === selectedStage)));
@@ -241,6 +312,16 @@ shipButtons.forEach(b => b.addEventListener('click', () => {
   selectedShip = b.dataset.ship === 'lance' ? 'lance' : 'vulcan'; updateMissionSelection();
 }));
 startEl.addEventListener('click', () => { resetGame(); canvas.focus(); });
+document.getElementById('menu-start')!.addEventListener('click', () => showMenuView('one-player'));
+document.getElementById('menu-one-player')!.addEventListener('click', () => showMenuView('one-player'));
+document.getElementById('menu-options')!.addEventListener('click', () => showMenuView('options'));
+document.getElementById('one-player-back')!.addEventListener('click', () => showMenuView('home'));
+document.getElementById('options-back')!.addEventListener('click', () => showMenuView('home'));
+document.getElementById('open-sprite-management')!.addEventListener('click', () => {
+  renderAssetManager();
+  showMenuView('sprites');
+});
+document.getElementById('sprite-management-back')!.addEventListener('click', () => showMenuView('options'));
 menuEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.repeat && hangarEl.hidden) {
     e.preventDefault(); resetGame(); canvas.focus();
@@ -249,6 +330,7 @@ menuEl.addEventListener('keydown', e => {
 document.getElementById('btn-missions')!.addEventListener('click', () => {
   mode = 'title'; paused = false; bannerTimer = 0;
   state = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
+  showMenuView('one-player');
   updateMissionSelection();
 });
 document.getElementById('toggle-lab')!.addEventListener('click', e => {
@@ -259,6 +341,7 @@ document.getElementById('toggle-lab')!.addEventListener('click', e => {
   fitCanvas();
 });
 canvas.tabIndex = 0;
+showMenuView('home');
 updateMissionSelection();
 Promise.all([skyAssetsReady, renderer.sky.ready]).then(() => {
   assetsReady = true; updateMissionSelection();
@@ -404,6 +487,11 @@ const loop = new GameLoop({
     // Más fuerte si aceleras hacia delante y más flojo si frenas, para que se
     // vea que la nave responde en vez de arrastrar una llama fija.
     if (!paused && state.player.alive && !state.gameOver) {
+      // El botón táctil también avisa: en el teléfono el pulgar tapa la nave.
+      const ratioCarga = state.player.chargeTimer / CHARGE_TIME;
+      chargeEl.classList.toggle('charging', ratioCarga > 0 && ratioCarga < 1);
+      chargeEl.classList.toggle('full', ratioCarga >= 1);
+
       if (state.player.dashTimer > 0) {
         particles.dashTrail(state.player.x, state.player.y);
       } else {

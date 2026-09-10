@@ -50,6 +50,16 @@ export function playSfx(engine: AudioEngine, ev: GameEvent): void {
       // Corto y agudo, nada de explosión: es un movimiento, no un impacto.
       tone(engine, 980, 'triangle', 0.05, 0.11);
       break;
+    case 'chargeReady':
+      // Aviso de "ya está": dos notas cortas subiendo, distintas de todo lo
+      // demás para que se reconozca sin mirar.
+      tone(engine, 880, 'triangle', 0.05, 0.09);
+      window.setTimeout(() => tone(engine, 1320, 'triangle', 0.06, 0.1), 70);
+      break;
+    case 'chargeShot':
+      // Grave y con cuerpo: tiene que sonar más caro que una balita.
+      tone(engine, 180 + 260 * ev.ratio, 'sawtooth', 0.16, 0.3);
+      break;
     case 'missileFire':
       tone(engine, 220, 'sawtooth', 0.14, 0.25);
       break;

@@ -14,6 +14,7 @@ export class TouchSource {
   private dpad: DpadState = { up: false, down: false, left: false, right: false, power: false };
   private firePressed = false;
   private missilePressed = false;
+  private chargePressed = false;
 
   private dpadPointers = new Map<number, HTMLElement>();
   /** Punto y momento en que cada dedo tocó, para medir el deslizamiento. */
@@ -23,11 +24,13 @@ export class TouchSource {
   constructor(
     dpadEl: HTMLElement,
     fireEl: HTMLElement,
-    missileEl: HTMLElement
+    missileEl: HTMLElement,
+    chargeEl?: HTMLElement
   ) {
     this.bindDpad(dpadEl);
     this.bindAction(fireEl, (v) => { this.firePressed = v; });
     this.bindAction(missileEl, (v) => { this.missilePressed = v; });
+    if (chargeEl) this.bindAction(chargeEl, (v) => { this.chargePressed = v; });
   }
 
   private bindDpad(dpadEl: HTMLElement): void {
@@ -124,6 +127,7 @@ export class TouchSource {
   get power(): boolean { return this.dpad.power; }
   get fire(): boolean { return this.firePressed; }
   get missile(): boolean { return this.missilePressed; }
+  get charge(): boolean { return this.chargePressed; }
   /** Se consume al leerlo: un gesto = un dash, no uno por frame. */
   get dash(): boolean {
     const v = this.dashPulse;

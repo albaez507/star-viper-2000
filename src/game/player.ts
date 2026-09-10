@@ -21,6 +21,22 @@ export const DASH_SPEED_MULT = 3.5;
 export const DASH_TIME = 0.16;
 export const DASH_COOLDOWN = 0.7;
 
+/**
+ * Disparo cargado.
+ *
+ * Mantener el botón carga; soltarlo dispara lo acumulado. Mientras cargas no
+ * salen balitas: ese es el precio, y es lo que impide que cargar sea gratis
+ * y por tanto siempre mejor.
+ *
+ * Se suelta PROPORCIONAL a lo cargado, no en dos escalones: así soltar antes
+ * de tiempo por nervios no te deja sin nada, solo con menos. Por debajo del
+ * mínimo no sale nada, para que un roce del botón no cuente como disparo.
+ */
+export const CHARGE_TIME = 0.9;
+export const CHARGE_MIN_RATIO = 0.28;
+export const CHARGE_DMG_MIN = 2;
+export const CHARGE_DMG_MAX = 8;
+
 export function fireCooldownFor(ship: ShipId, level: WeaponLevel): number {
   return cadenciaDe(ship, level);
 }
@@ -35,6 +51,8 @@ export type Player = {
   cores: number;
   fireCooldown: number;
   missileCooldown: number;
+  /** Segundos acumulados de carga. 0 = no está cargando. */
+  chargeTimer: number;
   /** Segundos que queda de dash. >0 = dasheando: no puedes disparar. */
   dashTimer: number;
   dashCooldown: number;
@@ -61,6 +79,7 @@ export function createPlayer(x: number, y: number): Player {
     fireCooldown: 0,
     missileCooldown: 0,
     missileLevel: 0,
+    chargeTimer: 0,
     dashTimer: 0,
     dashCooldown: 0,
     dashDX: 0,

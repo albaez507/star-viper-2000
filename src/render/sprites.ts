@@ -1,5 +1,5 @@
 import type { Player } from '../game/player';
-import { PLAYER_HALF_W, PLAYER_HALF_H } from '../game/player';
+import { PLAYER_HALF_W, PLAYER_HALF_H , CHARGE_TIME } from '../game/player';
 import type { Option } from '../game/options';
 import type { Enemy } from '../game/enemy';
 import type { Bullet } from '../game/bullets';
@@ -42,8 +42,36 @@ function drawAsset(ctx: CanvasRenderingContext2D, name: string, w: number, h: nu
   return true;
 }
 
+/**
+ * Aura de carga. Sin esto la mecánica no existe: mantener un botón y que no
+ * pase nada visible se lee como que está roto, aunque funcione. Crece con lo
+ * acumulado, y al llenarse pulsa en blanco para avisar sin mirar el HUD.
+ */
+function drawCharge(ctx: CanvasRenderingContext2D, p: Player): void {
+  if (p.chargeTimer <= 0) return;
+  const ratio = Math.min(1, p.chargeTimer / CHARGE_TIME);
+  const lleno = ratio >= 1;
+  const radio = 16 + ratio * 20;
+  ctx.save();
+  ctx.globalAlpha = 0.35 + ratio * 0.5;
+  ctx.strokeStyle = lleno ? '#ffffff' : '#4fc3ff';
+  ctx.lineWidth = lleno ? 3 : 1 + ratio * 2;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, lleno ? radio + Math.sin(p.chargeTimer * 26) * 2.5 : radio, 0, Math.PI * 2);
+  ctx.stroke();
+  // Un arco que se cierra: la cantidad exacta, no solo "está cargando".
+  ctx.globalAlpha = 0.9;
+  ctx.strokeStyle = lleno ? '#a8e8ff' : '#8fd8ff';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, radio + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ratio);
+  ctx.stroke();
+  ctx.restore();
+}
+
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 20) % 2 === 0) return;
+  drawCharge(ctx, p);
   if (skyActive && drawSkySprite(ctx, p.ship, p.x, p.y, 48, 32, p.hitFlash > 0)) {
     if (p.shield > 0) {
       ctx.save(); ctx.strokeStyle = '#fff5b3'; ctx.lineWidth = 2;
@@ -343,6 +371,20 @@ function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
 }
 
 export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
+  // El disparo cargado va ANTES del atlas: si cae en la rama del sprite se
+  // dibuja como una bala normal y deja de leerse como lo que costó cargar.
+  // Azul, como el aro de carga: lo que ves cargando es lo que sale.
+  if (b.fromPlayer && b.big && b.pierce) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(79, 195, 255, 0.28)';
+    ctx.fillRect(b.x - 34, b.y - 9, 52, 18);
+    ctx.fillStyle = '#4fc3ff';
+    ctx.fillRect(b.x - 26, b.y - 5, 44, 10);
+    ctx.fillStyle = '#eaf9ff';
+    ctx.fillRect(b.x - 20, b.y - 2, 40, 4);
+    ctx.restore();
+    return;
+  }
   if (skyActive && drawSkySprite(ctx, b.fromPlayer ? 'bolt' : 'orb', b.x, b.y,
     b.fromPlayer ? 22 : b.big ? 22 : 12, b.fromPlayer ? 9 : b.big ? 22 : 12,
     false, b.fromPlayer ? Math.atan2(b.vy, b.vx) : 0)) return;

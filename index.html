@@ -48,6 +48,7 @@
       <div id="action-pad">
         <button id="btn-fire" class="action-btn action-fire" aria-label="Disparo">FIRE</button>
         <button id="btn-missile" class="action-btn action-missile" aria-label="Misil">MSL</button>
+        <button id="btn-charge" class="action-btn action-charge" aria-label="Cargar">CHG</button>
       </div>
     </div>
     <div id="screens">
@@ -59,6 +60,19 @@
           <p class="flight-note"><span>✦</span> JARDINES DEL CÉFIRO <small>NUEVO SECTOR</small></p>
         </div>
         <div class="mission-panel">
+          <div id="home-view" class="menu-view">
+            <div class="arcade-menu-brand">STAR VIPER <span>2000</span></div>
+            <p class="arcade-menu-subtitle">SENTINEL COMMAND DECK</p>
+            <div class="arcade-menu-actions">
+              <button id="menu-start" class="arcade-menu-button arcade-menu-primary" type="button"><span>START</span><small>▶</small></button>
+              <button id="menu-one-player" class="arcade-menu-button" type="button"><span>ONE PLAYER</span><small>01</small></button>
+              <button id="menu-two-player" class="arcade-menu-button" type="button" disabled><span>TWO PLAYER</span><small>LOCKED</small></button>
+              <button id="menu-options" class="arcade-menu-button" type="button"><span>OPTIONS</span><small>⚙</small></button>
+            </div>
+            <p class="arcade-menu-footer">© SENTINEL FLIGHT SYSTEMS · BUILD 02.04</p>
+          </div>
+
+          <div id="one-player-view" class="menu-view" hidden>
           <div class="panel-heading"><span>01 / ELIGE TU DESTINO</span><small>2 SECTORES</small></div>
           <div class="sector-options" role="group" aria-label="Sector">
             <button class="sector-card" data-stage="sky" aria-pressed="true" type="button">
@@ -79,6 +93,27 @@
           </div>
           <button id="start-mission" type="button" disabled><span>PREPARANDO VUELO…</span><span>→</span></button>
           <p id="mission-status" role="status">Cargando los assets del archipiélago…</p>
+          <button id="one-player-back" class="menu-back-button" type="button">← VOLVER AL MENÚ</button>
+          </div>
+
+          <div id="options-view" class="menu-view" hidden>
+            <div class="panel-heading"><span>03 / OPTIONS</span><small>FLIGHT DECK</small></div>
+            <div class="options-card-list">
+              <button id="open-sprite-management" class="options-card" type="button"><span class="options-card-icon">✦</span><span><strong>SPRITE MANAGEMENT</strong><small>Asignar variantes visuales a Sentinel</small></span><b>→</b></button>
+              <button id="options-controls" class="options-card" type="button" disabled><span class="options-card-icon">⌘</span><span><strong>CONTROLS</strong><small>WASD · ARROWS · TOUCH · GAMEPAD</small></span><b>SOON</b></button>
+              <button id="options-audio" class="options-card" type="button" disabled><span class="options-card-icon">♫</span><span><strong>AUDIO</strong><small>SYNTH SFX · MASTER VOLUME</small></span><b>SOON</b></button>
+            </div>
+            <p class="options-note">Elige una familia, prueba tres variantes y deja activa la que mejor lea en combate.</p>
+            <button id="options-back" class="menu-back-button" type="button">← VOLVER AL MENÚ</button>
+          </div>
+
+          <div id="sprite-management" class="menu-view" hidden>
+            <div class="panel-heading"><span>SPRITE MANAGEMENT</span><small>SENTINEL / ENEMIES</small></div>
+            <p class="sprite-manager-copy">Asignación visual en vivo. La lógica de movimiento permanece intacta.</p>
+            <div id="asset-manager-list"></div>
+            <p id="asset-manager-status" class="asset-manager-status" role="status">Selecciona una variante para verla activa en Sentinel.</p>
+            <button id="sprite-management-back" class="menu-back-button" type="button">← VOLVER A OPTIONS</button>
+          </div>
         </div>
       </section>
     </div>

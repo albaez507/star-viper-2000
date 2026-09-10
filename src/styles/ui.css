@@ -243,9 +243,19 @@ body[data-lighting="true"] #game { filter: saturate(1.18) contrast(1.08) drop-sh
   border-color: rgba(255, 84, 112, 0.5);
 }
 
+.action-charge {
+  color: #4fc3ff;
+  border-color: rgba(79, 195, 255, 0.5);
+}
+
 .action-btn.active {
   background: rgba(255, 255, 255, 0.16);
 }
+
+/* El aro crece con la carga: el jugador tiene que ver cuánto lleva sin
+   apartar la vista de la nave, así que el aviso vive en el propio botón. */
+.action-charge.charging { box-shadow: 0 0 0 3px rgba(79, 195, 255, 0.55); }
+.action-charge.full { box-shadow: 0 0 14px 4px rgba(168, 232, 255, 0.9); }
 
 .action-missile.ready {
   box-shadow: 0 0 10px 2px rgba(255, 140, 62, 0.7);
@@ -528,6 +538,50 @@ html, body { height: 100dvh; }
   #rotate-hint .rotate-icon { font-size: 54px; }
   #rotate-hint p { margin: 0; font-size: 12px; line-height: 1.7; color: rgba(234,246,255,.75); }
   #rotate-hint strong { color: var(--sv-accent); font-size: 14px; letter-spacing: 1px; }
+}
+
+/* --- Flight Deck / early-2000s console menu --- */
+.menu-view[hidden] { display: none; }
+.arcade-menu-brand { color: #fff2ca; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; letter-spacing: 2px; line-height: 1; text-shadow: 0 2px #322452, 0 0 18px rgba(62,230,196,.16); }
+.arcade-menu-brand span { color: #ffd23f; font-size: 14px; letter-spacing: 1px; vertical-align: middle; }
+.arcade-menu-subtitle { margin: 8px 0 20px; color: #70d6cc; font-size: 9px; letter-spacing: 2px; }
+.arcade-menu-actions { display: grid; gap: 8px; }
+.arcade-menu-button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 14px; border: 1px solid #456c79; border-radius: 5px; background: linear-gradient(180deg, rgba(34,74,88,.95), rgba(18,43,59,.95)); color: #eaf6ff; font: bold 12px var(--sv-font); letter-spacing: 1.5px; text-align: left; box-shadow: inset 0 1px rgba(255,255,255,.12), 0 2px 0 rgba(6,8,16,.5); }
+.arcade-menu-button small { color: #8fc8c5; font-size: 9px; letter-spacing: 0; }
+.arcade-menu-button:hover, .arcade-menu-button:focus-visible { border-color: #3ee6c4; background: linear-gradient(180deg, rgba(43,93,104,.98), rgba(22,54,70,.98)); }
+.arcade-menu-primary { border-color: #ffd23f; background: linear-gradient(180deg, #f8d878, #bd8d3f); color: #172c3b; text-shadow: 0 1px rgba(255,255,255,.35); }
+.arcade-menu-primary small { color: #5e4220; }
+.arcade-menu-button:disabled { cursor: not-allowed; opacity: .42; filter: saturate(.55); }
+.arcade-menu-footer { margin: 22px 0 0; color: rgba(234,246,255,.42); font-size: 8px; letter-spacing: 1px; text-align: center; }
+.menu-back-button { width: 100%; margin-top: 16px; padding: 9px; border: 1px solid rgba(234,246,255,.25); border-radius: 4px; background: rgba(234,246,255,.05); color: rgba(234,246,255,.72); font: 10px var(--sv-font); letter-spacing: 1px; }
+.menu-back-button:hover, .menu-back-button:focus-visible { border-color: #3ee6c4; color: #3ee6c4; }
+.options-card-list { display: grid; gap: 8px; }
+.options-card { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; width: 100%; padding: 11px 10px; border: 1px solid rgba(62,230,196,.3); border-radius: 5px; background: rgba(18,43,59,.82); color: #eaf6ff; text-align: left; }
+.options-card:hover:not(:disabled), .options-card:focus-visible:not(:disabled) { border-color: #3ee6c4; background: rgba(31,72,85,.94); }
+.options-card:disabled { opacity: .52; }
+.options-card-icon { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid rgba(255,210,63,.5); border-radius: 4px; color: #ffd23f; font-size: 15px; }
+.options-card strong, .options-card small { display: block; }
+.options-card strong { font-size: 10px; letter-spacing: 1px; }
+.options-card small { margin-top: 4px; color: #8fb9bd; font-size: 8px; }
+.options-card > b { color: #3ee6c4; font-size: 9px; }
+.options-note, .sprite-manager-copy { margin: 15px 0 0; color: rgba(234,246,255,.62); font-size: 9px; line-height: 1.55; }
+.sprite-manager-copy { margin: -5px 0 12px; }
+.asset-family-card { margin-top: 10px; padding: 9px; border: 1px solid rgba(62,230,196,.25); border-radius: 5px; background: rgba(6,8,16,.32); }
+.asset-family-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.asset-family-heading strong { color: #ffd23f; font-size: 10px; letter-spacing: 1px; }
+.asset-family-heading small { color: #82b7ba; font-size: 7px; letter-spacing: .7px; text-align: right; }
+.asset-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.asset-choice { min-width: 0; padding: 4px; border: 1px solid rgba(234,246,255,.18); border-radius: 4px; background: rgba(16,23,38,.9); color: #eaf6ff; }
+.asset-choice:hover, .asset-choice:focus-visible { border-color: var(--asset-accent, #3ee6c4); }
+.asset-choice[aria-pressed="true"] { border-color: var(--asset-accent, #3ee6c4); box-shadow: 0 0 10px color-mix(in srgb, var(--asset-accent, #3ee6c4) 35%, transparent); background: rgba(32,40,61,.98); }
+.asset-choice-preview { display: block; height: 48px; border-radius: 3px; background-repeat: no-repeat; background-color: #090b18; background-position-y: 50%; background-image: none; }
+.asset-choice-label { display: block; overflow: hidden; margin-top: 5px; color: #b9d9dc; font-size: 7px; letter-spacing: .5px; text-overflow: ellipsis; white-space: nowrap; }
+.asset-choice[aria-pressed="true"] .asset-choice-label { color: #fff2ca; }
+.asset-manager-status { min-height: 24px; margin: 10px 0 0; color: #3ee6c4; font-size: 8px; line-height: 1.5; text-align: center; }
+#sprite-management { max-height: 100%; overflow-y: auto; scrollbar-color: #3ee6c4 rgba(6,8,16,.4); }
+@media (max-width: 650px) {
+  .arcade-menu-brand { font-size: 24px; }
+  .asset-choice-preview { height: 42px; }
 }
 
 /* Aviso de mando conectado. Sin esto, enchufar el control y que no pase nada

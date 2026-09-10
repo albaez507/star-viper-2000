@@ -18,7 +18,7 @@ const ZONA_MUERTA = 0.35;
 export class GamepadSource {
   up = false; down = false; left = false; right = false;
   fire = false; missile = false; power = false;
-  dash = false; detonate = false;
+  dash = false; charge = false;
   start = false; pauseToggle = false;
 
   /** Nombre del mando conectado, o null. Solo para avisar en pantalla. */
@@ -32,7 +32,7 @@ export class GamepadSource {
       this.connected = null;
       this.up = this.down = this.left = this.right = false;
       this.fire = this.missile = this.power = false;
-      this.dash = this.detonate = false;
+      this.dash = this.charge = false;
       this.start = this.pauseToggle = false;
       return;
     }
@@ -56,10 +56,11 @@ export class GamepadSource {
     // en un mando genérico, así que sobran a propósito.
     this.fire = btn(0) || btn(2);
     this.missile = btn(1) || btn(3);
-    // Los gatillos: L dashea, R queda para detonar. El dash va al índice
-    // izquierdo porque es lo que se pulsa en pánico sin soltar el disparo.
+    // Los gatillos: L dashea, R carga. El dash va al índice izquierdo
+    // porque es lo que se pulsa en pánico sin soltar el disparo; la carga va
+    // al derecho porque se mantiene un segundo y luego se suelta.
     this.dash = btn(4) || btn(6);
-    this.detonate = btn(5) || btn(7);
+    this.charge = btn(5) || btn(7);
     this.power = btn(10) || btn(11);
 
     this.start = btn(9) || btn(0);

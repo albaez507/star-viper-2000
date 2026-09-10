@@ -214,3 +214,46 @@ test('dash sin dirección va hacia delante', () => {
   assert.equal(p.dashDX, 1);
   assert.equal(p.dashDY, 0);
 });
+
+test('carga: mientras cargas no salen balitas, y al soltar sale proporcional', () => {
+  const state = createWorld(960, 540, 11, 'sky');
+  const p = state.player;
+  p.x = 200; p.y = 270;
+
+  // Cargar y disparar a la vez: el disparo no debe responder.
+  const cargando = { ...idle, charge: true, fire: true };
+  // 60 frames = 1 s, por encima de CHARGE_TIME (0.9): carga llena.
+  for (let i = 0; i < 60; i++) step(state, cargando, dt);
+  assert.equal(state.playerBullets.active().length, 0, 'cargar bloquea las balitas');
+  assert.ok(p.chargeTimer >= 0.9, `cargó ${p.chargeTimer}s`);
+
+  // Soltar: una sola bala, perforante y con mucho más daño que una normal.
+  step(state, idle, dt);
+  const balas = state.playerBullets.active();
+  assert.equal(balas.length, 1);
+  assert.equal(balas[0].pierce, true, 'el disparo cargado atraviesa');
+  assert.ok(balas[0].dmg >= 7, `daño ${balas[0].dmg} demasiado bajo para carga llena`);
+  assert.equal(p.chargeTimer, 0, 'la carga se gasta entera');
+});
+
+test('carga: un roce del botón no cuenta como disparo', () => {
+  const state = createWorld(960, 540, 11, 'sky');
+  step(state, { ...idle, charge: true }, dt);
+  step(state, idle, dt);
+  assert.equal(state.playerBullets.active().length, 0, 'por debajo del mínimo no sale nada');
+  assert.equal(state.player.chargeTimer, 0, 'y la carga se pierde igual');
+});
+
+test('carga a medias pega menos que carga llena', () => {
+  const daño = (frames) => {
+    const state = createWorld(960, 540, 11, 'sky');
+    for (let i = 0; i < frames; i++) step(state, { ...idle, charge: true }, dt);
+    step(state, idle, dt);
+    const b = state.playerBullets.active();
+    return b.length ? b[0].dmg : 0;
+  };
+  const medias = daño(20);
+  const llena = daño(60);
+  assert.ok(medias > 0, 'a medias sí dispara');
+  assert.ok(llena > medias, `llena (${llena}) debe pegar más que a medias (${medias})`);
+});

@@ -5,7 +5,7 @@ import { EventBus } from '../core/events';
 import { hits } from './collision';
 import { dist } from '../core/math';
 
-import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H, DASH_SPEED_MULT, DASH_TIME, DASH_COOLDOWN } from './player';
+import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H, DASH_SPEED_MULT, DASH_TIME, DASH_COOLDOWN, CHARGE_TIME, CHARGE_MIN_RATIO, CHARGE_DMG_MIN, CHARGE_DMG_MAX } from './player';
 import { PositionHistory } from './history';
 import { createOptions, updateOptions, type Option } from './options';
 import { makeEnemy, type Enemy } from './enemy';
@@ -166,11 +166,42 @@ function fireFrom(state: GameState, x: number, y: number, esOption: boolean): vo
 }
 
 function stepFiring(state: GameState, input: InputFrame, dt: number): void {
-  void dt;
   const p = state.player;
   if (!p.alive) return;
 
   if (p.dashTimer > 0) return;
+
+  // --- Carga -------------------------------------------------------------
+  // Mantener carga; soltar dispara lo acumulado. Mientras carga NO salen
+  // balitas: si pudieras cargar y disparar a la vez, cargar sería gratis y
+  // entonces siempre mejor, y el juego se reduciría a mantener el botón.
+  if (input.charge) {
+    const antes = p.chargeTimer;
+    p.chargeTimer = Math.min(CHARGE_TIME, p.chargeTimer + dt);
+    if (antes < CHARGE_TIME && p.chargeTimer >= CHARGE_TIME) {
+      state.events.emit({ type: 'chargeReady' });
+    }
+    return;
+  }
+
+  if (p.chargeTimer > 0) {
+    const ratio = p.chargeTimer / CHARGE_TIME;
+    p.chargeTimer = 0;
+    // Por debajo del mínimo no sale nada: un roce del botón no es un disparo,
+    // y así soltar por nervios se siente como haber perdido la carga.
+    if (ratio >= CHARGE_MIN_RATIO) {
+      const dmg = Math.round(CHARGE_DMG_MIN + (CHARGE_DMG_MAX - CHARGE_DMG_MIN) * ratio);
+      const b = state.playerBullets.acquire();
+      // Atraviesa: contra una formación en línea es devastador, contra
+      // enemigos sueltos y rápidos es un desperdicio. Esa asimetría es la
+      // decisión.
+      spawnBullet(b, p.x + 14, p.y, 700, 0, dmg, true, true, true, false);
+      state.events.emit({ type: 'chargeShot', ratio });
+      // Tras soltar, la cadencia normal arranca limpia.
+      p.fireCooldown = 0;
+    }
+    return;
+  }
 
   if (input.fire && p.fireCooldown <= 0) {
     fireFrom(state, p.x, p.y, false);
