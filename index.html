@@ -90,8 +90,6 @@
           <div class="ship-options" role="group" aria-label="Nave">
             <button type="button" data-ship="vulcan" aria-pressed="true"><span class="ship-portrait vulcan-portrait"></span><span><strong>VULCAN</strong><small>Ráfaga · 3 vidas</small></span></button>
             <button type="button" data-ship="lance" aria-pressed="false"><span class="ship-portrait lance-portrait"></span><span><strong>LANCE</strong><small>Buscador · 2 vidas</small></span></button>
-            <button type="button" data-ship="pyre" aria-pressed="false"><span class="ship-portrait pyre-portrait"></span><span><strong>PYRE</strong><small>Cinder · 2 vidas</small></span></button>
-            <button type="button" data-ship="aegis" aria-pressed="false"><span class="ship-portrait aegis-portrait"></span><span><strong>AEGIS</strong><small>Pulse · 4 vidas</small></span></button>
           </div>
           <button id="start-mission" type="button" disabled><span>PREPARANDO VUELO…</span><span>→</span></button>
           <p id="mission-status" role="status">Cargando los assets del archipiélago…</p>
@@ -101,6 +99,7 @@
           <div id="options-view" class="menu-view" hidden>
             <div class="panel-heading"><span>03 / OPTIONS</span><small>FLIGHT DECK</small></div>
             <div class="options-card-list">
+              <button id="open-player-ships" class="options-card" type="button"><span class="options-card-icon">✧</span><span><strong>PLAYER SHIPS</strong><small>Seleccionar nave y perfil de vuelo</small></span><b>→</b></button>
               <button id="open-sprite-management" class="options-card" type="button"><span class="options-card-icon">✦</span><span><strong>SPRITE MANAGEMENT</strong><small>Asignar variantes visuales a Sentinel</small></span><b>→</b></button>
               <button id="options-controls" class="options-card" type="button" disabled><span class="options-card-icon">⌘</span><span><strong>CONTROLS</strong><small>WASD · ARROWS · TOUCH · GAMEPAD</small></span><b>SOON</b></button>
               <button id="options-audio" class="options-card" type="button" disabled><span class="options-card-icon">♫</span><span><strong>AUDIO</strong><small>SYNTH SFX · MASTER VOLUME</small></span><b>SOON</b></button>
@@ -115,6 +114,14 @@
             <div id="asset-manager-list"></div>
             <p id="asset-manager-status" class="asset-manager-status" role="status">Selecciona una variante para verla activa en Sentinel.</p>
             <button id="sprite-management-back" class="menu-back-button" type="button">← VOLVER A OPTIONS</button>
+          </div>
+
+          <div id="player-ship-management" class="menu-view" hidden>
+            <div class="panel-heading"><span>PLAYER SHIP MANAGEMENT</span><small>LOADOUT / FLIGHT POSES</small></div>
+            <p class="sprite-manager-copy">Selecciona la nave activa. PYRE y AEGIS usan siete poses laterales graduales.</p>
+            <div id="player-ship-list" class="player-ship-list"></div>
+            <p id="player-ship-status" class="asset-manager-status" role="status">La selección se guarda para el próximo despegue.</p>
+            <button id="player-ship-management-back" class="menu-back-button" type="button">← VOLVER A OPTIONS</button>
           </div>
         </div>
       </section>

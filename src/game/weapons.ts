@@ -86,7 +86,15 @@ export const SHIPS: Record<ShipId, ShipDef> = {
   },
 };
 
-export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance', 'pyre', 'aegis'];
+/**
+ * Solo las dos naves originales, por decisión del usuario (2026-09-10).
+ *
+ * `pyre` y `aegis` siguen definidas más arriba pero NO se ofrecen: sacarlas
+ * de aquí las quita del menú y además hace que una nave guardada en
+ * localStorage que ya no esté en la lista caiga a VULCAN, así que nadie se
+ * queda atrapado en una nave que ya no existe.
+ */
+export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance'];
 
 /**
  * Cadencia en segundos.
