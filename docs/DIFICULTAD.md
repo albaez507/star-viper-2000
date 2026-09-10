@@ -172,3 +172,56 @@ patrones.
 4. **Más rocas y más variadas** por el camino, que ya funcionan.
 5. **Tope de arma por sector: aparcado.** Estrechar la navegación cubre lo
    mismo y mejor.
+
+---
+
+## 6. Lo de Gradius III (2026-09-10)
+
+Tres observaciones tuyas viendo Gradius. Comprobadas contra el código.
+
+### "Parece que piensan"
+
+No piensan: es **coreografía**. Y encontré el motivo exacto de que lo nuestro
+no lo parezca — revisé `spawner.ts` y **las seis oleadas entran por el mismo
+sitio**: `x = worldW + algo`. Todas. Siempre por el borde derecho, en fila y a
+media altura.
+
+Gradius mete escuadrones que entran **en arco desde una esquina, en bucle,
+desde arriba en picado, o por detrás de ti**. Eso es lo que se lee como
+inteligencia: no que cada enemigo sea listo, sino que las trayectorias se
+crucen.
+
+Es lo más barato de todo lo que hemos hablado: el registro de comportamientos
+ya existe, solo faltan trayectorias nuevas. **No toca arquitectura.**
+
+### Enemigos de tierra
+
+Dependen del pasillo de §3: un enemigo de suelo necesita suelo. Con el perfil
+de altura, uno de tierra es trivial — se pega al suelo de su columna, avanza
+con el terreno y dispara hacia arriba.
+
+Lo que cambia es grande: hoy volar bajo es seguro. Con torretas en las islas
+deja de serlo, y la altura pasa a ser una decisión.
+
+> Para el sector cielo no encajan coches. Encajan **torretas sobre las islas
+> flotantes** y algo que camine por las ruinas. Los vehículos son para el
+> sector "Rasante" del viaje (`ASSET_BRIEF` §9D), que sí es tierra.
+
+### Los caminos que te aplastan — aquí hay un problema
+
+⚠️ **Star Viper no tiene scroll forzado.** Comprobado: el jugador está
+limitado a `x >= 19` y puede quedarse ahí parado para siempre. El fondo se
+mueve, pero a ti nadie te empuja.
+
+En Gradius la pantalla avanza y **tú vas dentro de ella**: si te quedas atrás,
+el borde te mata. Por eso elegir mal el camino se paga. Sin esa presión,
+"camino sin salida" solo significa "date la vuelta", que no da miedo.
+
+Para tenerlo de verdad hay que hacer letal el borde izquierdo, y eso cambia el
+juego entero: pasa de "me muevo libre" a "no puedo quedarme atrás". Es un
+cambio grande y puede frustrar.
+
+**Versión suave, que yo probaría primero:** caminos que se bifurcan donde el
+malo no te mata, solo es **peor** — más estrecho, más torretas, sin espacio
+para esquivar. Eliges con la misma tensión y sin castigo injusto. Si al
+jugarlo te sabe a poco, entonces sí hacemos letal el borde.
