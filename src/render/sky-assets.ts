@@ -1,7 +1,51 @@
-/** Sky sheets stay at native pixels. We scale once, nearest-neighbor, at draw time. */
-export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3';
+/** Sprite sheets stay at native resolution. We scale once per display size. */
+export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3' | ManagedEnemyVariant;
 const names: SkySprite[] = ['vulcan', 'lance', 'option', 'core', 'scout', 'sine', 'diver', 'formation', 'swarm', 'harasser', 'rival', 'item', 'bolt', 'orb', 'missile', 'explosion'];
 const frames = new Map<SkySprite, HTMLCanvasElement>();
+
+export type ManagedEnemyFamily = 'scout' | 'diver' | 'formation';
+export type ManagedEnemyVariant = `${ManagedEnemyFamily}-v1` | `${ManagedEnemyFamily}-v2` | `${ManagedEnemyFamily}-v3`;
+const MANAGED_FAMILIES: ManagedEnemyFamily[] = ['scout', 'diver', 'formation'];
+const DEFAULT_ASSIGNMENTS: Record<ManagedEnemyFamily, ManagedEnemyVariant> = {
+  scout: 'scout-v1', diver: 'diver-v1', formation: 'formation-v1',
+};
+const ASSIGNMENT_KEY = 'starviper.sentinel-assets.v1';
+
+function loadAssignments(): Record<ManagedEnemyFamily, ManagedEnemyVariant> {
+  const next = { ...DEFAULT_ASSIGNMENTS };
+  try {
+    const raw = JSON.parse(localStorage.getItem(ASSIGNMENT_KEY) ?? '{}') as Partial<Record<ManagedEnemyFamily, string>>;
+    for (const family of MANAGED_FAMILIES) {
+      const candidate = raw[family];
+      if (candidate === `${family}-v1` || candidate === `${family}-v2` || candidate === `${family}-v3`) {
+        next[family] = candidate as ManagedEnemyVariant;
+      }
+    }
+  } catch {
+    /* Storage unavailable: use the first variant for every family. */
+  }
+  return next;
+}
+
+const assignments = loadAssignments();
+
+export function getEnemyVariant(family: ManagedEnemyFamily): ManagedEnemyVariant {
+  return assignments[family];
+}
+
+export function setEnemyVariant(family: ManagedEnemyFamily, variant: ManagedEnemyVariant): void {
+  assignments[family] = variant;
+  const selected = frames.get(variant);
+  if (selected) frames.set(family, selected);
+  try { localStorage.setItem(ASSIGNMENT_KEY, JSON.stringify(assignments)); } catch { /* optional persistence */ }
+}
+
+function syncAssignmentsToFrames(): void {
+  for (const family of MANAGED_FAMILIES) {
+    const selected = frames.get(assignments[family]);
+    if (selected) frames.set(family, selected);
+  }
+}
 
 /**
  * Vacío a propósito. Antes volteaba `swarm`, `harasser` y `rival` "porque
@@ -14,9 +58,9 @@ const FLIP_X = new Set<SkySprite>();
 export let skyActive = false;
 export function setSkyActive(active: boolean): void { skyActive = active; }
 
-async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[]): Promise<void> {
+async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[], folder = 'sky'): Promise<void> {
   const img = new Image();
-  img.src = `${import.meta.env.BASE_URL}assets/sky/${file}.png`;
+  img.src = `${import.meta.env.BASE_URL}assets/${folder}/${file}.png`;
   await img.decode();
   const source = document.createElement('canvas');
   source.width = img.naturalWidth; source.height = img.naturalHeight;
@@ -51,7 +95,10 @@ async function loadSheet(file: string, columns: number, rows: number, keys: SkyS
 export const skyAssetsReady = Promise.all([
   loadSheet('sprites', 4, 4, names),
   loadSheet('guardian', 3, 1, ['boss1', 'boss2', 'boss3']),
-]);
+  loadSheet('scout-variants', 3, 1, ['scout-v1', 'scout-v2', 'scout-v3'], 'sentinel'),
+  loadSheet('diver-variants', 3, 1, ['diver-v1', 'diver-v2', 'diver-v3'], 'sentinel'),
+  loadSheet('formation-variants', 3, 1, ['formation-v1', 'formation-v2', 'formation-v3'], 'sentinel'),
+]).then(() => { syncAssignmentsToFrames(); });
 
 /**
  * Los frames del atlas vienen a ~313 px y se dibujan a ~34 px: una reducción
