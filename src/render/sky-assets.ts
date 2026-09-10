@@ -67,7 +67,35 @@ const FLIP_X = new Set<SkySprite>();
 export let skyActive = false;
 export function setSkyActive(active: boolean): void { skyActive = active; }
 
-async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[], folder = 'sky'): Promise<void> {
+type Recorte = { left: number; top: number; right: number; bottom: number };
+
+function recorteDe(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): Recorte | null {
+  const data = ctx.getImageData(x, y, w, h).data;
+  let left = w, top = h, right = 0, bottom = 0;
+  for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+    if (data[(py * w + px) * 4 + 3] < 80) continue;
+    left = Math.min(left, px); right = Math.max(right, px);
+    top = Math.min(top, py); bottom = Math.max(bottom, py);
+  }
+  return left > right ? null : { left, top, right, bottom };
+}
+
+/**
+ * @param compartirRecorte  Recorta TODOS los fotogramas con la misma caja (la
+ *   unión de las suyas) en vez de cada uno con la propia.
+ *
+ *   Es obligatorio para una animación y sale mal sin ello. Cada fotograma
+ *   recortado por separado pierde su tamaño relativo, y como después se
+ *   dibujan todos al mismo ancho y alto, cada pose se estira de forma
+ *   distinta: medido en `pyre-poses.png`, la pose neutra ocupa 504 px de alto
+ *   y la de picado 172, o sea que se dibujaban con 2.9x de diferencia de
+ *   estiramiento. En pantalla la nave crecía, encogía y daba un salto lateral
+ *   al cambiar de pose.
+ *
+ *   Para sprites independientes (enemigos, items) el recorte propio SÍ es lo
+ *   correcto: no guardan ninguna relación entre ellos.
+ */
+async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[], folder = 'sky', compartirRecorte = false): Promise<void> {
   const img = new Image();
   img.src = `${import.meta.env.BASE_URL}assets/${folder}/${file}.png`;
   await img.decode();
@@ -76,27 +104,45 @@ async function loadSheet(file: string, columns: number, rows: number, keys: SkyS
   const ctx = source.getContext('2d', { willReadFrequently: true })!;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(img, 0, 0);
-  keys.forEach((name, i) => {
+
+  const celda = (i: number): { x: number; y: number; w: number; h: number } => {
     const x = Math.round((i % columns) * source.width / columns);
     const y = Math.round(Math.floor(i / columns) * source.height / rows);
-    const w = Math.round((i % columns + 1) * source.width / columns) - x;
-    const h = Math.round((Math.floor(i / columns) + 1) * source.height / rows) - y;
-    const data = ctx.getImageData(x, y, w, h).data;
-    let left = w, top = h, right = 0, bottom = 0;
-    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
-      if (data[(py * w + px) * 4 + 3] < 80) continue;
-      left = Math.min(left, px); right = Math.max(right, px);
-      top = Math.min(top, py); bottom = Math.max(bottom, py);
-    }
-    if (left > right) throw new Error(`Empty sky sprite: ${name}`);
-    const fw = right - left + 1;
-    const fh = bottom - top + 1;
+    return {
+      x, y,
+      w: Math.round((i % columns + 1) * source.width / columns) - x,
+      h: Math.round((Math.floor(i / columns) + 1) * source.height / rows) - y,
+    };
+  };
+
+  const recortes = keys.map((name, i) => {
+    const c = celda(i);
+    const r = recorteDe(ctx, c.x, c.y, c.w, c.h);
+    if (!r) throw new Error(`Empty sky sprite: ${name}`);
+    return r;
+  });
+
+  let comun: Recorte | null = null;
+  if (compartirRecorte) {
+    comun = recortes.reduce((a, b) => ({
+      left: Math.min(a.left, b.left),
+      top: Math.min(a.top, b.top),
+      right: Math.max(a.right, b.right),
+      bottom: Math.max(a.bottom, b.bottom),
+    }));
+  }
+
+  keys.forEach((name, i) => {
+    const c = celda(i);
+    const r = comun ?? recortes[i];
+    const fw = r.right - r.left + 1;
+    const fh = r.bottom - r.top + 1;
     const frame = document.createElement('canvas');
     frame.width = fw;
     frame.height = fh;
     const out = frame.getContext('2d')!;
     out.imageSmoothingEnabled = false;
-    out.drawImage(source, x + left, y + top, fw, fh, 0, 0, fw, fh);
+    out.drawImage(source, c.x + r.left, c.y + r.top, fw, fh, 0, 0, fw, fh);
     frames.set(name, frame);
   });
 }
@@ -107,7 +153,7 @@ export const skyAssetsReady = Promise.all([
   loadSheet('scout-variants', 3, 1, ['scout-v1', 'scout-v2', 'scout-v3'], 'sentinel'),
   loadSheet('diver-variants', 3, 1, ['diver-v1', 'diver-v2', 'diver-v3'], 'sentinel'),
   loadSheet('formation-variants', 3, 1, ['formation-v1', 'formation-v2', 'formation-v3'], 'sentinel'),
-  ...ANIMATED_SHIPS.map((ship) => loadSheet(`${ship}-poses`, 7, 1, animatedShipKeys(ship), 'ships')),
+  ...ANIMATED_SHIPS.map((ship) => loadSheet(`${ship}-poses`, 7, 1, animatedShipKeys(ship), 'ships', true)),
 ]).then(() => { syncAssignmentsToFrames(); });
 
 /**
