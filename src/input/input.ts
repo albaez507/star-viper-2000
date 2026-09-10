@@ -10,6 +10,7 @@ export class InputManager {
 
   private prevMissile = false;
   private prevDash = false;
+  private prevDetonate = false;
   private prevPower = false;
   private prevStart = false;
   private prevPause = false;
@@ -38,6 +39,7 @@ export class InputManager {
     const powerHeld = kb.power || (t?.power ?? false) || g.power;
     const dashHeld = kb.dash || g.dash || (t?.dash ?? false);
     const chargeHeld = kb.charge || g.charge || (t?.charge ?? false);
+    const detonateHeld = kb.detonate || g.detonate || (t?.detonate ?? false);
 
     const frame: InputFrame = emptyInput(this.tick++);
     frame.up = up;
@@ -51,10 +53,12 @@ export class InputManager {
     frame.dash = dashHeld && !this.prevDash;
     // Mantenido, no pulsación: la carga necesita saber que sigues apretando.
     frame.charge = chargeHeld;
+    frame.detonate = detonateHeld && !this.prevDetonate;
 
     this.prevMissile = missileHeld;
     this.prevPower = powerHeld;
     this.prevDash = dashHeld;
+    this.prevDetonate = detonateHeld;
 
     return frame;
   }

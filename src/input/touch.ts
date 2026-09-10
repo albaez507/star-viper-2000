@@ -128,6 +128,9 @@ export class TouchSource {
   get fire(): boolean { return this.firePressed; }
   get missile(): boolean { return this.missilePressed; }
   get charge(): boolean { return this.chargePressed; }
+  /** En el teléfono no cabe un cuarto botón: MSL detona cuando hay uno en
+   * vuelo, y el propio botón cambia de etiqueta para decirlo. */
+  get detonate(): boolean { return this.missilePressed; }
   /** Se consume al leerlo: un gesto = un dash, no uno por frame. */
   get dash(): boolean {
     const v = this.dashPulse;

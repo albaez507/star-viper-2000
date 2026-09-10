@@ -88,6 +88,6 @@ function drawMissileStatus(ctx: CanvasRenderingContext2D, state: GameState, t: n
 
   ctx.fillStyle = '#eaf6ff';
   ctx.font = '9px "Courier New", monospace';
-  ctx.fillText(ready ? 'MISIL LISTO (M/X)' : 'MISIL', x + 4, y + 2);
+  ctx.fillText(ready ? 'MISIL LISTO (M)' : 'MISIL', x + 4, y + 2);
 }
 

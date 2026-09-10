@@ -243,6 +243,8 @@ body[data-lighting="true"] #game { filter: saturate(1.18) contrast(1.08) drop-sh
   border-color: rgba(255, 84, 112, 0.5);
 }
 
+.action-missile.armed { color: #fff3c4; border-color: #ffd23f; box-shadow: 0 0 10px 2px rgba(255,210,63,.7); }
+
 .action-charge {
   color: #4fc3ff;
   border-color: rgba(79, 195, 255, 0.5);

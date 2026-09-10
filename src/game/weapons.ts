@@ -63,8 +63,8 @@ export const SHIPS: Record<ShipId, ShipDef> = {
   lance: {
     id: 'lance',
     nombre: 'LANCE',
-    armaNombre: 'BUSCADOR',
-    rasgo: 'Rápida y frágil. Los proyectiles persiguen, pero dispara poco.',
+    armaNombre: 'LANZA',
+    rasgo: 'Rápida y frágil. Sus disparos atraviesan, pero dispara poco.',
     velocidad: 1.18,
     vidasIniciales: 2,
   },
@@ -92,6 +92,8 @@ export type DisparoSpec = {
   vy: number;
   dmg: number;
   homing: boolean;
+  /** Atraviesa al enemigo en vez de apagarse en el primero. */
+  pierce: boolean;
 };
 
 /**
@@ -102,32 +104,38 @@ export type DisparoSpec = {
 export function disparosDe(ship: ShipId, level: WeaponLevel): DisparoSpec[] {
   // Básica: una bala lenta y sola. Tiene que verse pobre al lado de la tuya.
   if (level === 0) {
-    return [{ offsetY: 0, vx: 500, vy: 0, dmg: 1, homing: false }];
+    return [{ offsetY: 0, vx: 500, vy: 0, dmg: 1, homing: false, pierce: false }];
   }
 
   if (ship === 'vulcan') {
     if (level === 1) {
       return [
-        { offsetY: -5, vx: 620, vy: 0, dmg: 1, homing: false },
-        { offsetY: 5, vx: 620, vy: 0, dmg: 1, homing: false },
+        { offsetY: -5, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
+        { offsetY: 5, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
       ];
     }
     return [
-      { offsetY: -8, vx: 620, vy: 0, dmg: 1, homing: false },
-      { offsetY: 0, vx: 620, vy: 0, dmg: 1, homing: false },
-      { offsetY: 8, vx: 620, vy: 0, dmg: 1, homing: false },
+      { offsetY: -8, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
+      { offsetY: 0, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
+      { offsetY: 8, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
     ];
   }
 
+  // LANCE ya no persigue. Perseguir apuntaba por el jugador y volvía el juego
+  // fácil: la puntería dejaba de importar. Ahora ATRAVIESA, que sigue siendo
+  // un arma completamente distinta a la ráfaga de VULCAN pero premia alinear
+  // los disparos en vez de sustituir el apuntar. El único que persigue en
+  // todo el juego es el misil.
   const shots = level >= 3 ? 2 : 1;
   const specs: DisparoSpec[] = [];
   for (let i = 0; i < shots; i++) {
     specs.push({
       offsetY: shots === 1 ? 0 : (i === 0 ? -8 : 8),
-      vx: 360,
+      vx: 520,
       vy: 0,
       dmg: level >= 3 ? 2 : 1,
-      homing: true,
+      homing: false,
+      pierce: true,
     });
   }
   return specs;

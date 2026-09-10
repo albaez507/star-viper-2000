@@ -14,11 +14,13 @@ export type InputFrame = {
   dash: boolean;
   /** Mantenido: mientras esté a true se carga y NO salen balitas. */
   charge: boolean;
+  /** Pulsación. Detona el misil en vuelo, en su propio botón. */
+  detonate: boolean;
   tick: number;
 };
 
 export function emptyInput(tick: number): InputFrame {
-  return { up: false, down: false, left: false, right: false, fire: false, missile: false, power: false, dash: false, charge: false, tick };
+  return { up: false, down: false, left: false, right: false, fire: false, missile: false, power: false, dash: false, charge: false, detonate: false, tick };
 }
 
 export type EntityId = number;

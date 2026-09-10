@@ -5,7 +5,12 @@ export const PLAYER_BASE_SPEED = 220;
 export const PLAYER_HALF_W = 15;
 export const PLAYER_HALF_H = 10;
 export const FIRE_COOLDOWN = 0.14;
-export const MISSILE_COOLDOWN_BASE = 1.4;
+/**
+ * 1.4 s hacía que el misil fuese un segundo botón de disparo, no un recurso:
+ * salía tan seguido que no había nada que decidir. Con 5 s hay que elegir el
+ * momento, y por eso puede pegar mucho más fuerte.
+ */
+export const MISSILE_COOLDOWN_BASE = 5.0;
 export const INVULN_TIME = 1.5;
 export const SHIELD_MAX = 3;
 

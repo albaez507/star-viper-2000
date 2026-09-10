@@ -161,7 +161,7 @@ function fireFrom(state: GameState, x: number, y: number, esOption: boolean): vo
 
   for (const spec of specs) {
     const b = state.playerBullets.acquire();
-    spawnBullet(b, x + 10, y + spec.offsetY, spec.vx, spec.vy, spec.dmg, true, false, false, spec.homing);
+    spawnBullet(b, x + 10, y + spec.offsetY, spec.vx, spec.vy, spec.dmg, true, spec.pierce, false, spec.homing);
   }
 }
 
@@ -212,14 +212,17 @@ function stepFiring(state: GameState, input: InputFrame, dt: number): void {
     state.events.emit({ type: 'fire', weapon: 'single' });
   }
 
+  // Lanzar y detonar en botones distintos. Antes compartían uno, así que un
+  // doble toque nervioso te detonaba el misil en la cara.
+  if (input.detonate) {
+    for (const m of state.missiles.active()) {
+      m.active = false;
+      explodeMissile(state, m.x, m.y, m.dmg);
+    }
+  }
+
   if (input.missile) {
-    const inFlight = state.missiles.active();
-    if (inFlight.length > 0) {
-      for (const m of inFlight) {
-        m.active = false;
-        explodeMissile(state, m.x, m.y, m.dmg);
-      }
-    } else if (p.missileCooldown <= 0) {
+    if (p.missileCooldown <= 0) {
       const m = state.missiles.acquire();
       spawnMissile(m, p.x + 6, p.y, MISSILE_SPEED);
       p.missileCooldown = missileCooldownFor(p);
@@ -306,6 +309,41 @@ const HOMING_TURN = 2.5;
 
 /** Corrige el rumbo hacia el enemigo más cercano por delante, con giro
  * limitado: persigue, pero no es infalible — si te colocas mal, falla. */
+/**
+ * Gira más despacio que una bala buscadora a propósito (1.9 rad/s frente a
+ * 3.6): tiene que poder fallar si el enemigo cambia de rumbo. Un misil que
+ * nunca falla es una tecla de "matar", no un arma.
+ */
+const MISSILE_TURN = 1.9;
+
+function guiarMisil(state: GameState, m: Missile, dt: number): void {
+  // El jefe manda sobre todo lo demás: es para lo que guardas el misil.
+  let objetivo: { x: number; y: number } | null = null;
+  if (state.boss.active && state.boss.revealed && !state.boss.dying) {
+    objetivo = state.boss;
+  } else {
+    let mejorDist = Infinity;
+    for (const e of state.enemies.active()) {
+      // Los obstáculos no se pueden destruir: perseguirlos sería tirar el misil.
+      if (e.indestructible) continue;
+      if (e.x < m.x) continue;
+      const d = dist(m.x, m.y, e.x, e.y);
+      if (d < mejorDist) { mejorDist = d; objetivo = e; }
+    }
+  }
+  if (!objetivo) return;
+
+  const velocidad = Math.hypot(m.vx, m.vy) || 1;
+  const actual = Math.atan2(m.vy, m.vx);
+  let delta = Math.atan2(objetivo.y - m.y, objetivo.x - m.x) - actual;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  const giro = Math.max(-MISSILE_TURN * dt, Math.min(MISSILE_TURN * dt, delta));
+  const nuevo = actual + giro;
+  m.vx = Math.cos(nuevo) * velocidad;
+  m.vy = Math.sin(nuevo) * velocidad;
+}
+
 function guiarBala(state: GameState, b: Bullet, dt: number): void {
   let mejor: { x: number; y: number } | null = null;
   let mejorDist = Infinity;
@@ -347,6 +385,7 @@ function stepProjectiles(state: GameState, dt: number): void {
     }
   }
   for (const m of state.missiles.active()) {
+    guiarMisil(state, m, dt);
     stepMissile(m, dt);
     if (m.x > state.worldW + 30) m.active = false;
   }
@@ -405,7 +444,7 @@ function applyBossDamage(state: GameState, dmg: number, x: number, y: number): v
   }
 }
 
-const MISSILE_SPLASH_RADIUS = 46;
+const MISSILE_SPLASH_RADIUS = 70;
 
 function explodeMissile(state: GameState, x: number, y: number, dmg: number): void {
   for (const e of state.enemies.active()) {

@@ -71,7 +71,10 @@ test('both ships fire, upgrade on cores 1/3/5, and gain options at max', () => {
     state.playerBullets.releaseAll(); state.player.fireCooldown = 0;
     step(state, { ...idle, fire: true }, dt);
     assert.ok(state.playerBullets.active().length > 1);
-    assert.equal(state.playerBullets.active()[0].homing, ship === 'lance');
+    // Ninguna bala persigue ya: perseguir apuntaba por el jugador. LANCE se
+    // distingue ahora porque ATRAVIESA, y el único que persigue es el misil.
+    assert.equal(state.playerBullets.active()[0].homing, false, 'ninguna bala persigue');
+    assert.equal(state.playerBullets.active()[0].pierce, ship === 'lance', 'solo LANCE atraviesa');
   }
 });
 
@@ -256,4 +259,45 @@ test('carga a medias pega menos que carga llena', () => {
   const llena = daño(60);
   assert.ok(medias > 0, 'a medias sí dispara');
   assert.ok(llena > medias, `llena (${llena}) debe pegar más que a medias (${medias})`);
+});
+
+test('el misil persigue, espera mucho y detona en su propio botón', () => {
+  const state = createWorld(960, 540, 21, 'sky');
+  const p = state.player;
+  p.x = 200; p.y = 270; p.missileCooldown = 0;
+
+  // Un enemigo claramente por encima: el misil tiene que curvarse hacia él.
+  const e = state.enemies.acquire();
+  Object.assign(e, { active: true, x: 700, y: 120, baseY: 120, halfW: 13, halfH: 12, hp: 99, maxHp: 99, behavior: 'scout', vx: 0, indestructible: false });
+
+  step(state, { ...idle, missile: true }, dt);
+  const m = state.missiles.active()[0];
+  assert.ok(m, 'sale el misil');
+  assert.ok(m.dmg >= 20, `daño ${m.dmg}: tiene que compensar la espera`);
+
+  for (let i = 0; i < 25; i++) step(state, idle, dt);
+  assert.ok(m.vy < -20, `vy ${m.vy}: el misil no se curvó hacia el enemigo`);
+
+  // Espera larga: pulsar otra vez no saca un segundo misil.
+  const antes = state.missiles.active().length;
+  step(state, { ...idle, missile: true }, dt);
+  assert.equal(state.missiles.active().length, antes, 'no se pueden encadenar');
+  assert.ok(p.missileCooldown > 3, `espera ${p.missileCooldown}s demasiado corta`);
+
+  // Y detonar es OTRO botón.
+  step(state, { ...idle, detonate: true }, dt);
+  assert.equal(state.missiles.active().length, 0, 'detonate lo revienta');
+});
+
+test('el misil ignora los obstáculos: son indestructibles', () => {
+  const state = createWorld(960, 540, 21, 'sky');
+  const p = state.player;
+  p.x = 200; p.y = 270; p.missileCooldown = 0;
+  const roca = state.enemies.acquire();
+  Object.assign(roca, { active: true, x: 700, y: 60, baseY: 60, halfW: 22, halfH: 20, hp: 9999, maxHp: 9999, behavior: 'hazard', vx: 0, indestructible: true });
+
+  step(state, { ...idle, missile: true }, dt);
+  const m = state.missiles.active()[0];
+  for (let i = 0; i < 25; i++) step(state, idle, dt);
+  assert.ok(Math.abs(m.vy) < 1, `vy ${m.vy}: persiguió una roca que no se puede matar`);
 });

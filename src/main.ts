@@ -487,6 +487,13 @@ const loop = new GameLoop({
     // Más fuerte si aceleras hacia delante y más flojo si frenas, para que se
     // vea que la nave responde en vez de arrastrar una llama fija.
     if (!paused && state.player.alive && !state.gameOver) {
+      // En el teléfono no cabe un cuarto botón, así que MSL cambia de papel
+      // cuando hay un misil volando. Lo dice la etiqueta: si no, el jugador
+      // no puede saber que el mismo botón hace otra cosa.
+      const volando = state.missiles.active().length > 0;
+      missileEl.textContent = volando ? 'DET' : 'MSL';
+      missileEl.classList.toggle('armed', volando);
+
       // El botón táctil también avisa: en el teléfono el pulgar tapa la nave.
       const ratioCarga = state.player.chargeTimer / CHARGE_TIME;
       chargeEl.classList.toggle('charging', ratioCarga > 0 && ratioCarga < 1);
