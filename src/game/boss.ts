@@ -7,10 +7,58 @@ export const BASE_HALF_H = 112;
 const INTRO_HOLD = 0.5;
 const INTRO_WARP = 1.4;
 
-const PHASE_HP = [30, 35, 40];
+/**
+ * Subida grande y deliberada. Con 30/35/40 un solo misil (24 de daño) se
+ * llevaba casi una fase entera, así que la pelea terminaba antes de que
+ * llegaras a ver un patrón. Con ventanas de verdad hay que aguantar lo
+ * suficiente para aprenderlos.
+ */
+const PHASE_HP = [120, 150, 180];
 const PHASE_SCALE = [1, 1.08, 1.18];
 
+export type BossAttack = 'fan' | 'sweep' | 'charge' | 'wall';
+export type AttackStage = 'telegraph' | 'execute' | 'recover';
+
+/**
+ * Qué ataques tiene cada fase.
+ *
+ * El jefe no era predecible: es que **no tenía patrones**. Se movía con una
+ * suma de tres senos -- ruido suave, igual en el segundo 3 que en el 40, o
+ * sea imposible de aprender -- y tenía un único ataque del que entre fases
+ * solo cambiaba la cadencia.
+ *
+ * Un patrón es algo que se puede aprender, y para eso hace falta que sea
+ * DISCRETO: empieza, pasa, termina.
+ */
+const ROTACION: Record<1 | 2 | 3, BossAttack[]> = {
+  1: ['fan', 'sweep'],
+  2: ['fan', 'charge', 'sweep'],
+  3: ['wall', 'charge', 'fan', 'sweep'],
+};
+
+/** Aviso antes de cada ataque. Sin esto el ataque es injusto, no difícil. */
+const TELEGRAPH = 0.7;
+
+const EJECUCION: Record<BossAttack, number> = { fan: 0.95, sweep: 1.7, charge: 1.0, wall: 0.7 };
+
+/**
+ * Recuperación: se queda quieto y recibe el doble de daño. **Es el tiempo
+ * que convierte esto en una pelea.** Antes disparaba sin parar, así que
+ * atacarle era cuestión de aguantar, no de elegir el momento.
+ */
+const RECUPERACION = [1.15, 0.95, 0.75];
+export const RECOVER_DAMAGE_MULT = 2;
+
 export type Boss = {
+  attack: BossAttack;
+  stage: AttackStage;
+  stageTimer: number;
+  attackIndex: number;
+  /** Lo pone la máquina de estados y lo consume el mundo al disparar. */
+  volleyPending: boolean;
+  volleyTimer: number;
+  /** Dónde estaba al empezar la embestida, para volver luego. */
+  homeX: number;
   x: number; y: number;
   phase: 1 | 2 | 3;
   phaseHp: number;
@@ -31,6 +79,8 @@ export type Boss = {
 
 export function makeBoss(): Boss {
   return {
+    attack: 'fan', stage: 'telegraph', stageTimer: TELEGRAPH, attackIndex: 0,
+    volleyPending: false, volleyTimer: 0, homeX: 0,
     x: 0, y: 0, phase: 1, phaseHp: PHASE_HP[0], phaseMaxHp: PHASE_HP[0], t: 0,
     fireCooldown: 1, hitFlash: 0, halfW: BASE_HALF_W, halfH: BASE_HALF_H, active: false,
     dying: false, dyingTimer: 0,
@@ -131,4 +181,84 @@ export function damageBoss(b: Boss, dmg: number): DamageResult {
 
 export function bossMovementFrequency(b: Boss): number {
   return 1 + (b.phase - 1) * 0.3;
+}
+
+/** Cuánto dura la etapa actual, según ataque y fase. */
+function duracionEtapa(b: Boss): number {
+  if (b.stage === 'telegraph') return TELEGRAPH;
+  if (b.stage === 'execute') return EJECUCION[b.attack];
+  return RECUPERACION[b.phase - 1];
+}
+
+/**
+ * Avanza la máquina de estados y coloca al jefe.
+ *
+ * Cada ataque son tres tiempos: **aviso** (se coloca y se hincha, te dice qué
+ * viene), **ejecución** (difícil, pero con hueco porque lo telegrafió) y
+ * **recuperación** (quieto, y recibe el doble de daño).
+ *
+ * El movimiento ya no es ruido continuo: cada etapa lo coloca donde el ataque
+ * necesita, así que la posición del jefe *significa* algo.
+ */
+export function updateBossAttack(b: Boss, dt: number, worldW: number, worldH: number, playerY: number): void {
+  b.stageTimer -= dt;
+
+  if (b.stageTimer <= 0) {
+    if (b.stage === 'telegraph') {
+      b.stage = 'execute';
+      b.volleyTimer = 0;
+    } else if (b.stage === 'execute') {
+      b.stage = 'recover';
+    } else {
+      // Siguiente ataque de la rotación de esta fase.
+      const lista = ROTACION[b.phase];
+      b.attackIndex = (b.attackIndex + 1) % lista.length;
+      b.attack = lista[b.attackIndex];
+      b.stage = 'telegraph';
+      b.homeX = worldW - BOSS_ANCHOR_MARGIN;
+    }
+    b.stageTimer = duracionEtapa(b);
+  }
+
+  const anchorX = worldW - BOSS_ANCHOR_MARGIN;
+  const avance = 1 - b.stageTimer / Math.max(0.0001, duracionEtapa(b));
+
+  if (b.stage === 'telegraph') {
+    // Se coloca donde el ataque lo necesita. Verlo subir ES el aviso.
+    const destinoY = b.attack === 'sweep' ? b.halfH + 20
+      : b.attack === 'charge' ? playerY
+      : worldH / 2;
+    b.y += (destinoY - b.y) * Math.min(1, dt * 4);
+    b.x += (anchorX - b.x) * Math.min(1, dt * 4);
+    return;
+  }
+
+  if (b.stage === 'execute') {
+    if (b.attack === 'sweep') {
+      // Baja de arriba abajo disparando: hay que cruzar por detrás.
+      b.y = b.halfH + 20 + (worldH - b.halfH * 2 - 40) * avance;
+      b.volleyTimer -= dt;
+      if (b.volleyTimer <= 0) { b.volleyPending = true; b.volleyTimer = 0.13; }
+    } else if (b.attack === 'charge') {
+      // Cruza la pantalla. Se esquiva EN VERTICAL: es donde el dash importa.
+      b.x = anchorX - (anchorX - b.halfW - 30) * Math.sin(avance * Math.PI);
+    } else if (b.attack === 'fan') {
+      // Tres ráfagas con hueco entre ellas, no un chorro continuo.
+      b.volleyTimer -= dt;
+      if (b.volleyTimer <= 0) { b.volleyPending = true; b.volleyTimer = 0.3; }
+    } else {
+      // wall: una sola pared densa, al principio de la ejecución.
+      if (avance < 0.15 && b.volleyTimer <= 0) { b.volleyPending = true; b.volleyTimer = 99; }
+    }
+    return;
+  }
+
+  // Recuperación: quieto y vulnerable. Aquí es donde le pegas.
+  b.volleyTimer = 0;
+  b.x += (anchorX - b.x) * Math.min(1, dt * 3);
+}
+
+/** Multiplicador de daño según la etapa: el doble mientras se recupera. */
+export function bossDamageMultiplier(b: Boss): number {
+  return b.stage === 'recover' ? RECOVER_DAMAGE_MULT : 1;
 }

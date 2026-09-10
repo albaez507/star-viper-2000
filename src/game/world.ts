@@ -16,7 +16,7 @@ import { makeMissile, spawnMissile, stepMissile, type Missile } from './missiles
 import { makePowerCore, spawnPowerCore, stepPowerCore, type PowerCore } from './powercore';
 import { makeItem, spawnItem, stepItem, type Item } from './items';
 import { disparosDe, optionsPara, MAX_WEAPON_LEVEL, SHIPS, nivelPorCores, coresParaNivel } from './weapons';
-import { makeBoss, updateBossIntro, damageBoss, bossMovementFrequency, easeBossSize, BOSS_ANCHOR_MARGIN, type Boss } from './boss';
+import { makeBoss, updateBossIntro, damageBoss, easeBossSize, type Boss, updateBossAttack, bossDamageMultiplier } from './boss';
 import { updateSpawner } from './spawner';
 import type { StageId } from './stages';
 
@@ -430,7 +430,9 @@ function damagePlayer(state: GameState): void {
 
 function applyBossDamage(state: GameState, dmg: number, x: number, y: number): void {
   const boss = state.boss;
-  const result = damageBoss(boss, dmg);
+  // El doble mientras se recupera. Es lo que hace que la pelea sea elegir el
+  // momento en vez de aguantar disparando todo el rato.
+  const result = damageBoss(boss, Math.max(1, Math.round(dmg * bossDamageMultiplier(boss))));
 
   if (result === 'hit') {
     boss.hitFlash = 0.1;
@@ -630,37 +632,55 @@ function stepBoss(state: GameState, dt: number): void {
   if (boss.enrageFlash > 0) boss.enrageFlash = Math.max(0, boss.enrageFlash - dt);
   easeBossSize(boss, dt);
 
-  const freq = bossMovementFrequency(boss);
-  const anchorX = state.worldW - BOSS_ANCHOR_MARGIN;
-  boss.x = anchorX + Math.sin(boss.t * 0.6 * freq) * 30;
-  boss.y = state.worldH / 2
-    + Math.sin(boss.t * 1.3 * freq) * 70
-    + Math.sin(boss.t * 0.47 * freq) * 40
-    + Math.cos(boss.t * 2.1 * freq) * 15;
+  updateBossAttack(boss, dt, state.worldW, state.worldH, state.player.y);
 
-  boss.fireCooldown -= dt;
-  if (boss.fireCooldown <= 0) {
+  // Deriva suave encima del sitio que le marca su ataque: sin ella se ve
+  // clavado como un decorado, con ella respira sin dejar de ser legible.
+  if (boss.stage !== 'execute') {
+    boss.y += Math.sin(boss.t * 1.1) * 14 * dt;
+  }
+
+  if (boss.volleyPending) {
+    boss.volleyPending = false;
     fireBossPattern(state, boss);
-    boss.fireCooldown = boss.phase === 3 ? 0.5 : boss.phase === 2 ? 0.75 : 1.1;
   }
 }
 
+function disparoJefe(state: GameState, boss: Boss, angle: number, vel: number, big: boolean): void {
+  const b = state.enemyBullets.acquire();
+  spawnBullet(b, boss.x - boss.halfW, boss.y, Math.cos(angle) * vel, Math.sin(angle) * vel, 1, false, false, big);
+}
+
 function fireBossPattern(state: GameState, boss: Boss): void {
-  const shots = boss.phase === 3 ? 5 : boss.phase === 2 ? 3 : 1;
-  const spread = 0.5;
+  const vel = ENEMY_BULLET_SPEED;
+
+  if (boss.attack === 'sweep') {
+    // Chorro recto mientras baja. La dificultad está en su recorrido, no en
+    // la forma de la bala: si además abriera en abanico no habría por dónde.
+    disparoJefe(state, boss, Math.PI, vel * 1.15, false);
+    return;
+  }
+
+  if (boss.attack === 'wall') {
+    // Pared densa con UN hueco. El hueco se mueve con la fase, así que no
+    // sirve memorizar una altura: hay que leerlo.
+    const filas = 13;
+    const hueco = 3 + ((boss.phase * 3) % 7);
+    for (let i = 0; i < filas; i++) {
+      if (i === hueco || i === hueco + 1) continue;
+      const angle = Math.PI - 0.62 + (1.24 * i) / (filas - 1);
+      disparoJefe(state, boss, angle, vel * 0.85, false);
+    }
+    return;
+  }
+
+  if (boss.attack === 'charge') return;
+
+  // fan: abanico, ahora en ráfagas separadas en vez de un goteo constante.
+  const shots = boss.phase === 3 ? 5 : boss.phase === 2 ? 4 : 3;
+  const spread = 0.55;
   for (let i = 0; i < shots; i++) {
-    const angle = shots === 1 ? Math.PI : Math.PI - spread / 2 + (spread * i) / Math.max(1, shots - 1);
-    const b = state.enemyBullets.acquire();
-    spawnBullet(
-      b,
-      boss.x - boss.halfW,
-      boss.y,
-      Math.cos(angle) * ENEMY_BULLET_SPEED,
-      Math.sin(angle) * ENEMY_BULLET_SPEED * 0.6,
-      1,
-      false,
-      false,
-      true
-    );
+    const angle = Math.PI - spread / 2 + (spread * i) / Math.max(1, shots - 1);
+    disparoJefe(state, boss, angle, vel, true);
   }
 }

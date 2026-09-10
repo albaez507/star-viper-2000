@@ -115,7 +115,9 @@ test('the guardian advances through three phases and ends in victory', () => {
   spawnBoss(state.boss, 960, 540); state.boss.revealed = true;
   for (let phase = 1; phase <= 3; phase++) {
     assert.equal(state.boss.phase, phase);
-    spawnBullet(state.playerBullets.acquire(), state.boss.x, state.boss.y, 0, 0, 100, true);
+    // Más que la fase más gorda (180): la prueba mide el paso de fases, no
+    // el equilibrio de vida.
+    spawnBullet(state.playerBullets.acquire(), state.boss.x, state.boss.y, 0, 0, 400, true);
     step(state, idle, dt);
   }
   assert.ok(state.boss.dying);
@@ -347,4 +349,39 @@ test('el arco entra fuera de pantalla y cruza al otro lado', () => {
   assert.ok(arriba.y > 270, `el de arriba se quedó en y=${arriba.y}: no cruzó el centro`);
   assert.ok(abajo.y < 270, `el de abajo se quedó en y=${abajo.y}: no cruzó el centro`);
   assert.ok(arriba.x < 960, 'y avanzan hacia dentro de la pantalla');
+});
+
+test('el jefe encadena aviso, ejecución y recuperación', () => {
+  const state = createWorld(960, 540, 1337, 'sky');
+  state.spawnIndex = SKY_STAGE.length; state.player.invulnTimer = 999;
+  spawnBoss(state.boss, 960, 540); state.boss.revealed = true;
+  const b = state.boss;
+
+  const vistas = new Set();
+  const ataques = new Set();
+  for (let i = 0; i < 900; i++) {
+    step(state, idle, dt);
+    vistas.add(b.stage);
+    if (b.stage === 'execute') ataques.add(b.attack);
+  }
+  assert.deepEqual([...vistas].sort(), ['execute', 'recover', 'telegraph']);
+  assert.ok(ataques.size >= 2, `solo usó ${ataques.size} ataque(s): la fase 1 tiene dos`);
+});
+
+test('durante la recuperación recibe el doble de daño', () => {
+  const golpe = (etapa) => {
+    const state = createWorld(960, 540, 1337, 'sky');
+    state.spawnIndex = SKY_STAGE.length; state.player.invulnTimer = 999;
+    spawnBoss(state.boss, 960, 540); state.boss.revealed = true;
+    // Llevarlo a la etapa buscada sin que nada más le pegue.
+    for (let i = 0; i < 600 && state.boss.stage !== etapa; i++) step(state, idle, dt);
+    assert.equal(state.boss.stage, etapa, `no llegó a ${etapa}`);
+    const antes = state.boss.phaseHp;
+    spawnBullet(state.playerBullets.acquire(), state.boss.x, state.boss.y, 0, 0, 10, true);
+    step(state, idle, dt);
+    return antes - state.boss.phaseHp;
+  };
+  const normal = golpe('execute');
+  const vulnerable = golpe('recover');
+  assert.ok(vulnerable > normal, `recuperación ${vulnerable} no supera a ejecución ${normal}`);
 });

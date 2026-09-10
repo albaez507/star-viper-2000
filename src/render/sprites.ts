@@ -276,8 +276,61 @@ const BOSS_PHASE_COLOR: Record<1 | 2 | 3, string> = {
   3: '#9c1f3c',
 };
 
+/**
+ * Señal de las etapas del jefe.
+ *
+ * Un aviso que no se ve no es un aviso: el ataque llega igual de repente y
+ * se siente injusto en vez de difícil. Y la recuperación tiene que notarse,
+ * porque es la invitación a atacar.
+ *
+ *  - AVISO: un aro que se cierra sobre él marcando cuánto queda.
+ *  - RECUPERACIÓN: brillo verde, "pégame ahora".
+ */
+function drawBossStage(ctx: CanvasRenderingContext2D, b: Boss): void {
+  if (!b.active || !b.revealed || b.dying) return;
+  // Bien fuera de la silueta: el sprite del jefe es enorme y recargado, y un
+  // aro fino pegado a él se pierde entre el oro. Un aviso que hay que buscar
+  // no es un aviso.
+  const r = Math.max(b.halfW, b.halfH) + 46;
+
+  if (b.stage === 'telegraph') {
+    const cierre = Math.min(1, 1 - b.stageTimer / 0.7);
+    ctx.save();
+    // Un lavado rojo detrás para que el aro no compita con el arte.
+    ctx.globalAlpha = 0.22 * cierre;
+    ctx.fillStyle = '#ff5470';
+    ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#ff5470';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r + 34 * (1 - cierre), -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cierre);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if (b.stage === 'recover') {
+    const pulso = 0.6 + Math.sin(b.t * 14) * 0.3;
+    ctx.save();
+    ctx.globalAlpha = 0.16 * pulso;
+    ctx.fillStyle = '#7dffb0';
+    ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.fill();
+
+    ctx.globalAlpha = pulso;
+    ctx.strokeStyle = '#7dffb0';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   if (!b.active || !b.revealed) return;
+  drawBossStage(ctx, b);
   if (skyActive && drawSkySprite(ctx, `boss${b.phase}`, b.x, b.y, b.halfW * 2, b.halfH * 2, b.hitFlash > 0 || b.enrageFlash > 0)) return;
   ctx.save();
   ctx.translate(b.x, b.y);
