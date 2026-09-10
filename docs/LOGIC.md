@@ -531,3 +531,36 @@ assets reales (ver `ASSET_BRIEF.md`) para saber si el juego ya se siente bien
 vestido, y sobre esa base decidir si vale la pena la variedad de entrada/tipo
 de enemigo o si el foco debe ir a otro lado (más niveles, más fases del
 medidor, etc.).
+
+---
+
+## 15. Mando USB (Gamepad API)
+
+`src/input/gamepad.ts`. Una fuente más, al mismo nivel que teclado y táctil:
+`InputManager.sample()` hace un OR de las tres, así que los tres sirven a la
+vez y ninguno tiene prioridad.
+
+Tres cosas que no son obvias y que costaron:
+
+**El navegador no emite eventos de estado.** `gamepadconnected` avisa de la
+conexión, pero para saber si un botón está pulsado hay que pedir el estado
+entero con `navigator.getGamepads()` en cada frame. Por eso `update()` se
+llama desde `sample()` y no desde un listener.
+
+**Un mando conectado pero quieto es invisible.** Por privacidad el navegador
+no lo expone hasta que se pulsa algo. No es un fallo: es la API. Por eso el
+pie de página dice "pulsa un botón para activarlo", y por eso hay un aviso en
+pantalla al conectarse — sin él, enchufar el mando y que no pase nada se lee
+como que no funciona.
+
+**Los mandos genéricos no siguen el mapeo estándar.** Reportan `mapping: ''`
+y colocan botones y ejes donde el fabricante quiso. Por eso no se confía en
+ningún índice: cada dirección se lee de las tres formas en que puede llegar
+(cruceta como botones 12-15, stick en los ejes 0/1, o un "hat" que codifica 8
+direcciones en un solo eje) y vale la que responda.
+
+⚠️ **La trampa del hat:** los gatillos analógicos también son ejes y descansan
+en `-1`, que en la codificación del hat significa ARRIBA. Leerlos sin más hace
+que la nave se vaya sola contra el techo con el mando quieto. Un hat centrado,
+en cambio, se sale del rango (~1.29): solo cuando se ha visto ese valor se da
+el eje por bueno. Esa comprobación es la que evita el fallo.

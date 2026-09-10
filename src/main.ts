@@ -108,6 +108,22 @@ pauseEl.addEventListener('pointerdown', (e) => {
   e.stopPropagation();
 });
 
+// El navegador oculta los mandos hasta que se pulsa un botón, así que el
+// aviso llega al pulsar, no al enchufar. Merece la pena decirlo en pantalla.
+const padToastEl = document.getElementById('pad-toast') as HTMLElement;
+let padToastTimer = 0;
+function avisarMando(texto: string): void {
+  padToastEl.textContent = texto;
+  padToastEl.hidden = false;
+  window.clearTimeout(padToastTimer);
+  padToastTimer = window.setTimeout(() => { padToastEl.hidden = true; }, 3500);
+}
+window.addEventListener('gamepadconnected', (e) => {
+  const id = (e as GamepadEvent).gamepad.id.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  avisarMando(`🎮 MANDO CONECTADO · ${id || 'genérico'}`);
+});
+window.addEventListener('gamepaddisconnected', () => avisarMando('🎮 MANDO DESCONECTADO'));
+
 const audio = new AudioEngine();
 const unlockAudio = (): void => audio.unlock();
 window.addEventListener('pointerdown', unlockAudio, { once: true });

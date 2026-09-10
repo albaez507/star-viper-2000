@@ -31,6 +31,7 @@
   <div id="app">
     <canvas id="game" width="960" height="540"></canvas>
     <div id="hud"></div>
+    <div id="pad-toast" hidden></div>
     <div id="rotate-hint">
       <div class="rotate-icon">📱↻</div>
       <strong>GIRA EL TELÉFONO</strong>
@@ -91,7 +92,8 @@
       </div>
     </div>
   </div>
-  <footer id="flight-footer"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> MOVER</span><span><kbd>ESPACIO</kbd> DISPARAR</span><span><kbd>M</kbd> / <kbd>X</kbd> MISIL</span><span><kbd>P</kbd> PAUSA</span><button id="toggle-lab" type="button" aria-expanded="false">Herramientas de vuelo +</button></footer>
+  <footer id="flight-footer"><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> MOVER</span><span><kbd>ESPACIO</kbd> DISPARAR</span><span><kbd>M</kbd> / <kbd>X</kbd> MISIL</span><span><kbd>P</kbd> PAUSA</span>
+      <span><kbd>🎮</kbd> MANDO USB: PULSA UN BOTÓN PARA ACTIVARLO</span><button id="toggle-lab" type="button" aria-expanded="false">Herramientas de vuelo +</button></footer>
   <section id="style-lab" aria-label="Laboratorio visual de desarrollo">
     <div class="style-lab-heading">
       <span class="dev-label">VISUAL LAB</span>

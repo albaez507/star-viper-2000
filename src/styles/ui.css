@@ -529,3 +529,26 @@ html, body { height: 100dvh; }
   #rotate-hint p { margin: 0; font-size: 12px; line-height: 1.7; color: rgba(234,246,255,.75); }
   #rotate-hint strong { color: var(--sv-accent); font-size: 14px; letter-spacing: 1px; }
 }
+
+/* Aviso de mando conectado. Sin esto, enchufar el control y que no pase nada
+   visible se lee como "no funciona", aunque funcione. */
+#pad-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 9px 16px;
+  background: rgba(13,17,29,.92);
+  border: 1px solid var(--sv-accent);
+  border-radius: 4px;
+  color: var(--sv-accent);
+  font: 10px var(--sv-font);
+  letter-spacing: 1px;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#pad-toast[hidden] { display: none; }

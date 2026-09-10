@@ -1,10 +1,12 @@
 import { emptyInput, type InputFrame } from '../core/types';
 import { KeyboardSource } from './keyboard';
 import { TouchSource } from './touch';
+import { GamepadSource } from './gamepad';
 
 export class InputManager {
   private keyboard = new KeyboardSource();
   private touch: TouchSource | null = null;
+  private pad = new GamepadSource();
 
   private prevMissile = false;
   private prevPower = false;
@@ -16,17 +18,23 @@ export class InputManager {
     this.touch = new TouchSource(dpadEl, fireEl, missileEl);
   }
 
+  /** Nombre del mando conectado, o null. Para avisar en pantalla. */
+  get gamepadName(): string | null { return this.pad.connected; }
+
   sample(): InputFrame {
+    // El mando no emite eventos: hay que preguntarle en cada frame.
+    this.pad.update();
     const kb = this.keyboard;
     const t = this.touch;
+    const g = this.pad;
 
-    const up = kb.up || (t?.up ?? false);
-    const down = kb.down || (t?.down ?? false);
-    const left = kb.left || (t?.left ?? false);
-    const right = kb.right || (t?.right ?? false);
-    const fire = kb.fire || (t?.fire ?? false);
-    const missileHeld = kb.missile || (t?.missile ?? false);
-    const powerHeld = kb.power || (t?.power ?? false);
+    const up = kb.up || (t?.up ?? false) || g.up;
+    const down = kb.down || (t?.down ?? false) || g.down;
+    const left = kb.left || (t?.left ?? false) || g.left;
+    const right = kb.right || (t?.right ?? false) || g.right;
+    const fire = kb.fire || (t?.fire ?? false) || g.fire;
+    const missileHeld = kb.missile || (t?.missile ?? false) || g.missile;
+    const powerHeld = kb.power || (t?.power ?? false) || g.power;
 
     const frame: InputFrame = emptyInput(this.tick++);
     frame.up = up;
@@ -44,14 +52,14 @@ export class InputManager {
   }
 
   consumeStartPressed(): boolean {
-    const held = this.keyboard.start;
+    const held = this.keyboard.start || this.pad.start;
     const pressed = held && !this.prevStart;
     this.prevStart = held;
     return pressed;
   }
 
   consumePausePressed(): boolean {
-    const held = this.keyboard.pauseToggle;
+    const held = this.keyboard.pauseToggle || this.pad.pauseToggle;
     const pressed = held && !this.prevPause;
     this.prevPause = held;
     return pressed;
