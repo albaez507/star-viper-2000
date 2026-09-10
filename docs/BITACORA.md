@@ -613,3 +613,34 @@ fondo propio en vez del starfield genérico.
 que dispersa y se lee como escombros. Reacciona al input — más fuerte al
 acelerar, más flojo al frenar — para que la nave no arrastre una llama fija.
 Sin assets nuevos.
+
+## 2026-09-10 — Aprendizajes del experimento Aether Viper y foco en Sentinel
+
+Se probó una copia independiente llamada **Aether Viper** para explorar una
+dirección anime moderna. La copia no es una rama real de este repositorio: el
+producto canónico sigue siendo `star-viper-2000/`. Se dejó esta diferencia
+explicada en `README.md` y en `docs/DIRECTION_AND_EXPERIMENTS.md` para evitar
+que futuros agentes trabajen en la carpeta equivocada.
+
+El experimento confirmó varias reglas de diseño: mantener aproximadamente el
+75% de la pantalla limpio y dedicado al fondo, preferir fondos oscuros por su
+legibilidad, crear contraste explícito cuando el fondo sea claro y usar
+propulsores procedurales como workaround para dar vida a naves estáticas sin
+necesitar ciclos completos de sprites.
+
+También confirmó que los obstáculos son valiosos cuando se mezclan con otros
+retos: esquivar terreno, recoger upgrades y eliminar enemigos puntuables al
+mismo tiempo. La siguiente prioridad queda fijada en **Órbita Sentinel**:
+cuevas/rocas con colisión letal, enemigos rediseñados como naves o naves
+alienígenas en lugar de insectos y propulsores visibles para jugador y
+enemigos. Las habilidades adicionales de control se dejan para después de
+estabilizar ese núcleo.
+
+## 2026-09-10 — Poses arcade y dos naves nuevas
+
+Las capturas de Gradius 3 muestran una solución importante: la nave no necesita
+rotación libre ni un único sprite por dirección. Se añadieron `PYRE` y `AEGIS`
+con siete poses laterales discretas —neutral, tres hacia arriba y tres hacia
+abajo—. La simulación cambia de pose gradualmente mientras se mantiene la
+dirección vertical y vuelve al centro al soltarla. VULCAN y LANCE se conservan
+sin esta animación hasta rediseñar sus siluetas ambiguas.

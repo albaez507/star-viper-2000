@@ -2,7 +2,7 @@ import { GameLoop } from './core/loop';
 import { createWorld, step, type GameState } from './game/world';
 import { bossWarpMultiplier, spawnBoss } from './game/boss';
 import { STAGES, stageId } from './game/stages';
-import { SHIP_ORDER, SHIPS, nombreArma, MAX_WEAPON_LEVEL, type WeaponLevel } from './game/weapons';
+import { SHIP_ORDER, SHIPS, nombreArma, MAX_WEAPON_LEVEL, type ShipId, type WeaponLevel } from './game/weapons';
 import { loadProgress, banquearItems, comprar, nivelDe, puedeComprar, UPGRADES, type Progress } from './meta/progress';
 import { InputManager } from './input/input';
 import { AudioEngine } from './audio/audio';
@@ -143,7 +143,8 @@ const shake = new ScreenShake();
 const renderer = new Renderer(ctx, starfield, particles, shake);
 
 let selectedStage = stageId(localStorage.getItem('sv-stage'));
-let selectedShip = localStorage.getItem('sv-ship') === 'lance' ? 'lance' as const : 'vulcan' as const;
+const savedShip = localStorage.getItem('sv-ship');
+let selectedShip: ShipId = savedShip && SHIP_ORDER.includes(savedShip as ShipId) ? savedShip as ShipId : 'vulcan';
 let assetsReady = false;
 let state: GameState = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
 let mode: ScreenMode = 'title';
@@ -309,7 +310,8 @@ sectorButtons.forEach(b => b.addEventListener('click', () => {
   selectedStage = stageId(b.dataset.stage ?? null); updateMissionSelection();
 }));
 shipButtons.forEach(b => b.addEventListener('click', () => {
-  selectedShip = b.dataset.ship === 'lance' ? 'lance' : 'vulcan'; updateMissionSelection();
+  if (SHIP_ORDER.includes(b.dataset.ship as ShipId)) selectedShip = b.dataset.ship as ShipId;
+  updateMissionSelection();
 }));
 startEl.addEventListener('click', () => { resetGame(); canvas.focus(); });
 document.getElementById('menu-start')!.addEventListener('click', () => showMenuView('one-player'));

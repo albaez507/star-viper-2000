@@ -1,5 +1,8 @@
 /** Sprite sheets stay at native resolution. We scale once per display size. */
-export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3' | ManagedEnemyVariant;
+export type AnimatedShipId = 'pyre' | 'aegis';
+export type ShipPose = -3 | -2 | -1 | 0 | 1 | 2 | 3;
+export type AnimatedShipSprite = `${AnimatedShipId}-p${ShipPose}`;
+export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3' | ManagedEnemyVariant | AnimatedShipSprite;
 const names: SkySprite[] = ['vulcan', 'lance', 'option', 'core', 'scout', 'sine', 'diver', 'formation', 'swarm', 'harasser', 'rival', 'item', 'bolt', 'orb', 'missile', 'explosion'];
 const frames = new Map<SkySprite, HTMLCanvasElement>();
 
@@ -10,6 +13,12 @@ const DEFAULT_ASSIGNMENTS: Record<ManagedEnemyFamily, ManagedEnemyVariant> = {
   scout: 'scout-v1', diver: 'diver-v1', formation: 'formation-v1',
 };
 const ASSIGNMENT_KEY = 'starviper.sentinel-assets.v1';
+const ANIMATED_SHIPS: AnimatedShipId[] = ['pyre', 'aegis'];
+const POSES: ShipPose[] = [-3, -2, -1, 0, 1, 2, 3];
+
+function animatedShipKeys(ship: AnimatedShipId): AnimatedShipSprite[] {
+  return POSES.map((pose) => `${ship}-p${pose}` as AnimatedShipSprite);
+}
 
 function loadAssignments(): Record<ManagedEnemyFamily, ManagedEnemyVariant> {
   const next = { ...DEFAULT_ASSIGNMENTS };
@@ -98,6 +107,7 @@ export const skyAssetsReady = Promise.all([
   loadSheet('scout-variants', 3, 1, ['scout-v1', 'scout-v2', 'scout-v3'], 'sentinel'),
   loadSheet('diver-variants', 3, 1, ['diver-v1', 'diver-v2', 'diver-v3'], 'sentinel'),
   loadSheet('formation-variants', 3, 1, ['formation-v1', 'formation-v2', 'formation-v3'], 'sentinel'),
+  ...ANIMATED_SHIPS.map((ship) => loadSheet(`${ship}-poses`, 7, 1, animatedShipKeys(ship), 'ships')),
 ]).then(() => { syncAssignmentsToFrames(); });
 
 /**
@@ -154,4 +164,11 @@ export function drawSkySprite(ctx: CanvasRenderingContext2D, name: SkySprite, x:
   ctx.drawImage(scaledFrame(name, frame, pw, ph), -Math.round(dw / 2), -Math.round(dh / 2), dw, dh);
   ctx.restore();
   return true;
+}
+
+/** Dibuja una nave de jugador con la pose arcade correspondiente. */
+export function drawPlayerSkySprite(ctx: CanvasRenderingContext2D, ship: string, pose: number, x: number, y: number, w: number, h: number, flash = false): boolean {
+  if (ship !== 'pyre' && ship !== 'aegis') return drawSkySprite(ctx, ship as SkySprite, x, y, w, h, flash);
+  const safePose = Math.max(-3, Math.min(3, Math.round(pose))) as ShipPose;
+  return drawSkySprite(ctx, `${ship}-p${safePose}` as AnimatedShipSprite, x, y, w, h, flash);
 }

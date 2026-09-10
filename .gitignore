@@ -4,3 +4,7 @@ dist/
 .DS_Store
 *.local
 *.tsbuildinfo
+
+# Material en bruto del generador de imágenes: 19 MB de PNG sin nombrar.
+# Se recorta y se renombra antes de entrar a public/assets/. Nunca al repo.
+src/NEW SRC/

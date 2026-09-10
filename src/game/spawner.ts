@@ -127,6 +127,49 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.halfH = 22;
         break;
       }
+      case 'column': {
+        e.behavior = 'column';
+        e.vx = 0;
+        e.vy = 0;
+        e.t = 0;
+        e.canShoot = true;
+        e.hp = 2;
+        e.maxHp = 2;
+        e.score = 200;
+        // Frena a dos tercios de pantalla: lo bastante cerca para agobiar,
+        // lo bastante lejos para que te dé tiempo a leerlo y apartarte.
+        e.anchorX = state.worldW * 0.66;
+        // Su hueco dentro de la fila. El grupo se centra sobre el jugador
+        // conservando la forma, en vez de amontonarse en un punto.
+        e.divingVy = (i - (wave.count - 1) / 2) * 46;
+        // -1 = "aún no he llegado a mi puesto", lo pone el comportamiento.
+        e.anchorY = -1;
+        e.baseY = state.worldH / 2 + e.divingVy;
+        e.y = e.baseY;
+        // Escalonadas: entran una detrás de otra, no como una pared.
+        e.x = state.worldW + 40 + i * 34;
+        break;
+      }
+      case 'arc': {
+        e.behavior = 'arc';
+        e.t = 0;
+        e.canShoot = false;
+        e.hp = 1;
+        e.maxHp = 1;
+        e.score = 150;
+        // La mitad entran por arriba y la mitad por abajo, curvando hacia el
+        // centro: así las dos mitades se CRUZAN por la pantalla, que es lo
+        // que se lee como coreografía. Antes todo entraba por el mismo borde.
+        const porArriba = i % 2 === 0;
+        e.x = state.worldW + 30 + i * 30;
+        e.y = porArriba ? -30 : state.worldH + 30;
+        // Ángulo inicial apuntando hacia dentro, y sentido del giro.
+        // Más picado que 0.72: entra cortando hacia el lado contrario.
+        e.divingVx = porArriba ? Math.PI * 0.605 : -Math.PI * 0.605;
+        e.divingVy = porArriba ? 1 : -1;
+        e.baseY = e.y;
+        break;
+      }
       case 'hazard': {
         e.behavior = 'hazard';
         e.indestructible = true;

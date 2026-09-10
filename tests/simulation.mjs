@@ -19,7 +19,10 @@ test('both sectors have an ordered, complete timeline and distinct encounters', 
     assert.ok('boss' in stage.events.at(-1));
     for (let i = 1; i < stage.events.length; i++) assert.ok(stage.events[i].t > stage.events[i - 1].t);
   }
-  assert.equal(new Set(SKY_STAGE.filter(e => 'kind' in e).map(e => e.kind)).size, 8);
+  // Mínimo, no exacto: lo que importa es que haya variedad, y añadir un
+  // patrón nuevo no debería romper la prueba.
+  const kinds = new Set(SKY_STAGE.filter(e => 'kind' in e).map(e => e.kind));
+  assert.ok(kinds.size >= 8, `solo ${kinds.size} tipos de encuentro`);
   assert.notDeepEqual(STAGES.orbit.events, SKY_STAGE);
 });
 
@@ -300,4 +303,48 @@ test('el misil ignora los obstáculos: son indestructibles', () => {
   const m = state.missiles.active()[0];
   for (let i = 0; i < 25; i++) step(state, idle, dt);
   assert.ok(Math.abs(m.vy) < 1, `vy ${m.vy}: persiguió una roca que no se puede matar`);
+});
+
+test('la fila frena y se alinea a tu altura una sola vez', () => {
+  const state = createWorld(960, 540, 33, 'sky');
+  const idx = SKY_STAGE.findIndex(e => e.kind === 'column');
+  state.spawnIndex = idx; state.stageTime = SKY_STAGE[idx].t; updateSpawner(state);
+  const fila = state.enemies.active();
+  assert.ok(fila.length >= 4, 'sale la fila entera');
+
+  // El jugador se coloca arriba antes de que lleguen a su puesto.
+  state.player.y = 150;
+  for (let i = 0; i < 200; i++) step(state, idle, dt);
+
+  const vivos = state.enemies.active().filter(e => e.behavior === 'column');
+  assert.ok(vivos.length > 0, 'siguen en pantalla');
+  const centro = vivos.reduce((s, e) => s + e.y, 0) / vivos.length;
+  assert.ok(Math.abs(centro - 150) < 60, `la fila se centró en ${centro}, no en 150`);
+
+  // Y ahora el jugador se va abajo: NO deben seguirle.
+  state.player.y = 430;
+  const antes = vivos.map(e => e.y);
+  for (let i = 0; i < 90; i++) step(state, idle, dt);
+  const movido = vivos.reduce((max, e, i) => Math.max(max, Math.abs(e.y - antes[i])), 0);
+  assert.ok(movido < 30, `siguieron al jugador ${movido}px: deben alinearse una vez, no perseguir`);
+});
+
+test('el arco entra fuera de pantalla y cruza al otro lado', () => {
+  const state = createWorld(960, 540, 33, 'sky');
+  const idx = SKY_STAGE.findIndex(e => e.kind === 'arc');
+  state.spawnIndex = idx; state.stageTime = SKY_STAGE[idx].t; updateSpawner(state);
+  const grupo = state.enemies.active();
+
+  // Entran por arriba y por abajo, no todos por el borde derecho como el resto.
+  assert.ok(grupo.some(e => e.y < 0), 'algunos entran por arriba');
+  assert.ok(grupo.some(e => e.y > 540), 'y otros por abajo');
+
+  const arriba = grupo.find(e => e.y < 0);
+  const abajo = grupo.find(e => e.y > 540);
+  for (let i = 0; i < 150; i++) step(state, idle, dt);
+  // Lo que importa no es que curven, es que se CRUCEN: el que entró por
+  // arriba tiene que acabar por debajo del que entró por abajo.
+  assert.ok(arriba.y > 270, `el de arriba se quedó en y=${arriba.y}: no cruzó el centro`);
+  assert.ok(abajo.y < 270, `el de abajo se quedó en y=${abajo.y}: no cruzó el centro`);
+  assert.ok(arriba.x < 960, 'y avanzan hacia dentro de la pantalla');
 });

@@ -28,6 +28,13 @@ crear otro repo. No empujar a otro sitio.
 
 Cualquier cambio se commitea y se pushea a **este** `origin/main`.
 
+### Variante experimental: Aether Viper
+
+`aether-viper/` es una copia Git independiente usada para probar una dirección
+anime moderna. No es una rama del repositorio canónico ni sustituye a Star
+Viper 2000. El original sigue siendo esta carpeta; los aprendizajes de la
+prueba están resumidos en `docs/DIRECTION_AND_EXPERIMENTS.md`.
+
 ---
 
 ## Cómo correrlo
@@ -93,6 +100,12 @@ enjambre no suelta core. Detalle en `docs/LOGIC.md` y `docs/HANGAR.md`.
 
 ## To-do
 
+### Prioridad actual
+
+Terminar primero **Órbita Sentinel**: jugabilidad, colisiones con rocas/cuevas,
+enemigos rediseñados como naves y encuentros que mezclen evasión, upgrades y
+puntuación. Jardines del Céfiro queda como siguiente entorno del viaje.
+
 Lista viva. Un agente que cierre un punto lo marca `[x]` y lo anota en
 `docs/BITACORA.md`. No inventar un segundo tablero.
 
@@ -157,6 +170,7 @@ de juego, sin dependencias de runtime. Deploy previsto: Cloudflare Pages.
 | `docs/HANGAR.md` | Items persistentes |
 | `docs/NAVE_Y_PIEZAS.md` | Panel de nave por ranuras y piezas con trade-off (análisis) |
 | `docs/ASSET_BRIEF.md` | Brief de arte: estilo detallado, paleta, tamaños, encargo actual |
+| `docs/DIRECTION_AND_EXPERIMENTS.md` | Diferencia entre repositorios, aprendizajes y prioridad actual |
 
 El código de simulación vive en `src/game/` y **no** toca DOM, Canvas ni
 `Math.random()`. El arte y el menú viven en `src/render/` y `src/main.ts`.

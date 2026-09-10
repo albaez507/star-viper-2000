@@ -42,6 +42,14 @@ export const CHARGE_MIN_RATIO = 0.28;
 export const CHARGE_DMG_MIN = 2;
 export const CHARGE_DMG_MAX = 8;
 
+/**
+ * Pose visual discreta, al estilo de los shooters arcade clásicos:
+ * 0 = nivelado, negativo = morro arriba, positivo = morro abajo.
+ */
+export type ShipPitch = -3 | -2 | -1 | 0 | 1 | 2 | 3;
+export const PITCH_STEP_TIME = 0.12;
+export const PITCH_RETURN_TIME = 0.08;
+
 export function fireCooldownFor(ship: ShipId, level: WeaponLevel): number {
   return cadenciaDe(ship, level);
 }
@@ -51,6 +59,9 @@ export type Player = {
   y: number;
   speedLevel: number;
   ship: ShipId;
+  pitch: ShipPitch;
+  /** Tiempo acumulado desde el último cambio de pose. */
+  pitchTimer: number;
   weaponLevel: WeaponLevel;
   /** Cores recogidos en esta partida. El nivel se deriva de aquí. */
   cores: number;
@@ -79,6 +90,8 @@ export function createPlayer(x: number, y: number): Player {
     x, y,
     speedLevel: 0,
     ship: 'vulcan',
+    pitch: 0,
+    pitchTimer: 0,
     weaponLevel: 0,
     cores: 0,
     fireCooldown: 0,
@@ -97,6 +110,36 @@ export function createPlayer(x: number, y: number): Player {
     lives: 3,
     hitFlash: 0,
   };
+}
+
+function pitchStep(value: ShipPitch, direction: -1 | 1): ShipPitch {
+  return Math.max(-3, Math.min(3, value + direction)) as ShipPitch;
+}
+
+/**
+ * Cambia la pose por escalones y con un pequeño retraso. Mantener arriba no
+ * gira la nave de golpe: primero inclina un poco, luego más, hasta el máximo.
+ * Al soltar, vuelve a nivelarse en pasos rápidos para no dejar una pose vieja.
+ */
+export function updatePlayerPitch(p: Player, verticalInput: number, dt: number): void {
+  const direction = verticalInput < 0 ? -1 : verticalInput > 0 ? 1 : 0;
+  const target = direction === 0 ? 0 : direction * 3;
+  const stepTime = direction === 0 ? PITCH_RETURN_TIME : PITCH_STEP_TIME;
+
+  p.pitchTimer += dt;
+  while (p.pitchTimer >= stepTime && p.pitch !== target) {
+    p.pitchTimer -= stepTime;
+    if (target === 0) {
+      p.pitch = p.pitch > 0 ? pitchStep(p.pitch, -1) : p.pitch < 0 ? pitchStep(p.pitch, 1) : 0;
+    } else if (p.pitch === 0 || Math.sign(p.pitch) === direction) {
+      p.pitch = pitchStep(p.pitch, direction as -1 | 1);
+    } else {
+      // Invertir dirección primero pasa por una pose neutral, como una nave
+      // que físicamente tiene que deshacer su inclinación anterior.
+      p.pitch = p.pitch > 0 ? pitchStep(p.pitch, -1) : pitchStep(p.pitch, 1);
+    }
+  }
+  if (p.pitch === target) p.pitchTimer = 0;
 }
 
 export function playerSpeed(p: Player): number {

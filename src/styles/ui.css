@@ -429,6 +429,13 @@ body[data-stage="sky"] #game { filter: none; }
 .ship-portrait { display: block; flex-shrink: 0; width: 45px; height: 45px; background-image: url('/assets/sky/sprites.png'); background-size: 400% 400%; image-rendering: pixelated; }
 .vulcan-portrait { background-position: 0 0; }
 .lance-portrait { background-position: 33.3333% 0; }
+.pyre-portrait, .aegis-portrait {
+  background-size: 700% 100%;
+  background-position: 0 50%;
+  image-rendering: auto;
+}
+.pyre-portrait { background-image: url('/assets/ships/pyre-poses.png'); }
+.aegis-portrait { background-image: url('/assets/ships/aegis-poses.png'); }
 #start-mission { display: flex; justify-content: space-between; width: 100%; margin-top: 21px; padding: 15px 18px; color: #233f45; background: #f4d798; border: 1px solid #fff0be; box-shadow: 0 3px #a89060; font: bold 12px var(--sv-font); letter-spacing: 1.5px; }
 #start-mission:hover { background: #ffe9b3; }
 #start-mission:disabled { opacity: .55; cursor: wait; }

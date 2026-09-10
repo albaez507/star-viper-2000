@@ -7,7 +7,7 @@ import type { Missile } from '../game/missiles';
 import type { PowerCore } from '../game/powercore';
 import type { Item } from '../game/items';
 import type { Boss } from '../game/boss';
-import { drawSkySprite, skyActive } from './sky-assets';
+import { drawPlayerSkySprite, drawSkySprite, skyActive, type SkySprite } from './sky-assets';
 
 const ENEMY_COLORS: Record<string, string> = {
   scout: '#ff5470',
@@ -72,7 +72,7 @@ function drawCharge(ctx: CanvasRenderingContext2D, p: Player): void {
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 20) % 2 === 0) return;
   drawCharge(ctx, p);
-  if (skyActive && drawSkySprite(ctx, p.ship, p.x, p.y, 48, 32, p.hitFlash > 0)) {
+  if (skyActive && drawPlayerSkySprite(ctx, p.ship, p.pitch, p.x, p.y, 52, 34, p.hitFlash > 0)) {
     if (p.shield > 0) {
       ctx.save(); ctx.strokeStyle = '#fff5b3'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(p.x, p.y, 31, 25, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
@@ -140,12 +140,24 @@ export function drawOption(ctx: CanvasRenderingContext2D, o: Option): void {
   ctx.restore();
 }
 
+/**
+ * Los patrones nuevos todavía no tienen sprite propio, así que toman
+ * prestado el que mejor comunica lo que hacen: la fila que frena se lee como
+ * escuadrón (`formation`), y los que entran en arco como algo rápido y ligero
+ * (`swarm`). Cuando llegue arte suya, esto se cae.
+ */
+function spriteDe(e: Enemy): SkySprite {
+  if (e.behavior === 'column') return 'formation';
+  if (e.behavior === 'arc') return 'swarm';
+  return e.behavior as SkySprite;
+}
+
 export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   if (e.behavior === 'hazard') {
     drawHazard(ctx, e);
     return;
   }
-  if (skyActive && drawSkySprite(ctx, e.behavior, e.x, e.y, e.halfW * 2 + 8, e.halfH * 2 + 8, e.hitFlash > 0)) {
+  if (skyActive && drawSkySprite(ctx, spriteDe(e), e.x, e.y, e.halfW * 2 + 8, e.halfH * 2 + 8, e.hitFlash > 0)) {
     if (e.formationId >= 0 || e.dropsItem) {
       ctx.save(); ctx.strokeStyle = e.dropsItem ? '#fff9bd' : '#73569d';
       ctx.lineWidth = 1; ctx.setLineDash([2, 4]);

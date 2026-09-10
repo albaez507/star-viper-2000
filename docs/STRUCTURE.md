@@ -15,7 +15,7 @@ star-viper-2000/
 ├── vite.config.ts
 ├── public/
 │   └── favicon.svg
-├── docs/                       STRUCTURE.md · LOGIC.md · BITACORA.md
+├── docs/                       STRUCTURE.md · LOGIC.md · BITACORA.md · DIRECTION_AND_EXPERIMENTS.md
 └── src/
     ├── main.ts                 Arranque: crea canvas, loop, input, audio, render
     │

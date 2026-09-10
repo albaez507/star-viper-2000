@@ -1,6 +1,6 @@
 export type WaveSpawn = {
   t: number;
-  kind: 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'hazard';
+  kind: 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'hazard' | 'column' | 'arc';
   count: number;
   shape?: 'v' | 'column' | 'line';
 };

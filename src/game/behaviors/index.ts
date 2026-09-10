@@ -7,6 +7,8 @@ import { swarm } from './swarm';
 import { harasser } from './harasser';
 import { rival } from './rival';
 import { hazard } from './hazard';
+import { column } from './column';
+import { arc } from './arc';
 
 export type BehaviorContext = { playerX: number; playerY: number };
 
@@ -19,4 +21,6 @@ export const behaviors: Record<string, (e: Enemy, dt: number, ctx: BehaviorConte
   harasser: (e, dt, ctx) => harasser(e, dt, ctx.playerX, ctx.playerY),
   rival: (e, dt, ctx) => rival(e, dt, ctx.playerX, ctx.playerY),
   hazard: (e, dt) => hazard(e, dt),
+  column: (e, dt, ctx) => column(e, dt, ctx.playerY),
+  arc: (e, dt) => arc(e, dt),
 };

@@ -5,7 +5,7 @@ import { EventBus } from '../core/events';
 import { hits } from './collision';
 import { dist } from '../core/math';
 
-import { createPlayer, movePlayer, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H, DASH_SPEED_MULT, DASH_TIME, DASH_COOLDOWN, CHARGE_TIME, CHARGE_MIN_RATIO, CHARGE_DMG_MIN, CHARGE_DMG_MAX } from './player';
+import { createPlayer, movePlayer, updatePlayerPitch, type Player, fireCooldownFor, missileCooldownFor, INVULN_TIME, PLAYER_HALF_W, PLAYER_HALF_H, DASH_SPEED_MULT, DASH_TIME, DASH_COOLDOWN, CHARGE_TIME, CHARGE_MIN_RATIO, CHARGE_DMG_MIN, CHARGE_DMG_MAX } from './player';
 import { PositionHistory } from './history';
 import { createOptions, updateOptions, type Option } from './options';
 import { makeEnemy, type Enemy } from './enemy';
@@ -122,6 +122,7 @@ function stepPlayer(state: GameState, input: InputFrame, dt: number): void {
 
   let dx = (input.right ? 1 : 0) - (input.left ? 1 : 0);
   let dy = (input.down ? 1 : 0) - (input.up ? 1 : 0);
+  updatePlayerPitch(p, dy, dt);
 
   if (input.dash && p.dashTimer <= 0 && p.dashCooldown <= 0) {
     // Va hacia donde estés pulsando; sin nada pulsado, hacia delante. Es lo

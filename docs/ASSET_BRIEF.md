@@ -10,6 +10,16 @@ dibuja hoy por código (triángulos, rectángulos). Más adelante se reemplazar�
 por trabajo de artistas humanos, así que el objetivo aquí es **desbloquear el
 desarrollo**, no producir el arte definitivo.
 
+## ⚠️ Estado de este brief
+
+Este documento describe principalmente el lote de arte que ya existe y debe
+leerse como referencia técnica, no como una orden para repetirlo. Para la
+siguiente iteración de **Órbita Sentinel**, la nave del jugador se conserva,
+pero el rediseño de enemigos queda pendiente: no generar nuevos enemigos
+insectoides. La dirección actual pide naves hostiles o naves alienígenas con
+propulsores visibles y siluetas diferenciadas. Ver
+`docs/DIRECTION_AND_EXPERIMENTS.md`, que tiene prioridad para esa decisión.
+
 ## ⚑ ENCARGO ACTUAL — empieza por aquí
 
 > Actualizado el 2026-09-09. El resto del documento es referencia. **Esto es
@@ -222,7 +232,12 @@ diseñar: que la capa base admita variantes sin rehacer el resto.
 
 ---
 
-## 6. PRIORIDAD 1 — Enemigos
+## 6. PRIORIDAD 1 — Enemigos existentes / rediseño pendiente
+
+> Las tablas siguientes documentan los nombres, tamaños y comportamientos del
+> lote actual. No implican que debamos conservar la estética de insectos. Antes
+> de encargar reemplazos, rediseñar cada familia como nave o nave alienígena,
+> manteniendo su rol jugable y su orientación.
 
 **Todos miran a la izquierda.** Cada uno debe distinguirse por **silueta**, no
 solo por color: el jugador tiene que reconocer el patrón de movimiento por la

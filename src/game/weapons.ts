@@ -9,7 +9,7 @@
  * Ver `docs/ARMAS.md` para el porqué del cambio.
  */
 
-export type ShipId = 'vulcan' | 'lance';
+export type ShipId = 'vulcan' | 'lance' | 'pyre' | 'aegis';
 
 /** 0 = arma básica (sin core todavía). 1-3 = arma característica por nivel. */
 export type WeaponLevel = 0 | 1 | 2 | 3;
@@ -68,9 +68,25 @@ export const SHIPS: Record<ShipId, ShipDef> = {
     velocidad: 1.18,
     vidasIniciales: 2,
   },
+  pyre: {
+    id: 'pyre',
+    nombre: 'PYRE',
+    armaNombre: 'CINDER',
+    rasgo: 'Agresiva. Ráfaga frontal y aceleración alta, pero frágil.',
+    velocidad: 1.06,
+    vidasIniciales: 2,
+  },
+  aegis: {
+    id: 'aegis',
+    nombre: 'AEGIS',
+    armaNombre: 'PULSE',
+    rasgo: 'Pesada. Disparo ancho y resistente, pero más lenta.',
+    velocidad: 0.88,
+    vidasIniciales: 4,
+  },
 };
 
-export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance'];
+export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance', 'pyre', 'aegis'];
 
 /**
  * Cadencia en segundos.
@@ -82,6 +98,8 @@ export const SHIP_ORDER: ShipId[] = ['vulcan', 'lance'];
 export function fireCooldownFor(ship: ShipId, level: WeaponLevel): number {
   if (level === 0) return 0.22;
   if (ship === 'vulcan') return level >= 3 ? 0.10 : level === 2 ? 0.12 : 0.14;
+  if (ship === 'pyre') return level >= 3 ? 0.11 : level === 2 ? 0.13 : 0.15;
+  if (ship === 'aegis') return level >= 3 ? 0.22 : level === 2 ? 0.25 : 0.28;
   return level >= 3 ? 0.36 : 0.38;
 }
 
@@ -118,6 +136,32 @@ export function disparosDe(ship: ShipId, level: WeaponLevel): DisparoSpec[] {
       { offsetY: -8, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
       { offsetY: 0, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
       { offsetY: 8, vx: 620, vy: 0, dmg: 1, homing: false, pierce: false },
+    ];
+  }
+
+  if (ship === 'pyre') {
+    if (level === 1) {
+      return [
+        { offsetY: -5, vx: 680, vy: 0, dmg: 1, homing: false, pierce: false },
+        { offsetY: 5, vx: 680, vy: 0, dmg: 1, homing: false, pierce: false },
+      ];
+    }
+    return [
+      { offsetY: -9, vx: 700, vy: 0, dmg: 1, homing: false, pierce: false },
+      { offsetY: 0, vx: 720, vy: 0, dmg: 1, homing: false, pierce: false },
+      { offsetY: 9, vx: 700, vy: 0, dmg: 1, homing: false, pierce: false },
+    ];
+  }
+
+  if (ship === 'aegis') {
+    if (level === 1) {
+      return [{ offsetY: 0, vx: 440, vy: 0, dmg: 2, homing: false, pierce: true }];
+    }
+    const damage = level >= 3 ? 2 : 1;
+    return [
+      { offsetY: -5, vx: 470, vy: -45, dmg: damage, homing: false, pierce: true },
+      { offsetY: 0, vx: 500, vy: 0, dmg: damage, homing: false, pierce: true },
+      { offsetY: 5, vx: 470, vy: 45, dmg: damage, homing: false, pierce: true },
     ];
   }
 
