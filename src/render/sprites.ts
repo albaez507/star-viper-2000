@@ -7,7 +7,7 @@ import type { Missile } from '../game/missiles';
 import type { PowerCore } from '../game/powercore';
 import type { Item } from '../game/items';
 import type { Boss } from '../game/boss';
-import { drawPlayerSkySprite, drawSkySprite, skyActive, type SkySprite } from './sky-assets';
+import { drawPlayerSkySprite, drawSkySprite, skyActive, HAZARD_SPRITES, type SkySprite } from './sky-assets';
 
 const ENEMY_COLORS: Record<string, string> = {
   scout: '#ff5470',
@@ -231,6 +231,13 @@ function drawEnemyHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
  * sentiría estafado. La silueta tiene que decir "esto se esquiva".
  */
 function drawHazard(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  // Cuatro siluetas distintas, elegidas por id: dos rocas seguidas iguales
+  // se leen como un patrón repetido y delatan que es lo mismo copiado.
+  const variante = HAZARD_SPRITES[Math.abs(e.id) % HAZARD_SPRITES.length];
+  // Sin destello al recibir impactos: un obstáculo no reacciona, y esa
+  // ausencia es lo que enseña que no se puede matar.
+  if (skyActive && drawSkySprite(ctx, variante, e.x, e.y, e.halfW * 2 + 14, e.halfH * 2 + 14, false)) return;
+
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.fillStyle = '#6b6f7a';

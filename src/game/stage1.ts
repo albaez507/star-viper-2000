@@ -21,11 +21,17 @@ export function isBossSpawn(e: StageEvent): e is BossSpawn {
 // no exige perfección absoluta.
 export const STAGE_1: StageEvent[] = [
   { t: 2.0, kind: 'scout', count: 5 },
-  { t: 8.0, kind: 'formation', count: 6, shape: 'v' },
+  // Primer obstáculo solo, sin enemigos encima: la primera vez que ves una
+  // roca tienes que poder dispararle, ver que no pasa nada y esquivarla sin
+  // que además te estén disparando.
+  { t: 6.0, kind: 'hazard', count: 2 },
+  { t: 10.0, kind: 'formation', count: 6, shape: 'v' },
   { t: 16.0, kind: 'sine', count: 4 },
   { t: 22.0, kind: 'formation', count: 6, shape: 'column' },
   { t: 28.0, kind: 'harasser', count: 1 },
   { t: 34.0, kind: 'diver', count: 3 },
+  // Ya mezclados con enemigos, y con los móviles dentro.
+  { t: 37.0, kind: 'hazard', count: 4 },
   { t: 40.0, kind: 'formation', count: 6, shape: 'line' },
   { t: 46.0, kind: 'scout', count: 6 },
   { t: 52.0, kind: 'formation', count: 6, shape: 'v' },
@@ -34,6 +40,7 @@ export const STAGE_1: StageEvent[] = [
   { t: 58.0, kind: 'rival', count: 1 },
   { t: 68.0, kind: 'formation', count: 6, shape: 'column' },
   { t: 74.0, kind: 'harasser', count: 1 },
+  { t: 76.0, kind: 'hazard', count: 5 },
   { t: 78.0, kind: 'sine', count: 5 },
   { t: 84.0, kind: 'diver', count: 4 },
   { t: 90.0, kind: 'formation', count: 6, shape: 'line' },

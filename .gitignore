@@ -8,3 +8,7 @@ dist/
 # Material en bruto del generador de imágenes: 19 MB de PNG sin nombrar.
 # Se recorta y se renombra antes de entrar a public/assets/. Nunca al repo.
 src/NEW SRC/
+
+# Material en bruto del generador para el sector Sentinel. Se recorta y se
+# renombra antes de entrar a public/assets/. Nunca al repo.
+src/SENTINEL ASSETS/

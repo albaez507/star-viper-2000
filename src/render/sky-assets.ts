@@ -2,7 +2,10 @@
 export type AnimatedShipId = 'pyre' | 'aegis';
 export type ShipPose = -3 | -2 | -1 | 0 | 1 | 2 | 3;
 export type AnimatedShipSprite = `${AnimatedShipId}-p${ShipPose}`;
-export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3' | ManagedEnemyVariant | AnimatedShipSprite;
+export type HazardSprite = 'hazard-1' | 'hazard-2' | 'hazard-3' | 'hazard-4';
+export const HAZARD_SPRITES: HazardSprite[] = ['hazard-1', 'hazard-2', 'hazard-3', 'hazard-4'];
+
+export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3' | ManagedEnemyVariant | AnimatedShipSprite | HazardSprite;
 const names: SkySprite[] = ['vulcan', 'lance', 'option', 'core', 'scout', 'sine', 'diver', 'formation', 'swarm', 'harasser', 'rival', 'item', 'bolt', 'orb', 'missile', 'explosion'];
 const frames = new Map<SkySprite, HTMLCanvasElement>();
 
@@ -150,6 +153,9 @@ async function loadSheet(file: string, columns: number, rows: number, keys: SkyS
 export const skyAssetsReady = Promise.all([
   loadSheet('sprites', 4, 4, names),
   loadSheet('guardian', 3, 1, ['boss1', 'boss2', 'boss3']),
+  // Rocas y chatarra reales para los obstáculos. Recorte propio por pieza:
+  // son sprites independientes, no fotogramas de una animación.
+  loadSheet('hazards', 4, 1, HAZARD_SPRITES, 'sentinel'),
   loadSheet('scout-variants', 3, 1, ['scout-v1', 'scout-v2', 'scout-v3'], 'sentinel'),
   loadSheet('diver-variants', 3, 1, ['diver-v1', 'diver-v2', 'diver-v3'], 'sentinel'),
   loadSheet('formation-variants', 3, 1, ['formation-v1', 'formation-v2', 'formation-v3'], 'sentinel'),

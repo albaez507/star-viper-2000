@@ -385,3 +385,16 @@ test('durante la recuperación recibe el doble de daño', () => {
   const vulnerable = golpe('recover');
   assert.ok(vulnerable > normal, `recuperación ${vulnerable} no supera a ejecución ${normal}`);
 });
+
+test('el sector Órbita genera enemigos y obstáculos en sus tiempos', () => {
+  const state = createWorld(960, 540, 5, 'orbit');
+  let vioEnemigos = false, vioRocas = false;
+  for (let t = 0; t < 60 * 45; t++) {
+    step(state, idle, dt);
+    const act = state.enemies.active();
+    if (act.length > 0) vioEnemigos = true;
+    if (act.some(e => e.behavior === 'hazard')) vioRocas = true;
+  }
+  assert.ok(vioEnemigos, 'Órbita no generó ni un enemigo en 45 s');
+  assert.ok(vioRocas, 'Órbita no generó obstáculos');
+});
