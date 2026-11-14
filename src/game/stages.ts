@@ -1,6 +1,6 @@
 import { STAGE_1, type StageEvent } from './stage1';
 
-export type StageId = 'orbit' | 'sky';
+export type StageId = 'orbit' | 'sky' | 'ocean';
 export const SKY_STAGE: StageEvent[] = [
   { t: 2, kind: 'scout', count: 4 },
   // Primer obstáculo solo, sin enemigos encima: la primera vez que ves una
@@ -33,9 +33,29 @@ export const SKY_STAGE: StageEvent[] = [
   { t: 104, boss: 'sentinel' },
 ];
 
+/** Sector 03: one complete underwater arcade run. */
+export const OCEAN_STAGE: StageEvent[] = [
+  { t: 2, kind: 'scout', count: 4 },
+  { t: 6, kind: 'cage', count: 1 },
+  { t: 10, kind: 'hazard', count: 3 },
+  { t: 14, kind: 'formation', count: 6, shape: 'v' },
+  { t: 22, kind: 'sine', count: 5 },
+  { t: 27, kind: 'cage', count: 1 },
+  { t: 31, kind: 'diver', count: 3 },
+  { t: 38, kind: 'formation', count: 6, shape: 'column' },
+  { t: 45, kind: 'arc', count: 8 },
+  { t: 50, kind: 'harasser', count: 1 },
+  { t: 58, kind: 'hazard', count: 5 },
+  { t: 64, kind: 'cage', count: 1 },
+  { t: 69, kind: 'formation', count: 6, shape: 'line' },
+  { t: 78, kind: 'swarm', count: 12 },
+  { t: 94, boss: 'sentinel' },
+];
+
 export const STAGES: Record<StageId, { name: string; subtitle: string; boss: string; events: StageEvent[] }> = {
   orbit: { name: 'Órbita Sentinel', subtitle: 'Sector 01 · espacio profundo', boss: 'SENTINEL', events: STAGE_1 },
   sky: { name: 'Jardines del Céfiro', subtitle: 'Sector 02 · archipiélago celeste', boss: 'GUARDIÁN DEL CÉFIRO', events: SKY_STAGE },
+  ocean: { name: 'Abismo de Nereia', subtitle: 'Sector 03 · ruinas bajo la marea', boss: 'LEVIATÁN DE NEREIA', events: OCEAN_STAGE },
 };
 
-export function stageId(value: string | null): StageId { return value === 'orbit' ? 'orbit' : 'sky'; }
+export function stageId(value: string | null): StageId { return value === 'orbit' ? 'orbit' : 'ocean'; }

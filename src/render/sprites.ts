@@ -7,7 +7,7 @@ import type { Missile } from '../game/missiles';
 import type { PowerCore } from '../game/powercore';
 import type { Item } from '../game/items';
 import type { Boss } from '../game/boss';
-import { drawPlayerSkySprite, drawSkySprite, skyActive, HAZARD_SPRITES, type SkySprite } from './sky-assets';
+import { drawPlayerSkySprite, drawSkySprite, skyActive, oceanActive, HAZARD_SPRITES, type SkySprite } from './sky-assets';
 
 const ENEMY_COLORS: Record<string, string> = {
   scout: '#ff5470',
@@ -72,6 +72,20 @@ function drawCharge(ctx: CanvasRenderingContext2D, p: Player): void {
 export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player): void {
   if (p.invulnTimer > 0 && Math.floor(p.invulnTimer * 20) % 2 === 0) return;
   drawCharge(ctx, p);
+  if (oceanActive) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    if (p.hitFlash > 0) ctx.filter = 'brightness(3)';
+    if (!drawAsset(ctx, 'ocean/submarine.png', 70, 48)) { ctx.restore(); }
+    else {
+    ctx.strokeStyle = 'rgba(142, 255, 241, 0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, 39, 25, 0, 0, Math.PI * 2); ctx.stroke();
+    if (p.shield > 0) { ctx.strokeStyle = '#ffe9a6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, 44, 30, 0, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.restore();
+    return;
+    }
+  }
   if (skyActive && drawPlayerSkySprite(ctx, p.ship, p.pitch, p.x, p.y, 52, 34, p.hitFlash > 0)) {
     if (p.shield > 0) {
       ctx.save(); ctx.strokeStyle = '#fff5b3'; ctx.lineWidth = 2;
@@ -153,6 +167,10 @@ function spriteDe(e: Enemy): SkySprite {
 }
 
 export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  if (oceanActive) {
+    drawOceanEnemy(ctx, e);
+    return;
+  }
   if (e.behavior === 'hazard') {
     drawHazard(ctx, e);
     return;
@@ -208,6 +226,40 @@ export function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
   drawEnemyHealthBar(ctx, e);
 }
 
+function drawOceanEnemy(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  ctx.save(); ctx.translate(e.x, e.y);
+  const flash = e.hitFlash > 0;
+  if (e.behavior === 'cage') {
+    const pulse = 1 + Math.sin(e.t * 7) * 0.08;
+    ctx.strokeStyle = '#ffd47a'; ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(11, 49, 61, .9)';
+    ctx.beginPath(); ctx.roundRect(-e.halfW, -e.halfH, e.halfW * 2, e.halfH * 2, 5); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#78f3dc'; ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 8 * pulse, -e.halfH + 3); ctx.lineTo(i * 8 * pulse, e.halfH - 3); ctx.stroke(); }
+    ctx.fillStyle = '#ffd47a'; ctx.beginPath(); ctx.arc(0, 0, 5 + Math.sin(e.t * 8) * 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  if (e.behavior === 'hazard') {
+    ctx.fillStyle = '#132d3b'; ctx.strokeStyle = '#4e9c9a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-e.halfW, 7); ctx.lineTo(-11, -12); ctx.lineTo(3, -e.halfH); ctx.lineTo(e.halfW, -5); ctx.lineTo(13, 14); ctx.lineTo(-2, e.halfH); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#90fff0'; ctx.globalAlpha = 0.6; ctx.fillRect(-4, -4, 8, 3); ctx.restore(); return;
+  }
+  const color = flash ? '#ffffff' : e.behavior === 'diver' ? '#ff8aa8' : e.behavior === 'formation' || e.behavior === 'column' ? '#9d8cff' : e.behavior === 'swarm' || e.behavior === 'arc' ? '#65f1e0' : '#ffcc72';
+  ctx.fillStyle = color; ctx.strokeStyle = '#092332'; ctx.lineWidth = 2;
+  if (e.behavior === 'diver' || e.behavior === 'sine') {
+    ctx.beginPath(); ctx.ellipse(0, 0, e.halfW, e.halfH * 0.65, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-e.halfW + 4, 0); ctx.lineTo(-e.halfW - 8, -8); ctx.lineTo(-e.halfW - 8, 8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#092332'; ctx.beginPath(); ctx.arc(5, -2, 3, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.moveTo(e.halfW + 4, 0); ctx.lineTo(-e.halfW * 0.45, -e.halfH); ctx.lineTo(-e.halfW * 0.15, 0); ctx.lineTo(-e.halfW * 0.45, e.halfH); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#092332'; ctx.beginPath(); ctx.arc(3, 0, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  if (e.behavior === 'harasser' || e.behavior === 'rival') { ctx.strokeStyle = '#ffd47a'; ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.arc(0, 0, Math.max(e.halfW, e.halfH) + 7 + Math.sin(e.t * 7) * 2, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+  drawEnemyHealthBar(ctx, e);
+}
+
 function drawEnemyHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
   if (e.maxHp > 6 && e.hp < e.maxHp) {
     const w = e.halfW * 2;
@@ -259,6 +311,14 @@ function drawHazard(ctx: CanvasRenderingContext2D, e: Enemy): void {
 }
 
 export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
+  if (oceanActive) {
+    const pulse = 1 + Math.sin(it.t * 7) * 0.14;
+    ctx.save(); ctx.translate(it.x, it.y + Math.sin(it.t * 5) * 2); ctx.rotate(it.t * 2.2);
+    ctx.fillStyle = '#ffd47a'; ctx.strokeStyle = '#fff1b1'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, 8 * pulse, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#174458'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center'; ctx.fillText('¢', 0, 4); ctx.restore();
+    return;
+  }
   if (skyActive && drawSkySprite(ctx, 'item', it.x, it.y + Math.sin(it.t * 5) * 2, 22, 26)) return;
   const pulse = 1 + Math.sin(it.t * 7) * 0.18;
   ctx.save();
@@ -338,6 +398,7 @@ function drawBossStage(ctx: CanvasRenderingContext2D, b: Boss): void {
 export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   if (!b.active || !b.revealed) return;
   drawBossStage(ctx, b);
+  if (oceanActive) { drawOceanBoss(ctx, b); return; }
   if (skyActive && drawSkySprite(ctx, `boss${b.phase}`, b.x, b.y, b.halfW * 2, b.halfH * 2, b.hitFlash > 0 || b.enrageFlash > 0)) return;
   ctx.save();
   ctx.translate(b.x, b.y);
@@ -387,6 +448,23 @@ export function drawBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
   }
 
   ctx.restore();
+}
+
+function drawOceanBoss(ctx: CanvasRenderingContext2D, b: Boss): void {
+  ctx.save(); ctx.translate(b.x, b.y);
+  const flash = b.hitFlash > 0 || b.enrageFlash > 0;
+  const pulse = 1 + Math.sin(b.t * 4) * 0.035;
+  ctx.scale(pulse, pulse);
+  ctx.fillStyle = flash ? '#ffffff' : b.phase === 1 ? '#194f62' : b.phase === 2 ? '#315071' : '#4d2e67';
+  ctx.strokeStyle = b.phase === 3 ? '#ff76c8' : '#8effef'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(0, 0, b.halfW, b.halfH * 0.76, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = flash ? '#ffffff' : '#c79555';
+  for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-b.halfW * .3, side * b.halfH * .45); ctx.lineTo(-b.halfW * .65, side * b.halfH * 1.25); ctx.lineTo(b.halfW * .05, side * b.halfH * .75); ctx.closePath(); ctx.fill(); }
+  ctx.fillStyle = '#082a3a'; ctx.beginPath(); ctx.arc(b.halfW * .55, 0, b.halfH * .27, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = b.phase === 3 ? '#ff76c8' : '#d3fff6'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(b.halfW * .55, 0, b.halfH * .38 + Math.sin(b.t * 8) * 2, 0, Math.PI * 2); ctx.stroke();
+  if (b.phase >= 2) { ctx.strokeStyle = 'rgba(255, 222, 151, .8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-60, -20); ctx.lineTo(-15, 8); ctx.lineTo(20, -12); ctx.lineTo(55, 18); ctx.stroke(); }
+  ctx.restore();
+  drawBossHealthBar(ctx, b);
 }
 
 export function drawBossHealthBar(ctx: CanvasRenderingContext2D, b: Boss): void {
@@ -443,6 +521,13 @@ function drawBossCracks(ctx: CanvasRenderingContext2D, b: Boss): void {
 }
 
 export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
+  if (oceanActive) {
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.vy, b.vx));
+    ctx.fillStyle = b.fromPlayer ? '#8effef' : b.big ? '#ff7cb8' : '#ffcc72';
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = b.fromPlayer ? 8 : 5;
+    ctx.fillRect(-9, -2, 18, 4); ctx.fillStyle = '#ffffff'; ctx.fillRect(4, -1, 6, 2); ctx.restore();
+    return;
+  }
   // El disparo cargado va ANTES del atlas: si cae en la rama del sprite se
   // dibuja como una bala normal y deja de leerse como lo que costó cargar.
   // Azul, como el aro de carga: lo que ves cargando es lo que sale.
@@ -491,6 +576,10 @@ export function drawBullet(ctx: CanvasRenderingContext2D, b: Bullet): void {
 }
 
 export function drawMissile(ctx: CanvasRenderingContext2D, m: Missile): void {
+  if (oceanActive) {
+    ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(Math.atan2(m.vy, m.vx));
+    ctx.fillStyle = '#e9b965'; ctx.fillRect(-13, -4, 20, 8); ctx.fillStyle = '#9dffed'; ctx.fillRect(-23, -2, 10, 4); ctx.fillStyle = '#fff2bd'; ctx.beginPath(); ctx.arc(7, 0, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return;
+  }
   if (skyActive && drawSkySprite(ctx, 'missile', m.x, m.y, 30, 14)) return;
   ctx.fillStyle = '#ff8c3e';
   ctx.fillRect(m.x - 7, m.y - 3, 14, 6);
@@ -499,6 +588,14 @@ export function drawMissile(ctx: CanvasRenderingContext2D, m: Missile): void {
 }
 
 export function drawPowerCore(ctx: CanvasRenderingContext2D, c: PowerCore, t: number): void {
+  if (oceanActive) {
+    const pulse = 1 + Math.sin(t * 8) * 0.15;
+    ctx.save(); ctx.translate(c.x, c.y + Math.sin(t * 5) * 3);
+    ctx.fillStyle = '#8effef'; ctx.shadowColor = '#8effef'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(0, 0, 8 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#e5fffa'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 13 * pulse, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    return;
+  }
   if (skyActive && drawSkySprite(ctx, 'core', c.x, c.y + Math.sin(t * 5) * 3, 28, 30)) return;
   const pulse = 1 + Math.sin(t * 8) * 0.15;
   ctx.save();

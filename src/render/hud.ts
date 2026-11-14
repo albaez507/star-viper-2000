@@ -6,10 +6,10 @@ import { STAGES } from '../game/stages';
 
 export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, t: number): void {
   ctx.save();
-  if (state.stageId === 'sky') {
-    ctx.fillStyle = 'rgba(17, 47, 65, .91)';
+  if (state.stageId === 'sky' || state.stageId === 'ocean') {
+    ctx.fillStyle = state.stageId === 'ocean' ? 'rgba(4, 31, 47, .88)' : 'rgba(17, 47, 65, .91)';
     ctx.fillRect(0, 0, state.worldW, 70);
-    ctx.fillStyle = '#d6b975'; ctx.fillRect(0, 69, state.worldW, 1);
+    ctx.fillStyle = state.stageId === 'ocean' ? '#69e8d7' : '#d6b975'; ctx.fillRect(0, 69, state.worldW, 1);
   }
   const stage = STAGES[state.stageId];
   ctx.textAlign = 'center'; ctx.font = 'bold 12px monospace'; ctx.fillStyle = '#fff2ca';
@@ -27,6 +27,10 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState, t: numb
   ctx.font = '10px "Courier New", monospace';
   ctx.fillStyle = 'rgba(234,246,255,0.7)';
   ctx.fillText(`ARMA: ${nombreArma(state.player.ship, state.player.weaponLevel)}`, 118, 30);
+  if (state.stageId === 'ocean') {
+    ctx.fillStyle = '#8effef';
+    ctx.fillText(`PECES ${String(state.rescuedFish).padStart(2, '0')}`, 118, 48);
+  }
   ctx.font = '14px "Courier New", monospace';
 
   drawMissileStatus(ctx, state, t);

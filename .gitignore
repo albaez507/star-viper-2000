@@ -12,3 +12,16 @@ src/NEW SRC/
 # Material en bruto del generador para el sector Sentinel. Se recorta y se
 # renombra antes de entrar a public/assets/. Nunca al repo.
 src/SENTINEL ASSETS/
+
+# --- protecciones backup 2026-11-14 ---
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+*.keystore
+*.jks
+*.pem
+credenciales/
+*.blend1
+.godot/

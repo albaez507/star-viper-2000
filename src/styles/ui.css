@@ -413,6 +413,7 @@ body[data-stage="sky"] #game { filter: none; }
 .sector-card[aria-pressed="true"] { border-color: #e5c782; background: #254d55; box-shadow: inset 3px 0 #e5c782; }
 .sector-art { width: 75px; min-height: 79px; align-self: stretch; flex-shrink: 0; margin-left: 3px; }
 .sky-art { background: url('/assets/sky/background.png') 90% 75% / auto 100%; image-rendering: pixelated; }
+.ocean-art { background: url('/assets/ocean/background.png') 58% 52% / auto 100%; box-shadow: inset 0 0 18px rgba(28, 224, 210, .18); }
 .orbit-art { background: radial-gradient(circle at 20% 20%, #b3dfff 1px, transparent 2px), radial-gradient(circle at 78% 68%, #7195c7 1px, transparent 2px), #13253e; background-size: 23px 37px, 37px 27px, auto; display: grid; place-items: center; color: #a0a5ef; font-size: 30px; }
 .sector-info { padding: 12px; display: grid; gap: 6px; }
 .sector-info small { color: #99bcb7; font-size: 7px; letter-spacing: 1px; }
@@ -588,9 +589,30 @@ html, body { height: 100dvh; }
 .asset-choice[aria-pressed="true"] .asset-choice-label { color: #fff2ca; }
 .asset-manager-status { min-height: 24px; margin: 10px 0 0; color: #3ee6c4; font-size: 8px; line-height: 1.5; text-align: center; }
 #sprite-management { max-height: 100%; overflow-y: auto; scrollbar-color: #3ee6c4 rgba(6,8,16,.4); }
+.player-ship-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.player-ship-choice { display: flex; align-items: center; min-width: 0; gap: 8px; padding: 7px; border: 1px solid rgba(234,246,255,.18); border-radius: 4px; background: rgba(16,23,38,.9); color: #eaf6ff; text-align: left; }
+.player-ship-choice:hover, .player-ship-choice:focus-visible { border-color: #3ee6c4; background: rgba(31,72,85,.94); }
+.player-ship-choice[aria-pressed="true"] { border-color: #ffd23f; box-shadow: 0 0 11px rgba(255,210,63,.23); background: rgba(42,49,63,.98); }
+.player-ship-preview { display: block; flex: 0 0 54px; width: 54px; height: 42px; border-radius: 3px; background-repeat: no-repeat; background-color: #090b18; image-rendering: auto; }
+.player-ship-choice-info { min-width: 0; }
+.player-ship-choice-info strong, .player-ship-choice-info small { display: block; }
+.player-ship-choice-info strong { color: #fff2ca; font-size: 9px; letter-spacing: 1px; }
+.player-ship-choice-info small { margin-top: 4px; color: #8fb9bd; font-size: 7px; line-height: 1.35; }
+.player-ship-animated { animation: ship-pose-preview 1.8s steps(1, end) infinite; }
+@keyframes ship-pose-preview {
+  0%, 13% { background-position: 0% 50%; }
+  14%, 27% { background-position: 16.6667% 50%; }
+  28%, 41% { background-position: 33.3333% 50%; }
+  42%, 55% { background-position: 50% 50%; }
+  56%, 69% { background-position: 66.6667% 50%; }
+  70%, 83% { background-position: 83.3333% 50%; }
+  84%, 100% { background-position: 100% 50%; }
+}
+#player-ship-management { max-height: 100%; overflow-y: auto; scrollbar-color: #3ee6c4 rgba(6,8,16,.4); }
 @media (max-width: 650px) {
   .arcade-menu-brand { font-size: 24px; }
   .asset-choice-preview { height: 42px; }
+  .player-ship-list { grid-template-columns: 1fr; }
 }
 
 /* Aviso de mando conectado. Sin esto, enchufar el control y que no pase nada

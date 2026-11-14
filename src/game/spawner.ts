@@ -190,6 +190,23 @@ function spawnWave(state: GameState, wave: WaveSpawn): void {
         e.x = state.worldW + 50 + i * 210;
         break;
       }
+      case 'cage': {
+        e.behavior = 'cage';
+        e.indestructible = true;
+        e.hp = 9999; e.maxHp = 9999;
+        e.vx = -52;
+        e.vy = 0;
+        e.canShoot = false;
+        e.score = 0;
+        e.halfW = 24;
+        e.halfH = 24;
+        e.baseY = 108 + (state.nextEnemyId % 4) * 74;
+        e.y = e.baseY;
+        e.driftAmp = 18;
+        e.driftFreq = 1.4;
+        e.x = state.worldW + 70;
+        break;
+      }
       case 'swarm': {
         e.behavior = 'swarm';
         e.vx = 0;

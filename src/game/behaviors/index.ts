@@ -23,4 +23,5 @@ export const behaviors: Record<string, (e: Enemy, dt: number, ctx: BehaviorConte
   hazard: (e, dt) => hazard(e, dt),
   column: (e, dt, ctx) => column(e, dt, ctx.playerY),
   arc: (e, dt) => arc(e, dt),
+  cage: (e, dt) => hazard(e, dt),
 };

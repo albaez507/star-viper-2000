@@ -4,10 +4,10 @@ Shoot-'em-up horizontal de arcade para navegador. Pixel art detallado, luz
 cálida, fondos con profundidad. La idea a largo plazo es que los niveles sean
 un **viaje**: tierra → nubes → altura → espacio → otro planeta.
 
-Hay dos sectores jugables: **Órbita Sentinel** (espacio) y **Jardines del
-Céfiro** (cielo). **El estilo del cielo es el elegido** (2026-09-09) y manda
-sobre lo que decía antes el brief. Órbita no se tira: el espacio es un tramo
-posterior del mismo viaje.
+Hay tres sectores jugables: **Órbita Sentinel** (espacio), **Jardines del
+Céfiro** (cielo) y **Abismo de Nereia** (océano). El abismo es el stage
+principal actual: un viaje submarino con ruinas, jaulas de peces, cargas de
+profundidad y el Leviatán de Nereia como jefe final.
 
 ---
 
@@ -68,6 +68,9 @@ La barra DEV y el laboratorio visual están escondidos. Se abren con
 | M, X o Ctrl (izq.) | MISSILE (bomba de área; segundo toque detona en el aire) |
 | Enter | Start / Restart |
 | P | Pausa |
+
+En **Abismo de Nereia**, una carga que golpea una jaula la abre, suma 500
+puntos y rescata tres peces. El HUD muestra el total rescatado.
 
 Táctil: D-pad a la izquierda, FIRE encima de MISSILE a la derecha.
 Pensado primero para iPhone.

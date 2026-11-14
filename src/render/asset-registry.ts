@@ -1,4 +1,26 @@
+import type { ShipId } from '../game/weapons';
+
 export type ManagedEnemyFamily = 'scout' | 'diver' | 'formation';
+
+export type PlayerShipAsset = {
+  label: string;
+  description: string;
+  sheet: string;
+  backgroundSize: string;
+  backgroundPosition: string;
+  animated: boolean;
+};
+
+const SKY_SHEET = `${import.meta.env.BASE_URL}assets/sky/sprites.png`;
+const SHIP_SHEET = `${import.meta.env.BASE_URL}assets/ships/`;
+
+/** Registro único de los assets visuales de las naves del jugador. */
+export const PLAYER_SHIP_ASSETS: Record<ShipId, PlayerShipAsset> = {
+  vulcan: { label: 'VULCAN', description: 'Ráfaga equilibrada · 3 vidas', sheet: SKY_SHEET, backgroundSize: '400% 400%', backgroundPosition: '0% 0%', animated: false },
+  lance: { label: 'LANCE', description: 'Disparo penetrante · 2 vidas', sheet: SKY_SHEET, backgroundSize: '400% 400%', backgroundPosition: '33.3333% 0%', animated: false },
+  pyre: { label: 'PYRE', description: 'Cinder agresivo · 2 vidas', sheet: `${SHIP_SHEET}pyre-poses.png`, backgroundSize: '700% 100%', backgroundPosition: '0% 50%', animated: true },
+  aegis: { label: 'AEGIS', description: 'Pulse pesado · 4 vidas', sheet: `${SHIP_SHEET}aegis-poses.png`, backgroundSize: '700% 100%', backgroundPosition: '0% 50%', animated: true },
+};
 
 export type EnemyAssetOption = {
   id: string;

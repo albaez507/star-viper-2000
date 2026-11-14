@@ -69,6 +69,8 @@ const FLIP_X = new Set<SkySprite>();
 
 export let skyActive = false;
 export function setSkyActive(active: boolean): void { skyActive = active; }
+export let oceanActive = false;
+export function setOceanActive(active: boolean): void { oceanActive = active; }
 
 type Recorte = { left: number; top: number; right: number; bottom: number };
 

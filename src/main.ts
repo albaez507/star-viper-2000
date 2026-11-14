@@ -14,7 +14,7 @@ import { Renderer } from './render/renderer';
 import { drawPauseOverlay, drawWeaponBanner, type ScreenMode } from './render/screens';
 import { setSpriteVisualStyle } from './render/sprites';
 import { getEnemyVariant, setEnemyVariant, skyAssetsReady, type ManagedEnemyVariant, type ManagedEnemyFamily } from './render/sky-assets';
-import { ENEMY_ASSET_OPTIONS, MANAGED_ENEMY_FAMILIES } from './render/asset-registry';
+import { ENEMY_ASSET_OPTIONS, MANAGED_ENEMY_FAMILIES, PLAYER_SHIP_ASSETS } from './render/asset-registry';
 import { CHARGE_TIME } from './game/player';
 
 const WORLD_W = 960;
@@ -176,7 +176,7 @@ function banquearRun(): void {
 }
 
 function resetGame(): boolean {
-  if (selectedStage === 'sky' && !assetsReady) return false;
+  if ((selectedStage === 'sky' || selectedStage === 'ocean') && !assetsReady) return false;
   bannerTimer = 0;
   state = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
   state.player.ship = selectedShip;
@@ -226,13 +226,16 @@ const optionsViewEl = document.getElementById('options-view')!;
 const spriteManagementEl = document.getElementById('sprite-management')!;
 const assetManagerListEl = document.getElementById('asset-manager-list')!;
 const assetManagerStatusEl = document.getElementById('asset-manager-status')!;
+const playerShipManagementEl = document.getElementById('player-ship-management')!;
+const playerShipListEl = document.getElementById('player-ship-list')!;
+const playerShipStatusEl = document.getElementById('player-ship-status')!;
 const startEl = document.getElementById('start-mission') as HTMLButtonElement;
 const missionStatus = document.getElementById('mission-status')!;
 const sectorButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-stage]')];
 const shipButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-ship]')];
-type MenuView = 'home' | 'one-player' | 'options' | 'sprites';
+type MenuView = 'home' | 'one-player' | 'options' | 'sprites' | 'ships';
 const menuViews: Record<MenuView, HTMLElement> = {
-  home: homeViewEl, 'one-player': onePlayerViewEl, options: optionsViewEl, sprites: spriteManagementEl,
+  home: homeViewEl, 'one-player': onePlayerViewEl, options: optionsViewEl, sprites: spriteManagementEl, ships: playerShipManagementEl,
 };
 function showMenuView(view: MenuView): void {
   for (const [name, element] of Object.entries(menuViews)) element.hidden = name !== view;
@@ -292,13 +295,48 @@ function renderAssetManager(): void {
   }
 }
 
+function renderPlayerShipManager(): void {
+  playerShipListEl.replaceChildren();
+  for (const ship of SHIP_ORDER) {
+    const asset = PLAYER_SHIP_ASSETS[ship];
+    const choice = document.createElement('button');
+    choice.type = 'button';
+    choice.className = 'player-ship-choice';
+    choice.setAttribute('aria-pressed', String(ship === selectedShip));
+    choice.setAttribute('aria-label', `${asset.label} ${asset.description}`);
+
+    const preview = document.createElement('span');
+    preview.className = 'player-ship-preview';
+    preview.style.backgroundImage = `url("${asset.sheet}")`;
+    preview.style.backgroundSize = asset.backgroundSize;
+    preview.style.backgroundPosition = asset.backgroundPosition;
+    if (asset.animated) preview.classList.add('player-ship-animated');
+
+    const info = document.createElement('span');
+    info.className = 'player-ship-choice-info';
+    const name = document.createElement('strong');
+    name.textContent = asset.label;
+    const description = document.createElement('small');
+    description.textContent = asset.description;
+    info.append(name, description);
+    choice.append(preview, info);
+    choice.addEventListener('click', () => {
+      selectedShip = ship;
+      updateMissionSelection();
+      playerShipStatusEl.textContent = `${asset.label} → ACTIVA PARA EL PRÓXIMO DESPEGUE`;
+      renderPlayerShipManager();
+    });
+    playerShipListEl.append(choice);
+  }
+}
+
 function updateMissionSelection(): void {
   document.body.dataset.stage = selectedStage;
   sectorButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stage === selectedStage)));
   shipButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ship === selectedShip)));
-  startEl.disabled = selectedStage === 'sky' && !assetsReady;
+  startEl.disabled = (selectedStage === 'sky' || selectedStage === 'ocean') && !assetsReady;
   startEl.firstElementChild!.textContent = startEl.disabled ? 'PREPARANDO VUELO…' : 'INICIAR MISIÓN';
-  missionStatus.textContent = startEl.disabled ? 'Cargando los assets del archipiélago…' : `${STAGES[selectedStage].name} · ENTER para despegar`;
+  missionStatus.textContent = startEl.disabled ? 'Cargando los assets del abismo…' : `${STAGES[selectedStage].name} · ENTER para despegar`;
   if (mode === 'title') {
     state.stageId = selectedStage;
     state.player.ship = selectedShip;
@@ -324,6 +362,11 @@ document.getElementById('open-sprite-management')!.addEventListener('click', () 
   showMenuView('sprites');
 });
 document.getElementById('sprite-management-back')!.addEventListener('click', () => showMenuView('options'));
+document.getElementById('open-player-ships')!.addEventListener('click', () => {
+  renderPlayerShipManager();
+  showMenuView('ships');
+});
+document.getElementById('player-ship-management-back')!.addEventListener('click', () => showMenuView('options'));
 menuEl.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.repeat && hangarEl.hidden) {
     e.preventDefault(); resetGame(); canvas.focus();
@@ -345,7 +388,7 @@ document.getElementById('toggle-lab')!.addEventListener('click', e => {
 canvas.tabIndex = 0;
 showMenuView('home');
 updateMissionSelection();
-Promise.all([skyAssetsReady, renderer.sky.ready]).then(() => {
+Promise.all([skyAssetsReady, renderer.sky.ready, renderer.ocean.ready]).then(() => {
   assetsReady = true; updateMissionSelection();
 }).catch((error: unknown) => {
   console.error('Sky assets failed to load', error);
@@ -416,11 +459,11 @@ function handleEvents(s: GameState): void {
         particles.burst(ev.x, ev.y, 5, '#ffd23f', 70);
         break;
       case 'enemyDeath':
-        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed);
+        if (s.stageId === 'ocean') renderer.ocean.burst(ev.x, ev.y, elapsed); else if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed);
         particles.burst(ev.x, ev.y, 16, '#ff8c3e', 130);
         break;
       case 'bossDeath':
-        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 240);
+        if (s.stageId === 'ocean') renderer.ocean.burst(ev.x, ev.y, elapsed, 240); else if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 240);
         particles.burst(ev.x, ev.y, 40, '#ff5470', 180);
         break;
       case 'bossEnrage':
@@ -438,11 +481,15 @@ function handleEvents(s: GameState): void {
       case 'itemCollected':
         particles.burst(ev.x, ev.y, 18, '#9dff5e', 110);
         break;
+      case 'cageOpened':
+        if (s.stageId === 'ocean') renderer.ocean.burst(ev.x, ev.y, elapsed, 120);
+        particles.burst(ev.x, ev.y, 28, '#8effef', 160);
+        break;
       case 'shake':
         shake.trigger(ev.strength, ev.duration);
         break;
       case 'missileImpact':
-        if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 80);
+        if (s.stageId === 'ocean') renderer.ocean.burst(ev.x, ev.y, elapsed, 80); else if (s.stageId === 'sky') renderer.sky.burst(ev.x, ev.y, elapsed, 80);
         particles.burst(ev.x, ev.y, 26, '#ff8c3e', 150);
         break;
     }
@@ -468,6 +515,7 @@ const loop = new GameLoop({
     const warp = mode === 'playing' ? bossWarpMultiplier(state.boss) : 1;
     starfield.update(dt, warp);
     renderer.sky.update(dt, warp);
+    renderer.ocean.update(dt, warp);
     particles.update(dt);
     shake.update(dt);
     if (bannerTimer > 0) bannerTimer = Math.max(0, bannerTimer - dt);

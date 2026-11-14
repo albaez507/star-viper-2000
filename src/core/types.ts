@@ -25,7 +25,7 @@ export function emptyInput(tick: number): InputFrame {
 
 export type EntityId = number;
 
-export type BehaviorName = 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'hazard' | 'column' | 'arc';
+export type BehaviorName = 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'hazard' | 'column' | 'arc' | 'cage';
 
 export type Weapon = 'single' | 'double' | 'laser';
 

@@ -107,9 +107,9 @@ la escena aunque todavía no haya sprites animados.
 
 El menú principal de Star Viper 2000 ahora funciona como un pequeño **Flight
 Deck**: `START`, `ONE PLAYER`, `TWO PLAYER` (reservado) y `OPTIONS`. Dentro de
-`OPTIONS` está `SPRITE MANAGEMENT`, una herramienta de desarrollo para probar
-la lectura visual de Sentinel sin tocar la lógica de movimiento ni los patrones
-de combate.
+`OPTIONS` están `PLAYER SHIPS`, para escoger el loadout activo, y `SPRITE
+MANAGEMENT`, una herramienta de desarrollo para probar la lectura visual de
+Sentinel sin tocar la lógica de movimiento ni los patrones de combate.
 
 La gestión actual controla tres familias:
 
@@ -123,10 +123,10 @@ aplica en vivo al renderer. El propulsor procedural sigue siendo la animación
 común de la flota: el asset define la nave y el código define la respuesta del
 motor.
 
-Regla para agentes: no confundir este gestor con un sistema final de mods. Es
-un selector local de iteración artística; primero se valida contraste,
-silueta, escala y lectura en combate. Cuando una variante se confirme, se
-puede convertir en la asignación por defecto y retirar las alternativas.
+Regla para agentes: no confundir estos gestores con un sistema final de mods.
+Son selectores locales de iteración artística; primero se valida contraste,
+silueta, escala y lectura en combate. Cuando una variante se confirme, se puede
+convertir en la asignación por defecto y retirar las alternativas.
 
 ## 6. Selección de naves y poses de vuelo
 

@@ -7,6 +7,7 @@ export type GameEvent =
   | { type: 'coreCollected'; slot: number }
   | { type: 'weaponActivated'; nombre: string }
   | { type: 'itemCollected'; x: number; y: number }
+  | { type: 'cageOpened'; x: number; y: number; fish: number }
   | { type: 'playerDamage' }
   | { type: 'playerDeath' }
   | { type: 'dash'; x: number; y: number }

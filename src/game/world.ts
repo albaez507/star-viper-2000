@@ -41,6 +41,8 @@ export type GameState = {
   boss: Boss;
 
   score: number;
+  rescuedFish: number;
+  cagesOpened: number;
   /** Items de hangar recogidos en esta partida. Se suman al total
    * persistente solo cuando la partida termina — morir no los regala. */
   itemsCollected: number;
@@ -71,6 +73,8 @@ export function createWorld(worldW: number, worldH: number, seed = 1337, stageId
     items: new Pool(makeItem, 4),
     boss: makeBoss(),
     score: 0,
+    rescuedFish: 0,
+    cagesOpened: 0,
     itemsCollected: 0,
     stageTime: 0,
     spawnIndex: 0,
@@ -451,6 +455,14 @@ const MISSILE_SPLASH_RADIUS = 70;
 
 function explodeMissile(state: GameState, x: number, y: number, dmg: number): void {
   for (const e of state.enemies.active()) {
+    if (e.behavior === 'cage' && dist(x, y, e.x, e.y) <= MISSILE_SPLASH_RADIUS + Math.max(e.halfW, e.halfH)) {
+      e.active = false;
+      state.score += 500;
+      state.rescuedFish += 3;
+      state.cagesOpened++;
+      state.events.emit({ type: 'cageOpened', x: e.x, y: e.y, fish: 3 });
+      continue;
+    }
     if (e.indestructible) continue;
     if (dist(x, y, e.x, e.y) <= MISSILE_SPLASH_RADIUS + Math.max(e.halfW, e.halfH)) {
       e.hp -= dmg;

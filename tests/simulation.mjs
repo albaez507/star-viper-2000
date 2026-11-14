@@ -13,7 +13,7 @@ const { createWorld, step, STAGES, SKY_STAGE, emptyInput, updateSpawner, spawnBu
 const dt = 1 / 60;
 const idle = emptyInput(0);
 
-test('both sectors have an ordered, complete timeline and distinct encounters', () => {
+test('all sectors have an ordered, complete timeline and distinct encounters', () => {
   for (const stage of Object.values(STAGES)) {
     assert.equal(stage.events.filter(e => 'boss' in e).length, 1);
     assert.ok('boss' in stage.events.at(-1));
@@ -24,6 +24,22 @@ test('both sectors have an ordered, complete timeline and distinct encounters', 
   const kinds = new Set(SKY_STAGE.filter(e => 'kind' in e).map(e => e.kind));
   assert.ok(kinds.size >= 8, `solo ${kinds.size} tipos de encuentro`);
   assert.notDeepEqual(STAGES.orbit.events, SKY_STAGE);
+  assert.ok(STAGES.ocean.events.some(e => e.kind === 'cage'));
+});
+
+test('an underwater depth charge opens a cage and rescues fish', () => {
+  const state = createWorld(960, 540, 1337, 'ocean');
+  state.stageTime = 6;
+  updateSpawner(state);
+  const cage = state.enemies.active().find(e => e.behavior === 'cage');
+  assert.ok(cage, 'cage spawned');
+  cage.x = 900;
+  const charge = state.missiles.acquire();
+  Object.assign(charge, { x: cage.x, y: cage.y, vx: 0, vy: 0, active: true });
+  step(state, idle, dt);
+  assert.equal(state.rescuedFish, 3);
+  assert.equal(state.cagesOpened, 1);
+  assert.equal(state.enemies.active().some(e => e.behavior === 'cage'), false);
 });
 
 test('pooled scouts never inherit courier rewards or rival missiles', () => {

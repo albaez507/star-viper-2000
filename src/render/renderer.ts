@@ -8,11 +8,14 @@ import { drawParticles } from './particles';
 import { drawHud } from './hud';
 import { drawScreen, drawBossWarning, type ScreenMode } from './screens';
 import { Sky } from './sky';
+import { Ocean } from './ocean';
 import { setSkyActive } from './sky-assets';
+import { setOceanActive } from './sky-assets';
 import { STAGES } from '../game/stages';
 
 export class Renderer {
   readonly sky = new Sky();
+  readonly ocean = new Ocean();
   constructor(
     private ctx: CanvasRenderingContext2D,
     private starfield: Starfield,
@@ -24,10 +27,12 @@ export class Renderer {
     const ctx = this.ctx;
     const { worldW, worldH } = state;
     const sky = state.stageId === 'sky';
+    const ocean = state.stageId === 'ocean';
     // Las naves y los enemigos son los mismos vayas donde vayas: el atlas
     // sirve para cualquier sector, no solo para el cielo. Solo el FONDO
     // depende del stage.
     setSkyActive(true);
+    setOceanActive(ocean);
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = 'low';
 
@@ -38,7 +43,8 @@ export class Renderer {
     ctx.save();
     applyShake(ctx, this.shake);
 
-    if (sky) this.sky.draw(ctx, worldW, worldH, elapsed);
+    if (ocean) this.ocean.draw(ctx, worldW, worldH, elapsed);
+    else if (sky) this.sky.draw(ctx, worldW, worldH, elapsed);
     else this.starfield.draw(ctx);
 
     for (const c of state.powerCores.active()) drawPowerCore(ctx, c, elapsed);
@@ -57,7 +63,9 @@ export class Renderer {
     for (const m of state.missiles.active()) drawMissile(ctx, m);
 
     drawParticles(ctx, this.particles);
-    if (sky) this.sky.drawEffects(ctx, elapsed);
+    if (ocean) this.ocean.drawEffects(ctx, elapsed);
+    else if (sky) this.sky.drawEffects(ctx, elapsed);
+    if (ocean) this.ocean.drawForeground(ctx, worldW, worldH);
 
     ctx.restore();
 
@@ -74,7 +82,7 @@ export class Renderer {
       ctx.textAlign = 'center'; ctx.fillStyle = '#fff3cf'; ctx.font = 'bold 18px monospace';
       ctx.fillText(STAGES[state.stageId].name.toUpperCase(), worldW / 2, 106);
       ctx.font = '11px monospace'; ctx.fillStyle = '#b8e5da';
-      ctx.fillText('Destruye formaciones completas para mejorar tu arma', worldW / 2, 124);
+      ctx.fillText(ocean ? 'Abre las jaulas con el misil y rescata peces para ganar puntos' : 'Destruye formaciones completas para mejorar tu arma', worldW / 2, 124);
       ctx.restore();
     }
     if (mode === 'playing') drawBossWarning(ctx, worldW, worldH, state.boss, elapsed);
