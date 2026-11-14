@@ -4,3 +4,16 @@ dist/
 .DS_Store
 *.local
 *.tsbuildinfo
+
+# --- protecciones backup 2026-11-14 ---
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+!.env.template
+*.keystore
+*.jks
+*.pem
+credenciales/
+*.blend1
+.godot/

@@ -1,4 +1,5 @@
-/** Sky sheets stay at native pixels. We scale once, nearest-neighbor, at draw time. */
+/** Anime sheets stay crisp at their source resolution and are scaled with
+ * high-quality filtering at draw time. */
 export type SkySprite = 'vulcan' | 'lance' | 'option' | 'core' | 'scout' | 'sine' | 'diver' | 'formation' | 'swarm' | 'harasser' | 'rival' | 'item' | 'bolt' | 'orb' | 'missile' | 'explosion' | 'boss1' | 'boss2' | 'boss3';
 const names: SkySprite[] = ['vulcan', 'lance', 'option', 'core', 'scout', 'sine', 'diver', 'formation', 'swarm', 'harasser', 'rival', 'item', 'bolt', 'orb', 'missile', 'explosion'];
 const frames = new Map<SkySprite, HTMLCanvasElement>();
@@ -9,19 +10,21 @@ const frames = new Map<SkySprite, HTMLCanvasElement>();
  * la izquierda: el volteo los ponía de espaldas y atacaban al jugador desde
  * atrás. Comprobado dibujando los frames con y sin el volteo.
  */
-const FLIP_X = new Set<SkySprite>();
+// The generated atlas is authored facing left. The player and its ordnance
+// need to face right so their silhouettes agree with the flight direction.
+const FLIP_X = new Set<SkySprite>(['vulcan', 'lance', 'bolt', 'missile']);
 
 export let skyActive = false;
 export function setSkyActive(active: boolean): void { skyActive = active; }
 
 async function loadSheet(file: string, columns: number, rows: number, keys: SkySprite[]): Promise<void> {
   const img = new Image();
-  img.src = `${import.meta.env.BASE_URL}assets/sky/${file}.png`;
+  img.src = `${import.meta.env.BASE_URL}assets/anime/${file}.png`;
   await img.decode();
   const source = document.createElement('canvas');
   source.width = img.naturalWidth; source.height = img.naturalHeight;
   const ctx = source.getContext('2d', { willReadFrequently: true })!;
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   ctx.drawImage(img, 0, 0);
   keys.forEach((name, i) => {
     const x = Math.round((i % columns) * source.width / columns);
@@ -42,7 +45,7 @@ async function loadSheet(file: string, columns: number, rows: number, keys: SkyS
     frame.width = fw;
     frame.height = fh;
     const out = frame.getContext('2d')!;
-    out.imageSmoothingEnabled = false;
+    out.imageSmoothingEnabled = true;
     out.drawImage(source, x + left, y + top, fw, fh, 0, 0, fw, fh);
     frames.set(name, frame);
   });
@@ -54,10 +57,9 @@ export const skyAssetsReady = Promise.all([
 ]);
 
 /**
- * Los frames del atlas vienen a ~313 px y se dibujan a ~34 px: una reducción
- * de casi 9x. Hacerla en cada frame con `imageSmoothingEnabled = false` tira
- * el 99% de los píxeles y produce el aliasing que hacía que el juego se viera
- * en baja calidad pese a que el arte original es nítido.
+ * Los frames del atlas vienen a ~512 px y se dibujan a ~34 px: una reducción
+ * importante. Hacerla una sola vez por tamaño conserva el detalle del arte
+ * anime y evita que el escalado se vuelva borroso o dentado en cada frame.
  *
  * Aquí se reduce **una sola vez por tamaño**, con filtrado bueno, y a partir
  * de ahí se pinta 1:1. Los tamaños pedidos son constantes por tipo de enemigo,
@@ -99,7 +101,7 @@ export function drawSkySprite(ctx: CanvasRenderingContext2D, name: SkySprite, x:
   const pw = Math.max(1, Math.round(dw * escalaPantalla));
   const ph = Math.max(1, Math.round(dh * escalaPantalla));
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   ctx.translate(Math.round(x), Math.round(y));
   if (FLIP_X.has(name)) ctx.scale(-1, 1);
   if (angle) ctx.rotate(angle);

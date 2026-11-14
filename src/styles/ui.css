@@ -38,7 +38,7 @@ body {
 #style-lab select { color: var(--sv-ink); background: var(--sv-panel); border: 1px solid var(--sv-panel-border); border-radius: 4px; padding: 5px 7px; font: inherit; }
 .style-toggle { white-space: nowrap; }
 #style-readout { margin-left: auto; color: var(--sv-accent); }
-#style-preview { width: 72px; height: 40px; object-fit: cover; object-position: 8% 12%; image-rendering: pixelated; border: 1px solid rgba(62,230,196,.45); border-radius: 3px; }
+#style-preview { width: 72px; height: 40px; object-fit: cover; object-position: 8% 12%; image-rendering: auto; border: 1px solid rgba(104,244,255,.45); border-radius: 6px; }
 body[data-visual-style="neon"] #game { filter: saturate(1.22) contrast(1.08) drop-shadow(0 0 8px rgba(62,230,196,.18)); }
 body[data-visual-style="detailed"] #game { filter: saturate(1.08) contrast(1.04); }
 body[data-lighting="true"] #game { filter: saturate(1.18) contrast(1.08) drop-shadow(0 0 12px rgba(122,92,255,.24)); }
@@ -102,7 +102,7 @@ body[data-lighting="true"] #game { filter: saturate(1.18) contrast(1.08) drop-sh
   width: 960px;
   height: 540px;
   flex-shrink: 0;
-  image-rendering: pixelated;
+  image-rendering: auto;
   background: var(--sv-bg);
   touch-action: none;
   margin: auto;
@@ -379,7 +379,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 #btn-missions { margin-left: auto; border: 1px solid #557174; padding: 10px 14px; background: transparent; color: #e5eedc; font: 11px var(--sv-font); }
 #btn-missions span { margin-left: 18px; color: #e9c77b; }
 #app { background: #102d3b; overflow: hidden; container-type: size; }
-#game { image-rendering: pixelated; }
+#game { image-rendering: auto; }
 body[data-stage="sky"] #game { filter: none; }
 #game:focus { outline: none; }
 #screens { z-index: 4; }
@@ -400,7 +400,7 @@ body[data-stage="sky"] #game { filter: none; }
 .sector-card { display: flex; align-items: center; position: relative; text-align: left; padding: 0; background: #163949; border: 1px solid #41636c; color: #e7ecdc; font: inherit; min-height: 81px; }
 .sector-card[aria-pressed="true"] { border-color: #e5c782; background: #254d55; box-shadow: inset 3px 0 #e5c782; }
 .sector-art { width: 75px; min-height: 79px; align-self: stretch; flex-shrink: 0; margin-left: 3px; }
-.sky-art { background: url('/assets/sky/background.png') 90% 75% / auto 100%; image-rendering: pixelated; }
+.sky-art { background: url('/assets/anime/background.png') 90% 75% / auto 100%; image-rendering: auto; }
 .orbit-art { background: radial-gradient(circle at 20% 20%, #b3dfff 1px, transparent 2px), radial-gradient(circle at 78% 68%, #7195c7 1px, transparent 2px), #13253e; background-size: 23px 37px, 37px 27px, auto; display: grid; place-items: center; color: #a0a5ef; font-size: 30px; }
 .sector-info { padding: 12px; display: grid; gap: 6px; }
 .sector-info small { color: #99bcb7; font-size: 7px; letter-spacing: 1px; }
@@ -414,7 +414,7 @@ body[data-stage="sky"] #game { filter: none; }
 .ship-options button[aria-pressed="true"] { border-color: #e5c782; background: #254d55; }
 .ship-options strong { display: block; font-size: 10px; letter-spacing: 1px; }
 .ship-options small { display: block; margin-top: 5px; color: #a9c0bf; font-size: 8px; }
-.ship-portrait { display: block; flex-shrink: 0; width: 45px; height: 45px; background-image: url('/assets/sky/sprites.png'); background-size: 400% 400%; image-rendering: pixelated; }
+.ship-portrait { display: block; flex-shrink: 0; width: 45px; height: 45px; background-image: url('/assets/anime/sprites.png'); background-size: 400% 400%; image-rendering: auto; }
 .vulcan-portrait { background-position: 0 0; }
 .lance-portrait { background-position: 33.3333% 0; }
 #start-mission { display: flex; justify-content: space-between; width: 100%; margin-top: 21px; padding: 15px 18px; color: #233f45; background: #f4d798; border: 1px solid #fff0be; box-shadow: 0 3px #a89060; font: bold 12px var(--sv-font); letter-spacing: 1.5px; }
@@ -471,3 +471,86 @@ body[data-mode="title"] #touch-layer { display: none; }
   .mission-intro h1 { font-size: 42px; }
   .flight-note { display: none; }
 }
+
+/* --- Móvil: en horizontal la altura es el recurso escaso -----------------
+   El juego es 16:9 apaisado. En un iPhone tumbado quedan ~390 px de alto, y
+   la cabecera (54) más el pie (36) se comían casi un cuarto de eso. Como
+   fitCanvas escala por el lado que sobra menos, esos 90 px encogían TODA la
+   partida. Mientras se juega, la pantalla es de la partida. */
+html, body { height: 100dvh; }
+
+@media (pointer: coarse), (max-height: 620px) {
+  body[data-mode="playing"] #flight-header,
+  body[data-mode="playing"] #flight-footer,
+  body[data-mode="playing"] #dev-toolbar,
+  body[data-mode="playing"] #style-lab { display: none; }
+}
+
+/* El 960x540 fijo peleaba con el tamaño que calcula fitCanvas. */
+#game { max-width: 100%; max-height: 100%; }
+
+/* El notch y la barra de gestos se comen los controles si no se respetan. */
+#touch-layer {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#btn-fullscreen {
+  margin-left: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid rgba(62,230,196,.45);
+  border-radius: 4px;
+  color: var(--sv-accent);
+  font: 10px var(--sv-font);
+}
+/* Solo tiene sentido con dedos: en escritorio ya tienes la ventana entera. */
+@media (hover: hover) and (pointer: fine) { #btn-fullscreen { display: none; } }
+
+/* En vertical el juego cabría a un tercio del ancho. Mejor pedir que giren. */
+#rotate-hint { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  body[data-mode="playing"] #rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: var(--sv-bg-2);
+    color: var(--sv-ink);
+    text-align: center;
+    padding: 30px;
+  }
+  #rotate-hint .rotate-icon { font-size: 54px; }
+  #rotate-hint p { margin: 0; font-size: 12px; line-height: 1.7; color: rgba(234,246,255,.75); }
+  #rotate-hint strong { color: var(--sv-accent); font-size: 14px; letter-spacing: 1px; }
+}
+
+/* Aether Viper visual pass: smooth anime sprites, violet flight deck and
+   cyan/magenta emissive accents. Kept as a final layer so the original HUD
+   layout remains reusable while this fork gets its own identity. */
+body { background: #0e0a25; }
+#flight-header, #flight-footer { background: rgba(14,10,37,.94); border-color: rgba(104,244,255,.22); }
+.wordmark { color: #f4f2ff; letter-spacing: 3px; font-weight: 800; }
+.wordmark > span { color: #68f4ff; text-shadow: 0 0 14px rgba(104,244,255,.7); }
+.wordmark b { color: #b66cff; }
+.header-caption, #flight-footer { color: #9f9bbf; }
+#btn-missions { border-color: rgba(104,244,255,.35); background: rgba(104,244,255,.06); color: #edf5ff; }
+#btn-missions span { color: #68f4ff; }
+#app { background: #0e0a25; }
+#game, .ship-portrait, #style-preview, .sky-art { image-rendering: auto; }
+#mission-menu { background: linear-gradient(90deg, rgba(10,7,34,.66), rgba(10,7,34,.12) 65%); }
+.mission-intro { color: #f8f6ff; text-shadow: 0 3px 22px rgba(104,244,255,.22); }
+.mission-intro h1 > span, .flight-note > span { color: #68f4ff; }
+.mission-panel { border-color: rgba(104,244,255,.35); background: rgba(16,11,40,.92); box-shadow: 0 20px 70px rgba(0,0,0,.35), 0 0 0 1px rgba(182,108,255,.08) inset; color: #f4f2ff; }
+.sector-card, .ship-options button { background: rgba(38,25,78,.68); border-color: rgba(159,145,219,.3); color: #f0edff; }
+.sector-card[aria-pressed="true"], .ship-options button[aria-pressed="true"] { border-color: #68f4ff; background: rgba(47,44,108,.82); box-shadow: inset 3px 0 #68f4ff, 0 0 22px rgba(104,244,255,.1); }
+.sky-art { background-image: url('/assets/anime/background.png'); }
+.ship-portrait { background-image: url('/assets/anime/sprites.png'); }
+#start-mission { color: #120d2c; background: #68f4ff; border-color: #e9ffff; box-shadow: 0 4px #287a9a, 0 0 30px rgba(104,244,255,.2); }
+#start-mission:hover { background: #b7fbff; }
+#btn-hangar { background: rgba(22,14,54,.85); color: #ffc95c; border-color: rgba(255,201,92,.55); }

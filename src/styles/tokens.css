@@ -1,14 +1,14 @@
 :root {
-  --sv-bg: #0a0e17;
-  --sv-bg-2: #060810;
-  --sv-ink: #eaf6ff;
-  --sv-accent: #3ee6c4;
-  --sv-accent-2: #7a5cff;
-  --sv-danger: #ff5470;
-  --sv-warn: #ffd23f;
-  --sv-panel: rgba(10, 14, 23, 0.72);
-  --sv-panel-border: rgba(62, 230, 196, 0.35);
-  --sv-radius: 10px;
-  --sv-radius-sm: 6px;
-  --sv-font: 'Courier New', ui-monospace, monospace;
+  --sv-bg: #100d22;
+  --sv-bg-2: #070713;
+  --sv-ink: #f2f4ff;
+  --sv-accent: #68f4ff;
+  --sv-accent-2: #b66cff;
+  --sv-danger: #ff4c8c;
+  --sv-warn: #ffc95c;
+  --sv-panel: rgba(17, 13, 39, 0.78);
+  --sv-panel-border: rgba(104, 244, 255, 0.38);
+  --sv-radius: 14px;
+  --sv-radius-sm: 8px;
+  --sv-font: Inter, ui-sans-serif, system-ui, sans-serif;
 }

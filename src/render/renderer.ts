@@ -28,8 +28,8 @@ export class Renderer {
     // sirve para cualquier sector, no solo para el cielo. Solo el FONDO
     // depende del stage.
     setSkyActive(true);
-    ctx.imageSmoothingEnabled = false;
-    ctx.imageSmoothingQuality = 'low';
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.clearRect(0, 0, worldW, worldH);
     ctx.fillStyle = '#0a0e17';

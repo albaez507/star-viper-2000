@@ -13,7 +13,7 @@
  * y validarse ahí; esta capa quedaría solo como caché local.
  */
 
-const STORAGE_KEY = 'starviper.progress.v1';
+const STORAGE_KEY = 'aetherviper.progress.v1';
 
 export type UpgradeId = 'hull' | 'engines' | 'shield';
 

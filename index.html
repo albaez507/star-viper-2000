@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0e17" />
-  <title>Star Viper 2000</title>
+  <meta name="theme-color" content="#120d2c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Aether Viper" />
+  <title>Aether Viper</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/src/styles/tokens.css" />
   <link rel="stylesheet" href="/src/styles/ui.css" />
 </head>
 <body>
   <header id="flight-header">
-    <a class="wordmark" href="./" aria-label="Star Viper 2000 inicio"><span>✦</span> STAR VIPER <b>2000</b></a>
-    <span class="header-caption">CUADERNO DE VUELO / 02</span>
+    <a class="wordmark" href="./" aria-label="Aether Viper inicio"><span>✦</span> AETHER <b>VIPER</b></a>
+    <span class="header-caption">CELESTIAL RAID / 01</span>
+    <button id="btn-fullscreen" type="button" aria-label="Pantalla completa">⛶ PANTALLA</button>
     <button id="btn-missions" type="button">Mapa de sectores <span>↗</span></button>
   </header>
   <div id="dev-toolbar">
@@ -26,6 +31,11 @@
   <div id="app">
     <canvas id="game" width="960" height="540"></canvas>
     <div id="hud"></div>
+    <div id="rotate-hint">
+      <div class="rotate-icon">📱↻</div>
+      <strong>GIRA EL TELÉFONO</strong>
+      <p>Aether Viper se juega en horizontal.<br>Pon el teléfono de lado para volar.</p>
+    </div>
     <button id="btn-pause" aria-label="Pausa">⏸</button>
     <div id="touch-layer">
       <div id="dpad">
@@ -42,10 +52,10 @@
     <div id="screens">
       <section id="mission-menu" aria-label="Elegir misión">
         <div class="mission-intro">
-          <p class="eyebrow">UNA NUEVA FRONTERA</p>
-          <h1>Más allá<br>de las nubes<span>.</span></h1>
-          <p class="mission-copy">Islas suspendidas. Antiguos guardianes.<br>Tu próxima aventura empieza en el cielo.</p>
-          <p class="flight-note"><span>✦</span> JARDINES DEL CÉFIRO <small>NUEVO SECTOR</small></p>
+          <p class="eyebrow">AETHER PROTOCOL / 01</p>
+          <h1>Rompe el<br>firmamento<span>.</span></h1>
+          <p class="mission-copy">Ruinas celestes. Energía prohibida.<br>Tu leyenda empieza entre las estrellas.</p>
+          <p class="flight-note"><span>✦</span> AETHER VANGUARD <small>NUEVA VARIANTE ANIME</small></p>
         </div>
         <div class="mission-panel">
           <div class="panel-heading"><span>01 / ELIGE TU DESTINO</span><small>2 SECTORES</small></div>
@@ -90,7 +100,7 @@
     <label>Estilo
       <select id="visual-style">
         <option value="classic">Classic Signal</option>
-        <option value="detailed">Detailed Pixel</option>
+        <option value="detailed">Anime Cel-Shaded</option>
         <option value="neon">Neon Night</option>
       </select>
     </label>
@@ -103,7 +113,7 @@
       </select>
     </label>
     <label class="style-toggle"><input id="visual-lighting" type="checkbox"> Previsualizar luces</label>
-    <img id="style-preview" src="/assets/style-detailed-atlas.png" alt="Previsualización del estilo detallado" hidden>
+    <img id="style-preview" src="/assets/anime/sprites.png" alt="Previsualización del estilo anime" hidden>
     <span id="style-readout" role="status"></span>
   </section>
   <script type="module" src="/src/main.ts"></script>

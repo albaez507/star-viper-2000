@@ -1,6 +1,6 @@
 import { drawSkySprite } from './sky-assets';
 
-/** One 960×540 tile, nearest-neighbor from the painted source. */
+/** One 960×540 tile, smoothly resampled from the anime environment art. */
 export class Sky {
   private background = new Image();
   private tile: HTMLCanvasElement | null = null;
@@ -13,13 +13,13 @@ export class Sky {
   readonly ready: Promise<void>;
 
   constructor() {
-    this.background.src = `${import.meta.env.BASE_URL}assets/sky/background.png`;
+    this.background.src = `${import.meta.env.BASE_URL}assets/anime/background.png`;
     this.ready = this.background.decode().then(() => {
       this.tile = document.createElement('canvas');
       this.tile.width = 960;
       this.tile.height = 540;
       const ctx = this.tile.getContext('2d')!;
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
       ctx.drawImage(this.background, 0, 0, 960, 540);
       // Aquí iba un "foreground" que era un recorte de la MISMA imagen de
       // fondo, redibujado abajo al 70% de opacidad. No era una capa de
@@ -41,7 +41,7 @@ export class Sky {
 
   draw(ctx: CanvasRenderingContext2D, w: number, h: number, t: number): void {
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
     ctx.fillStyle = '#83dce3'; ctx.fillRect(0, 0, w, h);
     if (this.tile) {
       // Sin redondear. A 13 px/s, redondear a píxel entero hacía que el
@@ -55,7 +55,7 @@ export class Sky {
         ctx.save();
         ctx.translate(x + (i % 2 ? w : 0), 0);
         ctx.scale(i % 2 ? -1 : 1, 1);
-        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingEnabled = true;
         ctx.drawImage(this.tile, 0, 0, w, h);
         ctx.restore();
       }

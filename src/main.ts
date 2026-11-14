@@ -51,10 +51,47 @@ function fitCanvas(): void {
 
   const escala = canvas.width / WORLD_W;
   ctx.setTransform(escala, 0, 0, escala, 0, 0);
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
 }
 fitCanvas();
-window.addEventListener('resize', fitCanvas);
+
+/**
+ * iOS informa tamaños viejos justo cuando gira la pantalla: si solo escuchas
+ * `resize`, la partida se queda con las medidas del vertical y aparece
+ * diminuta en una esquina. Por eso se vuelve a medir en el frame siguiente y
+ * otra vez pasado un momento, cuando la barra del navegador ya se ha movido.
+ */
+function reajustar(): void {
+  fitCanvas();
+  requestAnimationFrame(fitCanvas);
+  setTimeout(fitCanvas, 350);
+}
+// Esconder la cabecera al empezar la partida cambia el alto disponible sin
+// que se dispare ningún `resize`. El observador lo cubre sin tener que
+// acordarse de llamar a fitCanvas en cada sitio que cambia de pantalla.
+if (canvas.parentElement) new ResizeObserver(() => fitCanvas()).observe(canvas.parentElement);
+window.addEventListener('resize', reajustar);
+window.addEventListener('orientationchange', reajustar);
+window.visualViewport?.addEventListener('resize', reajustar);
+
+const fullscreenEl = document.getElementById('btn-fullscreen') as HTMLElement;
+fullscreenEl?.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    await document.documentElement.requestFullscreen();
+    // Solo Android lo permite; en iOS lanza y no pasa nada más.
+    await (screen.orientation as { lock?: (o: string) => Promise<void> })
+      .lock?.('landscape');
+  } catch {
+    // Safari en iPhone no tiene fullscreen de elementos. No es un fallo que
+    // deba romper nada: el juego se sigue jugando, solo con la barra puesta.
+  }
+  reajustar();
+});
+document.addEventListener('fullscreenchange', reajustar);
 
 const dpadEl = document.getElementById('dpad') as HTMLElement;
 const fireEl = document.getElementById('btn-fire') as HTMLElement;
@@ -86,8 +123,8 @@ const particles = new ParticleSystem(200);
 const shake = new ScreenShake();
 const renderer = new Renderer(ctx, starfield, particles, shake);
 
-let selectedStage = stageId(localStorage.getItem('sv-stage'));
-let selectedShip = localStorage.getItem('sv-ship') === 'lance' ? 'lance' as const : 'vulcan' as const;
+let selectedStage = stageId(localStorage.getItem('av-stage'));
+let selectedShip = localStorage.getItem('av-ship') === 'lance' ? 'lance' as const : 'vulcan' as const;
 let assetsReady = false;
 let state: GameState = createWorld(WORLD_W, WORLD_H, 1337, selectedStage);
 let mode: ScreenMode = 'title';
@@ -144,16 +181,16 @@ const visualLightingEl = document.getElementById('visual-lighting') as HTMLInput
 const styleReadoutEl = document.getElementById('style-readout') as HTMLElement;
 const stylePreviewEl = document.getElementById('style-preview') as HTMLImageElement;
 
-const savedVisualStyle = localStorage.getItem('sv-visual-style');
-const savedLighting = localStorage.getItem('sv-visual-lighting') === 'true';
+const savedVisualStyle = localStorage.getItem('av-visual-style');
+const savedLighting = localStorage.getItem('av-visual-lighting') === 'true';
 if (savedVisualStyle && [...visualStyleEl.options].some((o) => o.value === savedVisualStyle)) visualStyleEl.value = savedVisualStyle;
 visualLightingEl.checked = savedLighting;
 function applyVisualLab(): void {
   document.body.dataset.visualStyle = visualStyleEl.value;
   setSpriteVisualStyle(visualStyleEl.value);
   document.body.dataset.lighting = String(visualLightingEl.checked);
-  localStorage.setItem('sv-visual-style', visualStyleEl.value);
-  localStorage.setItem('sv-visual-lighting', String(visualLightingEl.checked));
+  localStorage.setItem('av-visual-style', visualStyleEl.value);
+  localStorage.setItem('av-visual-lighting', String(visualLightingEl.checked));
   styleReadoutEl.textContent = `${visualStyleEl.selectedOptions[0].text} · ${visualWeaponEl.selectedOptions[0].text}`;
   stylePreviewEl.hidden = visualStyleEl.value !== 'detailed';
 }
@@ -178,8 +215,8 @@ function updateMissionSelection(): void {
     state.stageId = selectedStage;
     state.player.ship = selectedShip;
   }
-  localStorage.setItem('sv-stage', selectedStage);
-  localStorage.setItem('sv-ship', selectedShip);
+  localStorage.setItem('av-stage', selectedStage);
+  localStorage.setItem('av-ship', selectedShip);
 }
 sectorButtons.forEach(b => b.addEventListener('click', () => {
   selectedStage = stageId(b.dataset.stage ?? null); updateMissionSelection();

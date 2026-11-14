@@ -1,8 +1,18 @@
-# Star Viper 2000
+# Aether Viper
 
-Shoot-'em-up horizontal de arcade para navegador. Pixel art detallado, luz
-cálida, fondos con profundidad. La idea a largo plazo es que los niveles sean
-un **viaje**: tierra → nubes → altura → espacio → otro planeta.
+Shoot-'em-up horizontal de arcade para navegador. Variante moderna con assets
+anime cel-shaded, iluminación neón y fondos atmosféricos. Conserva la lógica
+jugable de Star Viper 2000 para poder comparar ambas direcciones visuales.
+
+## Probar esta variante
+
+```bash
+cd "C:\Users\witha\Documents\DEVELOPMENT EMANUEL\aether-viper"
+npm run dev
+```
+
+Abre la URL local que muestre Vite y usa **Herramientas de vuelo +** para
+saltar directamente al jefe o al laboratorio visual.
 
 Hay dos sectores jugables: **Órbita Sentinel** (espacio) y **Jardines del
 Céfiro** (cielo). **El estilo del cielo es el elegido** (2026-09-09) y manda
